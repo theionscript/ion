@@ -3,8 +3,14 @@
 # ῖon
 # ===
 # 
-# - 0.1.0; 2026-3-30 22:32; initial release
-#
+# - 0.2.0; 2026-4-15 17:18
+#   - finished the build system
+#   - every build now includes its log
+#   - added a polling mode to the watcher
+#   - updated the licence
+# - 0.1.0; 2026-3-30 22:32
+#   - initial release
+# 
 # References
 # ==========
 #
@@ -23,19 +29,20 @@
 # be obtained.
 # 
 # This licence is based on the SSPL from MongoDB, Inc. which itself was
-# derived from the AGPL from the Free Software Foundation. Section 18 was
-# derived from the CLAs of the Apache Software Foundation and Project Harmony.
-# The aim is to remain true to the spirit of free and open source software
-# while supporting its long-term stability and reducing ambiguity for
-# private enterprises.
+# derived from the AGPL from the Free Software Foundation. The Contributions
+# section that follows after the Licence was derived from the CLAs of the Apache
+# Software Foundation and Project Harmony. The aim is to remain true to the
+# spirit of free and open source software while supporting its long-term
+# stability and reducing ambiguity for private enterprises.
 # 
 # 0. Definitions
 # --------------
 # 
-# “The Author” refers to the copyright holder.
+# “The Author” refers to the copyright holder,
+# or the rightful heirs and assigns thereof.
 #
 # “This Licence” refers to the Libra Public Licence,
-# or the licence attached to the head of this file.
+# that is the licence attached to the head of this file.
 # 
 # “Copyright” also means copyright-like laws that apply
 # to other kinds of works, such as semiconductor masks.
@@ -598,30 +605,24 @@
 # warranty or assumption of liability accompanies a copy of the Program in
 # return for a fee.
 # 
-# 18. Contributions
-# -----------------
+# Contributions
+# =============
 # 
 # By submitting a contribution to this project, you grant the Author
 # perpetual, worldwide, non-exclusive, no-charge, royalty-free, transferable,
-# and irrevocable licence to import, use, reproduce, modify, prepare, display,
+# and irrevocable licence to import, use, run, reproduce, modify, prepare, display,
 # perform, transfer, distribute, offer to sell, sell, and sublicence through
 # multiple tiers of sublicensees, your contributions and such derivative works,
 # including patent licences for any patent claims you own or control that are
-# necessarily infringed by your contribution alone or in combination with
-# this project.
-# 
-# By submitting a contribution to this project, you represent that you
-# have the legal authority to grant the above licence, and that it is your
-# original work or that you have all appropriate permissions, and you have fully
-# disclosed its origin and any licence restrictions, including, but not
-# limited to, related patents, trademarks, and any employer's
-# intellectual property rights.
+# necessarily infringed by your contribution.
 # 
 # The Author provides no warranty regarding the acceptance or use of
-# your contribution, which is given to the Author on an 'as is' basis,
-# without warranties or conditions of any kind, either express or implied,
-# including, without limitation, any warranties or conditions of title,
-# non-infringement, merchantability, or fitness for a particular purpose.
+# your contribution, for which you represent that you have the legal authority
+# to grant the above licence, and that it is your original work or that you
+# have all necessary rights, and you have fully disclosed to the Author any
+# necessary details regarding its origin and any licence restrictions,
+# including, but not limited to, related patents, trademarks, and any
+# employer's intellectual property rights.
 # 
 # Developers
 # ==========
@@ -631,7 +632,7 @@
 # so that functions can call other functions without potentially getting
 # their own variables overwritten. This wouldn't help in the case of
 # recursive functions. This will likely be replaced with the local
-# keyword at some point. The last prefix used was: eq
+# keyword at some point. The last prefix used was: fa
 
 export ION___ERROR_PREFIX_MAIN="${ION___ERROR_PREFIX_MAIN:-"- "}"
 export ION___ERROR_PREFIX_SUB="${ION___ERROR_PREFIX_SUB:-"  - "}"
@@ -640,29 +641,27 @@ export ION___ERROR_PREFIX_SUBR="${ION___ERROR_PREFIX_SUBR:-"] "}"
 export ION___ERROR_INFIX_MAIN="${ION___ERROR_INFIX_MAIN:-": "}"
 export ION___ERROR_INFIX_SUB="${ION___ERROR_INFIX_SUB:-"; "}"
 
-export ION___SUFFIX_SECONDS="${ION___SUFFIX_SECONDS:-"s"}"
+export ION___TYPE_SEPARATOR="${ION___TYPE_SEPARATOR:-"."}"
+export ION___TITLE_SEPARATOR="${ION___TITLE_SEPARATOR:-" – "}"
 
 export ION___QUERY_PHRASE="${ION___QUERY_PHRASE:-"."}"
 export ION___QUERY_CLAUSE="${ION___QUERY_CLAUSE:-":"}"
 export ION___QUERY_SENTENCE="${ION___QUERY_SENTENCE:-"::"}"
 export ION___QUERY_PARAGRAPH="${ION___QUERY_PARAGRAPH:-":::"}"
 
-export ION___QUERY_SUBJECT="${ION___QUERY_SUBJECT:-"1"}"
-export ION___QUERY_VERB="${ION___QUERY_VERB:-"2"}"
-
 export ION___QUERY_ALL="${ION___QUERY_ALL:-"/"}"
 export ION___QUERY_SEPARATOR="${ION___QUERY_SEPARATOR:-"?"}"
 export ION___QUERY_NESTED_LEFT="${ION___QUERY_NESTED_LEFT:-"{"}"
 export ION___QUERY_NESTED_RIGHT="${ION___QUERY_NESTED_RIGHT:-"}"}"
 
-export ION___TITLE_SEPARATOR="${ION___TITLE_SEPARATOR:-" – "}"
-export ION___TYPE_SEPARATOR="${ION___TYPE_SEPARATOR:-"."}"
+export ION___QUERY_SUBJECT="${ION___QUERY_SUBJECT:-"1"}"
+export ION___QUERY_VERB="${ION___QUERY_VERB:-"2"}"
 
+export ION___SUFFIX_SECONDS="${ION___SUFFIX_SECONDS:-"s"}"
+
+export ION___SIGNAL_ALL="${ION___SIGNAL_ALL:-"-"}"
 export ION___SIGNAL_INPUT="${ION___SIGNAL_INPUT:-"i"}"
 export ION___SIGNAL_SOURCE="${ION___SIGNAL_SOURCE:-"s"}"
-
-export ION___BUILD_READ="${ION___BUILD_READ:-"r"}"
-export ION___BUILD_WRITE="${ION___BUILD_WRITE:-"w"}"
 
 export ION__EXT_JS="${ION__EXT_JS:-"js"}"
 export ION__EXT_CSS="${ION__EXT_CSS:-"css"}"
@@ -672,40 +671,42 @@ export ION__EXT_JSON="${ION__EXT_JSON:-"json"}"
 export ION__WORD_INFO="${ION__WORD_INFO:-"info"}"
 export ION__WORD_NOTE="${ION__WORD_NOTE:-"note"}"
 export ION__WORD_ERROR="${ION__WORD_ERROR:-"error"}"
+export ION__WORD_LOG="${ION__WORD_LOG:-"log"}"
 export ION__WORD_INBOX="${ION__WORD_INBOX:-"inbox"}"
 export ION__WORD_INDEX="${ION__WORD_INDEX:-"index"}"
 export ION__WORD_BUILD="${ION__WORD_BUILD:-"build"}"
+export ION__WORD_SOURCE="${ION__WORD_SOURCE:-"source"}"
 export ION__WORD_MAIN="${ION__WORD_MAIN:-"main"}"
 
-export ION__NAME_BUILD="${ION__NAME_BUILD:-".$ION__WORD_BUILD"}"
-export ION__NAME_INDEX_ROOT="${ION__NAME_INDEX_ROOT:-".$ION__WORD_INDEX"}"
-export ION__NAME_INDEX_BRANCH="${ION__NAME_INDEX_BRANCH:-"$ION__WORD_INDEX"}"
+export ION__NAME_LOG="${ION__NAME_LOG:-".$ION__WORD_LOG"}"
+export ION__NAME_PLAN="${ION__NAME_PLAN:-".$ION__WORD_BUILD"}"
+export ION__NAME_ROOT="${ION__NAME_ROOT:-".$ION__WORD_INDEX"}"
+export ION__NAME_BRANCH="${ION__NAME_BRANCH:-"$ION__WORD_INDEX"}"
 export ION__NAME_INDEX_CSS="${ION__NAME_INDEX_CSS:-"$ION__WORD_INDEX.$ION__EXT_CSS"}"
 export ION__NAME_INDEX_JS="${ION__NAME_INDEX_JS:-"$ION__WORD_INDEX.$ION__EXT_JS"}"
 export ION__NAME_MAIN_CSS="${ION__NAME_MAIN_CSS:-"$ION__WORD_MAIN.$ION__EXT_CSS"}"
 export ION__NAME_MAIN_JS="${ION__NAME_MAIN_JS:-"$ION__WORD_MAIN.$ION__EXT_JS"}"
 
-export ION__MSG_CHANGING_DIR="${ION__MSG_CHANGING_DIR:-"changing the directory"}"
 export ION__MSG_COMMAND_NOT_FOUND="${ION__MSG_COMMAND_NOT_FOUND:-"command not found"}"
 export ION__MSG_COMMAND_NOT_EXEC="${ION__MSG_COMMAND_NOT_EXEC:-"command not executable"}"
 export ION__MSG_COMMAND_NOT_RECOGNISED="${ION__MSG_COMMAND_NOT_RECOGNISED:-"command not recognised"}"
-export ION__MSG_MAKING_NOISE="${ION__MSG_MAKING_NOISE:-"generating random noise"}"
 export ION__MSG_INVALID_ENVIRONMENT="${ION__MSG_INVALID_ENVIRONMENT:-"an invalid option was given"}"
 export ION__MSG_INVALID_REPLACEMENT="${ION__MSG_INVALID_REPLACEMENT:-"a sed replacement contains a newline"}"
 export ION__MSG_LINKING_FILE="${ION__MSG_LINKING_FILE:-"unable to create a hard link; reverting to copying"}"
 export ION__MSG_NOT_SLEEPING="${ION__MSG_NOT_SLEEPING:-"sub-second sleep seemingly not possible"}"
-export ION__MSG_CHANGED="${ION__MSG_CHANGED:-"waiting a moment..."}"
 export ION__MSG_MAKING_DIR="${ION__MSG_MAKING_DIR:-"making a directory"}"
 export ION__MSG_MAKING_FILE="${ION__MSG_MAKING_FILE:-"making a file"}"
 export ION__MSG_MOVING_FILE="${ION__MSG_MOVING_FILE:-"moving a file"}"
 export ION__MSG_NOT_POSIX="${ION__MSG_NOT_POSIX:-"the environment must be POSIX-compliant"}"
 export ION__MSG_REMOVING_FILE="${ION__MSG_REMOVING_FILE:-"removing a file"}"
 export ION__MSG_RUNNING_COMMAND="${ION__MSG_RUNNING_COMMAND:-"running command"}"
+export ION__MSG_RUNNING_COMMAND_BG="${ION__MSG_RUNNING_COMMAND_BG:-"running background command"}"
+export ION__MSG_RUNNING_COMMAND_MANY="${ION__MSG_RUNNING_COMMAND_MANY:-"running command list"}"
 export ION__MSG_RUNNING_TESTS="${ION__MSG_RUNNING_TESTS:-"running tests"}"
-export ION__MSG_RUNNING_HASH="${ION__MSG_RUNNING_HASH:-"hashing a file"}"
 export ION__MSG_NOTICED_CHANGE="${ION__MSG_NOTICED_CHANGE:-"one moment..."}"
-export ION__MSG_STARTING_BUILD="${ION__MSG_STARTING_BUILD:-"building"}"
-export ION__MSG_STARTING_COMPILER="${ION__MSG_STARTING_COMPILER:-"compiling"}"
+export ION__MSG_BUILD_START="${ION__MSG_BUILD_START:-"building"}"
+export ION__MSG_BUILD_STEP="${ION__MSG_BUILD_STEP:-"build step"}"
+export ION__MSG_BUILD_ACTION="${ION__MSG_BUILD_ACTION:-"build action"}"
 export ION__MSG_STARTING_SERVERS="${ION__MSG_STARTING_SERVERS:-"starting the servers"}"
 export ION__MSG_STARTING_WATCHER="${ION__MSG_STARTING_WATCHER:-"starting the watcher"}"
 export ION__MSG_STOPPING_WATCHER="${ION__MSG_STOPPING_WATCHER:-"stopping the watcher"}"
@@ -715,6 +716,9 @@ export ION__MSG_STOPPING_BUILD="${ION__MSG_STOPPING_BUILD:-"finished"}"
 export ION__MSG_OPENING_FILE="${ION__MSG_OPENING_FILE:-"opening a file"}"
 export ION__MSG_QUERYING_THE_INDEX="${ION__MSG_QUERYING_THE_INDEX:-"querying the index"}"
 export ION__MSG_QUERY_FOUND_AN_ENTRY="${ION__MSG_QUERY_FOUND_AN_ENTRY:-"found a matching entry in the index"}"
+
+export ION__ACTION_SOURCE="${ION__ACTION_SOURCE:-"$ION__WORD_SOURCE"}"
+export ION__ACTION_INDEX="${ION__ACTION_INDEX:-"$ION__WORD_INDEX"}"
 
 export ION__VERB_IDENTITY="${ION__VERB_IDENTITY:-"identity"}"
 
@@ -833,13 +837,15 @@ export ION_BIN_SHELLCHECK="${ION_BIN_SHELLCHECK:-"shellcheck"}"
 export ION_BIN_SSH="${ION_BIN_SSH:-"ssh"}"
 export ION_BIN_TCPSERVER="${ION_BIN_TCPSERVER:-"tcpserver"}"
 export ION_BIN_TIDY="${ION_BIN_TIDY:-}"
-
+export ION_BIN_PARALLEL="${ION_BIN_PARALLEL:-parallel}"
 export ION_BIN_STAT="${ION_BIN_STAT:-"stat"}"
-export ION_BIN_STAT_GNU="${ION_BIN_STAT_GNU:-}"
-export ION_BIN_STAT_BSD="${ION_BIN_STAT_BSD:-}"
-
 export ION_BIN_FIND="${ION_BIN_FIND:-"bfs:find"}"
+export ION_BIN_XARGS="${ION_BIN_XARGS:-xargs}"
+
+export ION_BIN_STAT_BSD="${ION_BIN_STAT_BSD:-}"
+export ION_BIN_STAT_GNU="${ION_BIN_STAT_GNU:-}"
 export ION_BIN_FIND_GNU="${ION_BIN_FIND_GNU:-}"
+export ION_BIN_XARGS_GNU="${ION_BIN_XARGS_GNU:-}"
 
 export ION_DEV_URANDOM="${ION_DEV_URANDOM:-"/dev/urandom"}"
 
@@ -851,13 +857,15 @@ export ION_SERVE_WWW="${ION_SERVE_WWW:-}"
 
 export ION_WATCH="${ION_WATCH:-2}"
 export ION_WATCH_CLEAR="${ION_WATCH_CLEAR:-1}"
-export ION_WATCH_INITIAL="${ION_WATCH_INITIAL:-1}"
 export ION_WATCH_THROTTLE="${ION_WATCH_THROTTLE:-0.1}"
 export ION_WATCH_DEBOUNCE="${ION_WATCH_DEBOUNCE:-0.1}"
+export ION_WATCH_POLLING="${ION_WATCH_POLLING:-}"
 
 export ION_BUILD="${ION_BUILD:-}"
-export ION_BUILD_LOG="${ION_BUILD_LOG:-}"
-export ION_BUILD_LOG_KEEP="${ION_BUILD_LOG_KEEP:-}"
+export ION_BUILD_STEP="${ION_BUILD_STEP:-}"
+export ION_BUILD_CURRENT="${ION_BUILD_CURRENT:-}"
+export ION_BUILD_PREVIOUS="${ION_BUILD_PREVIOUS:-}"
+export ION_BUILD_INITIAL="${ION_BUILD_INITIAL:-1}"
 export ION_BUILD_JS="${ION_BUILD_JS:-1}"
 export ION_BUILD_JS_GLOBAL="${ION_BUILD_JS_GLOBAL:-1}"
 export ION_BUILD_CSS="${ION_BUILD_CSS:-1}"
@@ -893,12 +901,13 @@ export ION_SYNTAX="${ION_SYNTAX:-"monochrome"}"
 export ION_COGNATES="${ION_COGNATES:-"inventori:inventory"}"
 
 export ION_TEMP="${ION_TEMP:-"${TMPDIR:-/tmp}"}"
-export ION_TEST="${ION_TEST:-1}"
+export ION_TEST="${ION_TEST:-}"
 export ION_WORDS="${ION_WORDS:-1}"
 
 export ION_VOLUME="${ION_VOLUME:-3}"
 export ION_MINIFY="${ION_MINIFY:-0}"
-export ION_PARALLEL="${ION_PARALLEL:-}"
+export ION_PARALLEL="${ION_PARALLEL:-0}"
+export ION_CLUSTER="${ION_CLUSTER:-}"
 
 export ION_INPUT="${ION_INPUT:-}"
 export ION_MIRRORS="${ION_MIRRORS:-}"
@@ -919,8 +928,6 @@ WATCHER_PID_INPUT=
 WATCHER_PID_SOURCE=
 
 BUILD_TEMP=
-BUILD_CURRENT=
-BUILD_NEXT=
 
 TEMP_SED=
 TEMP_BLANK=
@@ -937,13 +944,12 @@ TEMP_TEMPLATE_JSON=
 TEMP_TEMPLATE_HTML=
 TEMP_SOURCE_STYLES=
 TEMP_SOURCE_SCRIPTS=
-TEMP_COMPILED=
 
 SHARED_LUA="$(cat <<'EOF'
 function env(name, default)
 	local found = os.getenv("ION_"..name)
 	found = found and #found > 0 and found or default
-	assert(found, name.." not given")
+	assert(found ~= nil, name.." not given")
 	return found
 end
 
@@ -985,8 +991,8 @@ _WORD_NOTE = env("_WORD_NOTE")
 _EXT_JSON = env("_EXT_JSON")
 _EXT_HTML = env("_EXT_HTML")
 
-_NAME_INDEX_ROOT = env("_NAME_INDEX_ROOT")
-_NAME_INDEX_BRANCH = env("_NAME_INDEX_BRANCH")
+_NAME_ROOT = env("_NAME_ROOT")
+_NAME_BRANCH = env("_NAME_BRANCH")
 _NAME_INDEX_JS = env("_NAME_INDEX_JS")
 _NAME_INDEX_CSS = env("_NAME_INDEX_CSS")
 
@@ -1104,7 +1110,7 @@ WORDS = envb("WORDS")
 
 FILTER_PATH = env("FILTER_PATH")
 FILTER_TARGET = env("FILTER_TARGET")
-FILTER_OUTPUT = env("FILTER_OUTPUT")
+FILTER_OUTPUT = env("FILTER_OUTPUT", false)
 
 CACHED_COGNATES = nil
 CACHED_INDEX = nil
@@ -1248,7 +1254,11 @@ function printe(label, ...)
 	local started = false
 	local err = ""
 
-	local prefix = __ERROR_PREFIX_SUB..__ERROR_PREFIX_SUBL..START_ID..__ERROR_PREFIX_SUBR
+	local prefix = __ERROR_PREFIX_SUB
+
+	if START_ID ~= 1 then
+		prefix = prefix..__ERROR_PREFIX_SUBL..START_ID..__ERROR_PREFIX_SUBR
+	end
 
 	for i=1, args.n do
 		local arg = args[i]
@@ -1437,7 +1447,7 @@ end
 function string_escape(s)
 	-- see: lua.org/pil/20.2.html
 	--                 ( ) . % + - * ? [   ^ $
-    return s:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+	return s:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
 end
 
 function string_split(str, pattern, f, strip, plain)
@@ -1593,8 +1603,7 @@ end
 function path_is_safe(str)
 	local safe = str ~= nil
 	safe = safe and str ~= ""
-	safe = safe and not str:match(
-        "[\0\t\n\r\\*?$`\"'<>%(%)%[%]{}|&;:%%~]")
+	safe = safe and not str:match("[\0\t\n\r\\*?$`\"'<>%(%)%[%]{}|&;:%%~]")
 	return safe
 end
 
@@ -2587,7 +2596,7 @@ function Index.name(key, kind)
 end
 
 function Index:path(path, key, kind)
-	local root = path_join(self.output, _NAME_INDEX_ROOT)
+	local root = path_join(self.output, _NAME_ROOT)
 	local name = Index.name(key, kind)
 	return name and path_join(root, path, name)
 end
@@ -2605,7 +2614,7 @@ function Index.open(output)
 	local self = setmetatable({}, { __index = Index })
 
 	self.output = output
-	self.scan_file = output and self:file(_NAME_INDEX_BRANCH, _META_SCAN, subtype_array(_TYPE_PATHS))
+	self.scan_file = output and self:file(_NAME_BRANCH, _META_SCAN, subtype_array(_TYPE_PATHS))
 
 	return self.scan_file and self
 end
@@ -3112,9 +3121,9 @@ function test_all()
 	table_values__test()
 	array_contains__test()
 	array_deduplicated__test()
-	string_split__test()
 	string_before__test()
 	string_after__test()
+	string_split__test()
 	path_resolve__test()
 	query__test()
 	merge__test()
@@ -3207,7 +3216,7 @@ EOF
 GLOBAL_JS="$(cat <<'EOF'
 	var COMPONENTS = {};
 
-	function node_ready(node, f) {
+	function document_ready(node, f) {
 		if (node.readyState === "loading") {
 			node.addEventListener("DOMContentLoaded", f);
 		} else {
@@ -3228,7 +3237,7 @@ GLOBAL_JS="$(cat <<'EOF'
 	}
 
 	function components_start() {
-		node_ready(document, components_run);
+		document_ready(document, components_run);
 	}
 EOF
 )"
@@ -3265,14 +3274,10 @@ TEMPLATE_HTML="$(cat <<'EOF'
 		<title>$template-title$</title>
 	$endif$
 
-	$if(math)$
-		$math$
-	$endif$
-
 	<style>
-		:root:not(.$template-class-no-js$) :not(.$template-class-component$),
-		:root:not(.$template-class-no-js$) :not(.$template-class-component$)::before,
-		:root:not(.$template-class-no-js$) :not(.$template-class-component$)::after {
+		:root:not(.$template-class-no-js$) > body :not(.$template-class-component$),
+		:root:not(.$template-class-no-js$) > body :not(.$template-class-component$)::before,
+		:root:not(.$template-class-no-js$) > body :not(.$template-class-component$)::after {
 			pointer-events: none;
 			user-select: none;
 			opacity: 0;
@@ -3281,10 +3286,7 @@ TEMPLATE_HTML="$(cat <<'EOF'
 
 	<script>
 		var JS = typeof Symbol === "function";
-		
-		if (JS) {
-			document.documentElement.classList.remove("$template-class-no-js$");
-		}
+		if (JS) document.documentElement.classList.remove("$template-class-no-js$");
 	</script>
 
 	$if(template-link-js)$
@@ -3379,7 +3381,7 @@ terminal_clear() {
 }
 
 find_command() {
-	command -v "$@" 2>/dev/null || return 0
+	command -v "$@" 2>/dev/null || true
 }
 
 found_command() {
@@ -3479,26 +3481,10 @@ have_stat() {
 }
 
 have_stat_gnu() {
-	if ! test "$ION_BIN_STAT_GNU"; then
-		if have_stat && test "$("$ION_BIN_STAT" -c '%s' /dev/null 2>/dev/null)" = 0; then
-			ION_BIN_STAT_GNU=1
-		else
-			ION_BIN_STAT_GNU=0
-		fi
-	fi
-
 	test "$ION_BIN_STAT_GNU" = 1
 }
 
 have_stat_bsd() {
-	if ! test "$ION_BIN_STAT_BSD"; then
-		if have_stat && test "$("$ION_BIN_STAT" -f '%z' /dev/null 2>/dev/null)" = 0; then
-			ION_BIN_STAT_BSD=1
-		else
-			ION_BIN_STAT_BSD=0
-		fi
-	fi
-
 	test "$ION_BIN_STAT_BSD" = 1
 }
 
@@ -3507,19 +3493,23 @@ have_stat_recognised() {
 }
 
 have_find_gnu() {
-	if ! test "$ION_BIN_FIND_GNU"; then
-		if test "$("$ION_BIN_FIND" /dev/null -printf '%s' 2>/dev/null)" = 0; then
-			ION_BIN_FIND_GNU=1
-		else
-			ION_BIN_FIND_GNU=0
-		fi
-	fi
-
 	test "$ION_BIN_FIND_GNU" = 1
 }
 
 have_find() {
 	test "$ION_BIN_FIND" && { have_find_gnu || have_stat_recognised; }
+}
+
+have_xargs() {
+	test "$ION_BIN_XARGS"
+}
+
+have_xargs_gnu() {
+	test "$ION_BIN_XARGS_GNU" = 1
+}
+
+have_parallel() {
+	test "$ION_BIN_PARALLEL"
 }
 
 have_watcher() {
@@ -3547,11 +3537,11 @@ should_help() {
 }
 
 should_test() {
-	! should_help && ! have_parent && test "$ION_TEST" = 1
+	! have_parent && test "$ION_TEST" = 1
 }
 
-should_watch_initial() {
-	! should_help && test "$ION_WATCH_INITIAL" = 1
+should_build() {
+	test "$ION_BUILD_CURRENT"
 }
 
 should_watch() {
@@ -3568,6 +3558,10 @@ should_serve() {
 			test "$ION_SERVE" = 2 && have_server
 		}
 	}
+}
+
+can_build() {
+	have_xargs || have_xargs_gnu || have_parallel
 }
 
 can_watch() {
@@ -3596,7 +3590,11 @@ printe() {
 	ab__err=
 
 	if have_parent; then
-		ab__prefix="$ION___ERROR_PREFIX_SUB$ION___ERROR_PREFIX_SUBL$ION_START_ID$ION___ERROR_PREFIX_SUBR"
+		ab__prefix="$ION___ERROR_PREFIX_SUB"
+
+		if test "$ION_START_ID" != 1; then
+			ab__prefix="$ab__prefix$ION___ERROR_PREFIX_SUBL$ION_START_ID$ION___ERROR_PREFIX_SUBR"
+		fi
 	else
 		ab__prefix="$ION___ERROR_PREFIX_MAIN"
 	fi
@@ -4035,9 +4033,9 @@ path_type() {
 	eq__indicator="$1"
 	eq__extension="$2"
 
-	eq__character="$(printf "%s" "$indicator" | cut -c1-1)" || return
+	eq__character="$(printf '%s' "$eq__indicator" | cut -c1-1)" || return
 
-	if test "$eq__indicator" = "d"; then
+	if test "$eq__character" = "d"; then
 		printf '%s' "$ION__META_TYPE_DIRECTORY"
 	elif ext_data "$eq__extension"; then
 		printf '%s' "$ION__META_TYPE_DATA"
@@ -4070,9 +4068,9 @@ path_absolute_from() {
 	ct__cwd="$(pwd)" || return
 	
 	if test -d "$1"; then
-		dir_change "$1" || return
+		cd -- "$1" || return
 		ct__path="$(pwd)" || return
-		dir_change "$ct__cwd" || return
+		cd -- "$ct__cwd" || return
 		print "$ct__path"
 	fi
 }
@@ -4192,10 +4190,6 @@ file_copy() {
 	fi
 }
 
-dir_change() {
-	cd -- "$1" || error "$ION__MSG_CHANGING_DIR" "$1"
-}
-
 dir_make() {
 	mkdir -- "$1" || error "$ION__MSG_MAKING_DIR" "$1"
 }
@@ -4206,28 +4200,25 @@ dir_make_all() {
 
 dir_empty() {
 	# see: unix.stackexchange.com/a/77313
-
-	eo__ret=0
-
 	eo__path="$(path_normal "$1")" || return
 
-	if ! test -d "$eo__path" || test "$eo__path" = "/"; then
-		return 1
+	if test -d "$eo__path" && test "$eo__path" != "/"; then
+		set +f
+		rm -rf -- \
+			"${eo__path:?}"/* \
+			"${eo__path:?}"/.[!.]* \
+			"${eo__path:?}"/..?* \
+		|| true
+		set -f
 	fi
-
-	set +f
-	rm -rf -- "$eo__path"/* "$eo__path"/.[!.]* "$eo__path"/..?* || eo__ret=$?
-	set -f
-
-	return "$eo__ret"
 }
 
 dir_remove() {
 	df__path="$(path_normal "$1")" || return
 	df__ret=0
 
-	if test -d "$df__path"; then
-		rm -rf -- "$df__path" || df__ret=$?
+	if test -d "$df__path" && test "$df__path" != "/"; then
+		rm -rf -- "$df__path" 2>/dev/null || df__ret=$?
 	fi
 
 	return "$df__ret"
@@ -4243,31 +4234,95 @@ stop() {
 start() {
 	eh__ret=0
 	eh__ifs="$IFS"
+	eh__start_id="$ION_START_ID"
 	IFS=" "
+
+	export ION_START_ID=1
 
 	# shellcheck disable=SC2086
 	info "$ION__MSG_RUNNING_COMMAND" "$ION_START_CMD" $ION_START_ARGS "$@"
 
 	# shellcheck disable=SC2086
-	"$ION_START_CMD" $ION_START_ARGS ION_START_ID=1 ION_START_CMD="env" ION_START_ARGS= "$@" || eh__ret=$?
+	"$ION_START_CMD" $ION_START_ARGS "$@" || eh__ret=$?
 
+	export ION_START_ID="$eh__start_id"
 	IFS="$eh__ifs"
-	return $eh__ret
+
+	return "$eh__ret"
 }
 
 # shellcheck disable=SC2120
 start_bg() {
 	em__ifs="$IFS"
+	em__start_id="$ION_START_ID"
 	IFS=" "
 
-	# shellcheck disable=SC2086
-	info "$ION__MSG_RUNNING_COMMAND" "$ION_START_CMD" $ION_START_ARGS "$@"
+	export ION_START_ID=1
 
 	# shellcheck disable=SC2086
-	"$ION_START_CMD" $ION_START_ARGS ION_START_ID=1 ION_START_CMD="env" ION_START_ARGS= "$@" &
+	info "$ION__MSG_RUNNING_COMMAND_BG" "$ION_START_CMD" $ION_START_ARGS "$@"
+
+	# shellcheck disable=SC2086
+	"$ION_START_CMD" $ION_START_ARGS "$@" &
 
 	START_PID=$!
 	IFS="$em__ifs"
+	export ION_START_ID="$em__start_id"
+}
+
+start_many() {
+	ev__start_id="$ION_START_ID"
+	ev__old_volume="$ION_VOLUME"
+	ev__volume="$ION_VOLUME"
+	ev__ifs="$IFS"
+	ev__args=
+	ev__ret=0
+	IFS=" "
+
+	if test "$ev__volume" -gt 3; then
+		ev__args="-t"
+	fi
+
+	if have_parallel; then
+		ev__cmd="$ION_BIN_PARALLEL"
+		ev__args="$ev__args --line-buffer"
+
+		if test "$ev__volume" -gt 1 && test -t 2; then
+			ev__args="$ev__args --progress"
+		fi
+
+		if test "$ION_PARALLEL"; then
+			ev__args="$ev__args -j$ION_PARALLEL"
+		fi
+	elif have_xargs_gnu; then
+		ev__cmd="$ION_BIN_XARGS"
+		ev__args="$ev__args -d""$NEWLINE"
+
+		if test "$ION_PARALLEL"; then
+			ev__args="$ev__args -P$ION_PARALLEL"
+			ev__volume=0
+		fi
+	elif have_xargs; then
+		ev__cmd="$ION_BIN_XARGS"
+		ev__args="$ev__args -L1"
+	fi
+
+	if test "$ev__cmd"; then
+		export ION_START_ID=1
+		export ION_VOLUME="$ev__volume"
+
+		# shellcheck disable=SC2086
+		info "$ION__MSG_RUNNING_COMMAND_MANY" "$ION_START_CMD" $ION_START_ARGS "$@"
+
+		# shellcheck disable=SC2086
+		"$ev__cmd" $ev__args "$ION_START_CMD" $ION_START_ARGS "$@" || ev__ret=$?
+
+		export ION_START_ID="$ev__start_id"
+		export ION_VOLUME="$ev__old_volume"
+	fi
+
+	IFS="$ev__ifs"
+	return "$ev__ret"
 }
 
 start_stat() {
@@ -4314,6 +4369,7 @@ start_find() {
 
 	cn__dir="$1"
 	cn__flat="$2"
+	cn__extra="$3"
 
 	cn__args=
 	cn__dirs_l=
@@ -4333,7 +4389,9 @@ start_find() {
 		cn__dir_r="-o"
 	fi
 
-	if have_find_gnu; then
+	if ! test "$cn__extra"; then
+		cn__args="$cn__args""-print"
+	elif have_find_gnu; then
 		cn__args="$cn__args""-printf"
 		cn__args="$cn__args""$NEWLINE""%p:%s:%Ts:%M\n"
 	elif have_stat_gnu; then
@@ -4355,21 +4413,19 @@ start_find() {
 	fi
 
 	(
-		dir_change "$cn__dir" || exit
+		cd -- "$cn__dir" || exit
 
 		IFS="$NEWLINE"
 
-		# shellcheck disable=SC2046
-		start "$ION_BIN_FIND" . $cn__dirs_l \( \
+		# shellcheck disable=SC2086
+		"$ION_BIN_FIND" . $cn__dirs_l \( \
 			$cn__dir_l -name '.git' $cn__dir_r \
 			$cn__dir_l -name '.hg' $cn__dir_r \
-			$cn__dir_l -path './'"$ION__NAME_BUILD" $cn__dir_r \
-			$cn__dir_l -path './'"$ION__NAME_INDEX_ROOT" \
+			$cn__dir_l -path './'"$ION__NAME_ROOT" \
 		\) $cn__dirs_r \( \
 			-type f -o \
 			-type d \
 		\) \
-			! -name "$ION__NAME_INDEX_BRANCH" \
 			! -name '*'"$TAB"'*' \
 			! -name '*'"$NEWLINE"'*' \
 			! -name '*'"$CARRIAGE"'*' \
@@ -4408,7 +4464,7 @@ start_random_openssl() {
 	start "$ION_BIN_OPENSSL" rand -base64 "$1" | tr "+/=" "xyz" | cut -c 1-"$1"
 }
 
-start_random_internal() {
+start_random() {
 	am__amount="$1"
 
 	if have_urandom; then
@@ -4418,10 +4474,6 @@ start_random_internal() {
 	else
 		return 1
 	fi
-}
-
-start_random() {
-	start_random_internal "$@" || error "$ION__MSG_MAKING_NOISE" "$@"
 }
 
 start_hash_sha256_sha256sum() {
@@ -4464,7 +4516,7 @@ start_hash_sha256_openssl() {
 	IFS="$ap__ifs"
 }
 
-start_hash_sha256() {
+start_hash() {
 	aq__digest=""
 
 	if have_sha256sum; then
@@ -4483,10 +4535,6 @@ start_hash_sha256() {
 	else
 		return 1
 	fi
-}
-
-start_hash() {
-	start_hash_sha256 "$@" || error "$ION__MSG_RUNNING_HASH" "$1"
 }
 
 start_temp_template() {
@@ -4581,65 +4629,72 @@ stop_signal() {
 }
 
 start_fswatch() {
-	ch__once="$1"; shift
+	ch__signal="$1"; shift
 	ch__args="-ro"
 	ch__ret=0
 
 	ch__ifs="$IFS"
 	IFS=" "
 	
-	if test "$ch__once" = 1; then
+	if ! test "$ch__signal"; then
 		ch__args="$ch__args""1"
 	fi
 
 	if test "$ION_WATCH_THROTTLE"; then
-		ch__args="$ch__args""l $ION_WATCH_THROTTLE"
+		ch__args="$ch__args"" -l $ION_WATCH_THROTTLE"
 	fi
 
-	# shellcheck disable=SC2086
-	start "$ION_BIN_FSWATCH" $ch__args "$@" >/dev/null || ch__ret=$?
+	if test "$ION_WATCH_POLLING"; then
+		ch__args="$ch__args"" -m poll_monitor"
+	fi
+
+	#set -m
+
+	if test "$ch__signal"; then
+		# shellcheck disable=SC2086
+		(start "$ION_BIN_FSWATCH" $ch__args "$@" | {
+			while IFS= read -r _; do
+				start_signal "$ch__signal"
+			done
+		}) &
+		START_PID=$!
+	else
+		# shellcheck disable=SC2086
+		start "$ION_BIN_FSWATCH" $ch__args "$@" >/dev/null &
+		START_PID=$!
+	fi
+
+	#set +m
 
 	IFS="$ch__ifs"
 	return $ch__ret
 }
 
-start_monitor() {
-	if should_watch_initial; then
-		start_signal "$1" || return
-	fi
+start_watch() {
+	start_fswatch "" "$@"
+}
 
+start_monitor() {
 	cz__old_ifs="$IFS"
 	IFS="$NEWLINE"
 
 	# shellcheck disable=SC2046
-	start_fswatch 0 $(cat) | {
-		#if should_watch_initial; then
-		#	IFS= read -r _
-		#fi
-
-		while IFS= read -r _; do
-			start_signal "$1"
-		done
-	}
+	start_fswatch "$1" $(cat)
 
 	IFS="$cz__old_ifs"
-}
-
-start_watch() {
-	start_fswatch 1 "$@"
 }
 
 start_watcher() {
 	note "$ION__MSG_STARTING_WATCHER"
 
 	if test "$ION_INPUT" && ! test "$WATCHER_PID_INPUT"; then
-		print "$ION_INPUT" | start_monitor "$ION___SIGNAL_INPUT" &
-		WATCHER_PID_INPUT="$!"
+		print "$ION_INPUT" | start_monitor "$ION___SIGNAL_INPUT"
+		WATCHER_PID_INPUT="$START_PID"
 	fi
 
 	if test "$ION_SOURCE" && ! test "$WATCHER_PID_SOURCE"; then
-		paths_split_raw "$ION_SOURCE" | start_monitor "$ION___SIGNAL_SOURCE" &
-		WATCHER_PID_SOURCE="$!"
+		paths_split_raw "$ION_SOURCE" | start_monitor "$ION___SIGNAL_SOURCE"
+		WATCHER_PID_SOURCE="$START_PID"
 	fi
 }
 
@@ -4826,14 +4881,14 @@ start_pandoc() {
 		partial)
 			ax__filter="$TEMP_FILTER_DOCUMENT"
 			ax__target="$ION__EXT_HTML"
-			ax__format="html4"
+			ax__format="html"
 		;;
 		full)
 			ax__args="--standalone"
 			ax__filter="$TEMP_FILTER_TEMPLATE"
 			ax__template="$TEMP_TEMPLATE_HTML"
 			ax__target="$ION__EXT_HTML"
-			ax__format="html4"
+			ax__format="html"
 		;;
 		extract)
 			ax__filter="$TEMP_FILTER_EXTRACT"
@@ -4898,7 +4953,7 @@ start_pandoc() {
 }
 
 start_pandoc_tests() {
-	start_pandoc test "$TEMP_BLANK" "$TEMP_BLANK" "$TEMP_COMPILED" >/dev/null
+	start_pandoc test "$TEMP_BLANK" "$TEMP_BLANK" "" >/dev/null
 }
 
 start_pandoc_split() {
@@ -4981,6 +5036,7 @@ start_esbuild() {
 	fi
 
 	de__in="$1"
+	de__out="$2"
 	de__ret=0
 	de__args=
 	de__ifs="$IFS"
@@ -4992,7 +5048,7 @@ start_esbuild() {
 
 	# shellcheck disable=SC2086
 	start "$ION_BIN_ESBUILD" \
-		--outdir="$TEMP_COMPILED" \
+		--outdir="$de__out" \
 		--loader="$de__in" \
 		--bundle \
 		--target=es6 \
@@ -5013,43 +5069,72 @@ start_esbuild() {
 }
 
 start_esbuild_style() {
-	start_esbuild css < "$TEMP_SOURCE_STYLES"
+	start_esbuild css "$1" < "$TEMP_SOURCE_STYLES"
 }
 
 start_esbuild_script() {
-	start_esbuild js < "$TEMP_SOURCE_SCRIPTS"
+	start_esbuild js "$1" < "$TEMP_SOURCE_SCRIPTS"
 }
 
 start_compile() {
-	info "$ION__MSG_STARTING_COMPILER"
-	dir_empty "$TEMP_COMPILED" || return
-	start_esbuild_style || return
-	start_esbuild_script || return
+	start_esbuild_style "$1" || return
+	start_esbuild_script "$1" || return
+}
+
+start_step() {
+	eu__step="$1"
+	eu__count="$2"
+
+	start_find "$eu__step" 1 | while IFS= read -r eu__action_line; do
+		eu__action_name="${eu__action_line#./}"
+		eu__action_path="$eu__step/$eu__action_name"
+
+		start_find "$eu__action_path" | while IFS= read -r eu__path_line; do
+			eu__path="/${eu__path_line#./}"
+			eu__content_path="$eu__action_path""$eu__path"
+			read -r eu__content < "$eu__content_path" || true
+			printf '%s:%s:%s\n' "$eu__action_name" "$eu__path" "$eu__content"
+		done
+	done
+}
+
+start_run() {
+	es__plan="$1"
+	es__count=1
+
+	while :; do
+		es__step="$es__plan/$es__count"
+
+		if test -d "$es__step"; then
+			export ION_BUILD_STEP="$es__count"
+			start_step "$es__step" "$es__count" | start_many sh "$ION_BIN_SELF" || exit
+		else
+			break
+		fi
+
+		es__count=$((es__count+1))
+	done
 }
 
 start_scan() {
-	start_find "$ION_INPUT" "$ION_PARALLEL" | while IFS= read -r ep__line; do
+	start_find "$ION_INPUT" "$ION_CLUSTER" 1 | while IFS= read -r ep__line; do
 		ep__ifs="$IFS"
 		IFS=":"
 		# shellcheck disable=SC2086
 		set -- $ep__line
 		IFS="$ep__ifs"
 
-		ep__path="/${${1:-}#./}"
-		ep__parent="$(path_parent "$ep__path")" || return
-		ep__name="$(path_name "$ep__path")" || return
-		ep__ext="$(path_ext_get "$ep__path")" || return
+		ep__path_raw="${1:-}"
+		ep__path="/${ep__path_raw#./}"
 		ep__size="${2:-}"
-		ep__time="$(floor "${3:-}")" || return
+		ep__time="$(floor "${3:-}" 0)" || return
+		ep__ext="$(path_ext_get "$ep__path")" || return
 		ep__type="$(path_type "${4:-}" "$ep__ext")" || return
 		ep__iteration=1
 
 		printf \
-			'%s:%s:%s:%s:%s:%d:%d:%d\n' \
+			'%s:%s:%d:%d:%d\n' \
 			"$ep__path" \
-			"$ep__parent" \
-			"$ep__name" \
-			"$ep__ext" \
 			"$ep__type" \
 			"$ep__size" \
 			"$ep__time" \
@@ -5057,107 +5142,137 @@ start_scan() {
 	done
 }
 
-start_build() {
-	do__time="$1"
-	do__input="$2"
-	do__source="$3"
-	do__ret=0
+start_plan() {
+	er__plan="$1"
+	er__rebuild="$2"
+	er__recompile="$3"
+	er__ret=0
 
-	if test "$do__source"; then
-		start_compile || return
+	er__step="$er__plan/1"
+	er__index="$er__step/$ION__ACTION_INDEX"
+	er__source="$er__step/$ION__ACTION_SOURCE"
+
+	mkdir -- \
+		"$er__step" \
+		"$er__index" \
+		"$er__source" \
+	|| er__ret=$?
+
+	if test "$er__ret" -ne 0; then
+		return 1
 	fi
 
-	if test "$do__input"; then
-		do__noise="$(start_random 16)" || return
-		do__name_read="$do__time"-"$do__noise"-$$-"$ION___BUILD_READ"
-		do__name_write="$do__time"-"$do__noise"-$$-"$ION___BUILD_WRITE"
-		do__name_build="$do__time"-"$do__noise"
+	if test "$er__recompile"; then
+		touch -- "$er__source/$ION__NAME_BRANCH"
+	fi
 
-		do__read="$ION_BUILD/$do__name_read"
-		do__write="$ION_BUILD/$do__name_write"
-		do__build="$ION_BUILD/$do__name_build"
+	if test "$er__rebuild"; then
+		start_scan | while IFS= read -r er__line; do
+			er__ifs="$IFS"
+			IFS=":"
+	
+			# shellcheck disable=SC2086
+			set -- $er__line
+	
+			er__path="$1"; shift
+			er__parent="$er__index""$(path_parent "$er__path")" || return
+			er__indexed="$er__index""$er__path"
+	
+			mkdir -p -- "$er__parent" || continue
+			printf '%s\n' "$*" > "$er__indexed" || continue
+	
+			IFS="$er__ifs"
+		done
+	fi
 
-		mkdir -- "$do__read" "$do__write" "$do__build" || do__ret=$?
-		
-		if test "$do__ret" -ne 0; then
-			rm -f -- "$do__read" "$do__write" "$do__build" || true
-			return 1
+	return "$er__ret"
+}
+
+start_prune() {
+	ey__time="$1"
+
+	start_find "$ION_BUILD" 1 | while IFS= read -r ey__line; do
+		ey__build="${ey__line#./}"
+		ey__build_time="${ey__build%%-*}"
+
+		if ! is_uint "$ey__build_time"; then
+			continue
 		fi
 
-		BUILD_CURRENT=
-		BUILD_NEXT="$do__build"
-
-
-		/
-		/.index
-		/.build
-
-
-		start_scan | while IFS= read -r do__line; do
-			echo hello
-		done
-
-
-
-		
-
-
-
-	fi
+		if test "$ey__build_time" -lt "$ey__time"; then
+			dir_remove "$ION_BUILD/$ey__build" || true
+		fi
+	done
 }
 
-start_build_logged() {
-	dm__input="$1"
-	dm__source="$2"
-	dm__ret=0
-	dm__pid=
-
-	dm__before="$(timestamp)" || return
-	note "$ION__MSG_STARTING_BUILD"
-
-	if test -w "$ION_BUILD_LOG"; then
-		:> "$ION_BUILD_LOG" || return
-		start_build "$dm__before" "$dm__input" "$dm__source" > "$ION_BUILD_LOG" 2>&1 &
-		dm__pid=$!
-	else
-		start_build "$dm__before" "$dm__input" "$dm__source" &
-		dm__pid=$!
-	fi
-
-	wait "$dm__pid" || dm__ret=$?
+start_build_internal() {
+	ez__build="$1"
+	ez__plan="$2"
+	ez__rebuild="$3"
+	ez__recompile="$4"
 	
-	dm__after="$(timestamp)" || return
-	dm__duration=$((dm__after-dm__before)) || return
-	note "$ION__MSG_STOPPING_BUILD" "$dm__duration""$ION___SUFFIX_SECONDS"
-
-	if test "$dm__ret" -eq 0 && test -w "$ION_BUILD_LOG" && ! test "$ION_BUILD_LOG_KEEP"; then
-		file_remove "$ION_BUILD_LOG" || return
+	if test "$ez__recompile"; then
+		start_compile "$ez__build" || return
 	fi
+
+	start_plan "$ez__plan" "$ez__rebuild" "$ez__recompile" || return
+	start_run "$ez__plan" || return
 }
 
-start_build_bounce() {
-	ef__result=0
+start_build() {
+	do__rebuild="$1"
+	do__recompile="$2"
+	do__ret=0
 
-	sleep "$ION_WATCH_DEBOUNCE" 2>/dev/null || ef__result=$?
+	do__time="$(timestamp)" || return
+	do__space="$(start_random 16)" || return
+	do__build="$ION_BUILD/$do__time-$do__space"
+	do__index="$do__build/$ION__NAME_ROOT"
+	do__plan="$do__index/$ION__NAME_PLAN"
+	do__log="$do__build/$ION__NAME_LOG"
 
-	if test "$ef__result" -ne 0 && is_unum "$ION_WATCH_DEBOUNCE"; then
-		note "$ION__MSG_NOT_SLEEPING"
-		ION_WATCH_DEBOUNCE="$(floor "$ION_WATCH_DEBOUNCE")" || return
-		sleep "$ION_WATCH_DEBOUNCE" || return
+	mkdir -- \
+		"$do__build" \
+		"$do__index" \
+		"$do__plan" \
+	|| do__ret=$?
+
+	if test "$do__ret" -eq 0; then
+		export ION_BUILD_PREVIOUS=
+		export ION_BUILD_CURRENT="$do__build"
+
+		{ start_build_internal "$do__build" "$do__plan" "$do__rebuild" "$do__recompile" 2>&1 1>&4 | tee "$do__log" 1>&2; } 4>&1
+
+		do__after="$(timestamp)" || return
+		do__duration=$((do__after-do__time)) || return
+		note "$ION__MSG_STOPPING_BUILD" "$do__duration""$ION___SUFFIX_SECONDS"
 	fi
+
+	dir_remove "$do__plan" || return
+	start_prune "$do__time" || return
+
+	return "$do__ret"
 }
 
-start_build_debounce() {
+start_bouncing() {
 	if ! test "$ION_WATCH_DEBOUNCE"; then
 		return
 	fi
 
+	info "$ION__MSG_NOTICED_CHANGE"
+
 	dp__size=0
 
-	note "$ION__MSG_CHANGED"
-
 	while :; do
-		start_build_bounce || return
+		dp__ret=0
+	
+		sleep "$ION_WATCH_DEBOUNCE" 2>/dev/null || dp__ret=$?
+	
+		if test "$dp__ret" -ne 0 && is_unum "$ION_WATCH_DEBOUNCE"; then
+			note "$ION__MSG_NOT_SLEEPING"
+			ION_WATCH_DEBOUNCE="$(floor "$ION_WATCH_DEBOUNCE")" || return
+			sleep "$ION_WATCH_DEBOUNCE" || return
+		fi
 
 		dp__size_new="$(start_size "$TEMP_WATCH_STREAM")" || return
 
@@ -5169,48 +5284,56 @@ start_build_debounce() {
 	done
 }
 
-start_build_receiving() {
+start_receiving() {
 	dn__first="$1"
 	dn__size=0
 	dn__pid=
-	
-	if should_watch; then
-		start_watch "$TEMP_WATCH_STREAM" &
-		dn__pid=$!
 
-		dn__size="$(start_size "$TEMP_WATCH_STREAM")" || return
+	if test "$dn__first" && test "$ION_BUILD_INITIAL"; then
+		start_signal "$ION___SIGNAL_ALL" || return
 	fi
 
-	if test "$dn__pid"; then
-		if test "$dn__size" -eq 0; then
-			wait "$dn__pid" || return
-			dn__size="$(start_size "$TEMP_WATCH_STREAM")" || return
-		else
-			stop "$dn__pid" || return
-		fi
+	start_watch "$TEMP_WATCH_STREAM"
+	dn__pid="$START_PID"
+
+	dn__size="$(start_size "$TEMP_WATCH_STREAM")" || return
+
+	if ! test "$dn__pid"; then
+		return 1
+	fi
+
+	if test "$dn__size" -eq 0; then
+		wait "$dn__pid" || return
+		dn__size="$(start_size "$TEMP_WATCH_STREAM")" || return
+	else
+		stop "$dn__pid" || return
 	fi
 
 	dn__change="$(stop_signal)" || return
 
-	if ! test "$dn__change"; then
+	if test "$dn__change"; then
+		note "$ION__MSG_BUILD_START"
+	else
 		return
 	fi
 
 	case "$dn__change" in
-		*"$ION___SIGNAL_INPUT"*) dn__input=1 ;;
-		*) dn__input= ;;
+		*"$ION___SIGNAL_ALL"*) dn__rebuild=1 ;;
+		*"$ION___SIGNAL_INPUT"*) dn__rebuild=1 ;;
+		*) dn__rebuild= ;;
 	esac
 
 	case "$dn__change" in
-		*"$ION___SIGNAL_SOURCE"*) dn__source=1 ;;
-		*) dn__source= ;;
+		*"$ION___SIGNAL_ALL"*) dn__recompile=1 ;;
+		*"$ION___SIGNAL_SOURCE"*) dn__recompile=1 ;;
+		*) dn__recompile= ;;
 	esac
 
 	if ! test "$dn__first"; then
-		start_build_debounce || return
+		start_bouncing || return
 	fi
 
-	start_build_logged "$dn__input" "$dn__source"
+	start_build "$dn__rebuild" "$dn__recompile"
 }
 
 start_builder() {
@@ -5222,13 +5345,25 @@ start_builder() {
 				terminal_clear || true
 			fi
 
-			start_build_receiving "$dj__first" || return
+			start_receiving "$dj__first" || return
 
 			dj__first=
 		done
 	else
-		start_build_logged "" "" || return
+		start_build "" "" || return
 	fi
+}
+
+start_building() {
+	for fa__line in "$@"; do
+		fa__ifs="$IFS"
+		IFS=":"
+		# shellcheck disable=SC2086
+		set -- $fa__line
+		IFS="$fa__ifs"
+
+		info "$ION__MSG_BUILD_ACTION" "$ION_BUILD_STEP" "$@"
+	done
 }
 
 stop_temp() {
@@ -5247,10 +5382,6 @@ stop_temp() {
 	file_remove "$TEMP_TEMPLATE_HTML" || true
 	file_remove "$TEMP_SOURCE_STYLES" || true
 	file_remove "$TEMP_SOURCE_SCRIPTS" || true
-
-	if path_is_dir "$TEMP_COMPILED"; then
-		dir_remove "$TEMP_COMPILED" || true
-	fi
 	
 	if test "$BUILD_TEMP"; then
 		dir_remove "$ION_BUILD" || true
@@ -5282,7 +5413,7 @@ init_signals() {
 }
 
 init_basics() {
-	TAB="$(printf '\t')" || return
+	TAB="	"
 	CARRIAGE="$(printf '\r_')" || return
 	CARRIAGE="${CARRIAGE%_}"
 	NEWLINE="
@@ -5298,7 +5429,7 @@ init_env_bin() {
 	if path_is_absolute "$cs__command"; then
 		cs__absolute="$cs__command"
 	elif path_is_name "$cs__command" && ! test -f "$cs__command"; then
-		cs__absolute="$(find_command "$cs__command")"
+		cs__absolute="$(find_command "$cs__command")" || return
 	elif test "$cs__command"; then
 		cs__absolute="$(path_normal "$cs__command")" || return
 	fi
@@ -5356,6 +5487,8 @@ init_env_find() {
 	ea__bin_stat="$(init_env_bins "$ION_BIN_STAT")" || return
 	ea__bin_tcpserver="$(init_env_bins "$ION_BIN_TCPSERVER")" || return
 	ea__bin_tidy="$(init_env_bins "$ION_BIN_TIDY")" || return
+	ea__bin_xargs="$(init_env_bins "$ION_BIN_XARGS")" || return
+	ea__bin_parallel="$(init_env_bins "$ION_BIN_PARALLEL")" || return
 
 	export ION_BIN_SELF="$ea__bin_self"
 	export ION_BIN_FLOCK="$ea__bin_flock"
@@ -5376,6 +5509,8 @@ init_env_find() {
 	export ION_BIN_STAT="$ea__bin_stat"
 	export ION_BIN_TCPSERVER="$ea__bin_tcpserver"
 	export ION_BIN_TIDY="$ea__bin_tidy"
+	export ION_BIN_XARGS="$ea__bin_xargs"
+	export ION_BIN_PARALLEL="$ea__bin_parallel"
 }
 
 init_env_input() {
@@ -5548,6 +5683,14 @@ init_check_array() {
 	true
 }
 
+init_check_array_name() {
+	true
+}
+
+init_check_array_path() {
+	true
+}
+
 init_check_array_paths() {
 	true
 }
@@ -5559,6 +5702,8 @@ init_check_command() {
 }
 
 init_check_env() {
+	init_check_dir ION_TEMP "$ION_TEMP" || return
+
 	init_check_string ION___ERROR_PREFIX_MAIN "$ION___ERROR_PREFIX_MAIN" || return
 	init_check_string ION___ERROR_PREFIX_SUB "$ION___ERROR_PREFIX_SUB" || return
 	init_check_string ION___ERROR_PREFIX_SUBL "$ION___ERROR_PREFIX_SUBL" || return
@@ -5582,11 +5727,9 @@ init_check_env() {
 	init_check_string ION___TITLE_SEPARATOR "$ION___TITLE_SEPARATOR" || return
 	init_check_string ION___TYPE_SEPARATOR "$ION___TYPE_SEPARATOR" || return
 
+	init_check_string ION___SIGNAL_ALL "$ION___SIGNAL_ALL" || return
 	init_check_string ION___SIGNAL_INPUT "$ION___SIGNAL_INPUT" || return
 	init_check_string ION___SIGNAL_SOURCE "$ION___SIGNAL_SOURCE" || return
-
-	init_check_string ION___BUILD_READ "$ION___BUILD_READ" || return
-	init_check_string ION___BUILD_WRITE "$ION___BUILD_WRITE" || return
 
 	init_check_name ION__EXT_JS "$ION__EXT_JS" || return
 	init_check_name ION__EXT_CSS "$ION__EXT_CSS" || return
@@ -5596,40 +5739,42 @@ init_check_env() {
 	init_check_name ION__WORD_INFO "$ION__WORD_INFO" || return
 	init_check_name ION__WORD_NOTE "$ION__WORD_NOTE" || return
 	init_check_name ION__WORD_ERROR "$ION__WORD_ERROR" || return
+	init_check_name ION__WORD_LOG "$ION__WORD_LOG" || return
 	init_check_name ION__WORD_INBOX "$ION__WORD_INBOX" || return
 	init_check_name ION__WORD_INDEX "$ION__WORD_INDEX" || return
 	init_check_name ION__WORD_BUILD "$ION__WORD_BUILD" || return
+	init_check_name ION__WORD_SOURCE "$ION__WORD_SOURCE" || return
 	init_check_name ION__WORD_MAIN "$ION__WORD_MAIN" || return
 
-	init_check_name ION__NAME_BUILD "$ION__NAME_BUILD" || return
-	init_check_name ION__NAME_INDEX_ROOT "$ION__NAME_INDEX_ROOT" || return
-	init_check_name ION__NAME_INDEX_BRANCH "$ION__NAME_INDEX_BRANCH" || return
+	init_check_name ION__NAME_LOG "$ION__NAME_LOG" || return
+	init_check_name ION__NAME_PLAN "$ION__NAME_PLAN" || return
+	init_check_name ION__NAME_ROOT "$ION__NAME_ROOT" || return
+	init_check_name ION__NAME_BRANCH "$ION__NAME_BRANCH" || return
 	init_check_name ION__NAME_INDEX_CSS "$ION__NAME_INDEX_CSS" || return
 	init_check_name ION__NAME_INDEX_JS "$ION__NAME_INDEX_JS" || return
 	init_check_name ION__NAME_MAIN_CSS "$ION__NAME_MAIN_CSS" || return
 	init_check_name ION__NAME_MAIN_JS "$ION__NAME_MAIN_JS" || return
 
-	init_check_string ION__MSG_CHANGING_DIR "$ION__MSG_CHANGING_DIR" || return
 	init_check_string ION__MSG_COMMAND_NOT_FOUND "$ION__MSG_COMMAND_NOT_FOUND" || return
 	init_check_string ION__MSG_COMMAND_NOT_EXEC "$ION__MSG_COMMAND_NOT_EXEC" || return
 	init_check_string ION__MSG_COMMAND_NOT_RECOGNISED "$ION__MSG_COMMAND_NOT_RECOGNISED" || return
-	init_check_string ION__MSG_MAKING_NOISE "$ION__MSG_MAKING_NOISE" || return
 	init_check_string ION__MSG_INVALID_ENVIRONMENT "$ION__MSG_INVALID_ENVIRONMENT" || return
 	init_check_string ION__MSG_INVALID_REPLACEMENT "$ION__MSG_INVALID_REPLACEMENT" || return
 	init_check_string ION__MSG_LINKING_FILE "$ION__MSG_LINKING_FILE" || return
 	init_check_string ION__MSG_NOT_SLEEPING "$ION__MSG_NOT_SLEEPING" || return
-	init_check_string ION__MSG_CHANGED "$ION__MSG_CHANGED" || return
+	init_check_string ION__MSG_BUILD_START "$ION__MSG_BUILD_START" || return
 	init_check_string ION__MSG_MAKING_DIR "$ION__MSG_MAKING_DIR" || return
 	init_check_string ION__MSG_MAKING_FILE "$ION__MSG_MAKING_FILE" || return
 	init_check_string ION__MSG_MOVING_FILE "$ION__MSG_MOVING_FILE" || return
 	init_check_string ION__MSG_NOT_POSIX "$ION__MSG_NOT_POSIX" || return
 	init_check_string ION__MSG_REMOVING_FILE "$ION__MSG_REMOVING_FILE" || return
 	init_check_string ION__MSG_RUNNING_COMMAND "$ION__MSG_RUNNING_COMMAND" || return
+	init_check_string ION__MSG_RUNNING_COMMAND_BG "$ION__MSG_RUNNING_COMMAND_BG" || return
+	init_check_string ION__MSG_RUNNING_COMMAND_MANY "$ION__MSG_RUNNING_COMMAND_MANY" || return
 	init_check_string ION__MSG_RUNNING_TESTS "$ION__MSG_RUNNING_TESTS" || return
-	init_check_string ION__MSG_RUNNING_HASH "$ION__MSG_RUNNING_HASH" || return
 	init_check_string ION__MSG_NOTICED_CHANGE "$ION__MSG_NOTICED_CHANGE" || return
-	init_check_string ION__MSG_STARTING_BUILD "$ION__MSG_STARTING_BUILD" || return
-	init_check_string ION__MSG_STARTING_COMPILER "$ION__MSG_STARTING_COMPILER" || return
+	init_check_string ION__MSG_BUILD_STEP "$ION__MSG_BUILD_STEP" || return
+	init_check_string ION__MSG_BUILD_ACTION "$ION__MSG_BUILD_ACTION" || return
 	init_check_string ION__MSG_STARTING_SERVERS "$ION__MSG_STARTING_SERVERS" || return
 	init_check_string ION__MSG_STARTING_WATCHER "$ION__MSG_STARTING_WATCHER" || return
 	init_check_string ION__MSG_STOPPING_WATCHER "$ION__MSG_STOPPING_WATCHER" || return
@@ -5638,6 +5783,9 @@ init_check_env() {
 	init_check_string ION__MSG_OPENING_FILE "$ION__MSG_OPENING_FILE" || return
 	init_check_string ION__MSG_QUERYING_THE_INDEX "$ION__MSG_QUERYING_THE_INDEX" || return
 	init_check_string ION__MSG_QUERY_FOUND_AN_ENTRY "$ION__MSG_QUERY_FOUND_AN_ENTRY" || return
+
+	init_check_name ION__ACTION_SOURCE "$ION__ACTION_SOURCE" || return
+	init_check_name ION__ACTION_INDEX "$ION__ACTION_INDEX" || return
 
 	init_check_name ION__VERB_IDENTITY "$ION__VERB_IDENTITY" || return
 
@@ -5739,14 +5887,16 @@ init_check_env() {
 	! test "$ION_SERVE_PORT" || init_check_uint ION_SERVE_PORT "$ION_SERVE_PORT" || return
 
 	init_check_uint ION_WATCH "$ION_WATCH" || return
-	init_check_bool ION_WATCH_INITIAL "$ION_WATCH_INITIAL" || return
+	init_check_bool ION_WATCH_CLEAR "$ION_WATCH_CLEAR" || return
 	! test "$ION_WATCH_THROTTLE" || init_check_unum ION_WATCH_THROTTLE "$ION_WATCH_THROTTLE" || return
 	! test "$ION_WATCH_DEBOUNCE" || init_check_unum ION_WATCH_DEBOUNCE "$ION_WATCH_DEBOUNCE" || return
-	init_check_bool ION_WATCH_CLEAR "$ION_WATCH_CLEAR" || return
+	init_check_bool ION_WATCH_POLLING "$ION_WATCH_POLLING" || return
 
-	init_check_dir ION_BUILD "$ION_BUILD" || return
-	! test "$ION_BUILD_LOG" || init_check_path ION_BUILD_LOG "$ION_BUILD_LOG" || return
-	init_check_bool ION_BUILD_LOG_KEEP "$ION_BUILD_LOG_KEEP" || return
+	! test "$ION_BUILD" || init_check_dir ION_BUILD "$ION_BUILD" || return
+	! test "$ION_BUILD_STEP" || init_check_uint ION_BUILD_STEP "$ION_BUILD_STEP" || return
+	! test "$ION_BUILD_CURRENT" || init_check_dir ION_BUILD_CURRENT "$ION_BUILD_CURRENT" || return
+	! test "$ION_BUILD_PREVIOUS" || init_check_dir ION_BUILD_PREVIOUS "$ION_BUILD_PREVIOUS" || return
+	init_check_bool ION_BUILD_INITIAL "$ION_BUILD_INITIAL" || return
 	init_check_bool ION_BUILD_JS "$ION_BUILD_JS" || return
 	init_check_bool ION_BUILD_JS_GLOBAL "$ION_BUILD_JS_GLOBAL" || return
 	init_check_bool ION_BUILD_CSS "$ION_BUILD_CSS" || return
@@ -5783,19 +5933,59 @@ init_check_env() {
 
 	init_check_uint ION_VOLUME "$ION_VOLUME" || return
 	init_check_uint ION_MINIFY "$ION_MINIFY" || return
-	init_check_bool ION_PARALLEL "$ION_PARALLEL" || return
+	! test "$ION_PARALLEL" || init_check_uint ION_PARALLEL "$ION_PARALLEL" || return
+	init_check_bool ION_CLUSTER "$ION_CLUSTER" || return
 
 	! test "$ION_INPUT" || init_check_dir ION_INPUT "$ION_INPUT" || return
 	init_check_paths ION_MIRRORS "$ION_MIRRORS" || return
 }
 
+init_check_bsd() {
+	if test "$ION_BIN_STAT" && ! test "$ION_BIN_STAT_BSD"; then
+		if test "$("$ION_BIN_STAT" -f '%z' /dev/null 2>/dev/null)" = 0; then
+			export ION_BIN_STAT_BSD=1
+		else
+			export ION_BIN_STAT_BSD=0
+		fi
+	fi
+}
+
+init_check_gnu() {
+	if test "$ION_BIN_STAT" && ! test "$ION_BIN_STAT_GNU"; then
+		if test "$("$ION_BIN_STAT" -c '%s' /dev/null 2>/dev/null)" = 0; then
+			export ION_BIN_STAT_GNU=1
+		else
+			export ION_BIN_STAT_GNU=0
+		fi
+	fi
+
+	if test "$ION_BIN_FIND" && ! test "$ION_BIN_FIND_GNU"; then
+		if test "$("$ION_BIN_FIND" /dev/null -printf '%s' 2>/dev/null)" = 0; then
+			export ION_BIN_FIND_GNU=1
+		else
+			export ION_BIN_FIND_GNU=0
+		fi
+	fi
+
+	if test "$ION_BIN_XARGS" && ! test "$ION_BIN_XARGS_GNU"; then
+		if "$ION_BIN_XARGS" -d"$NEWLINE" </dev/null >/dev/null 2>&1; then
+			export ION_BIN_XARGS_GNU=1
+		else
+			export ION_BIN_XARGS_GNU=0
+		fi
+	fi
+}
+
 init_check_commands() {
 	init_check_posix || return
+	init_check_bsd || return
+	init_check_gnu || return
 
 	init_check_command have_find "bfs or stat" || return
 	init_check_command have_hash "openssl" || return
 	init_check_command have_random "openssl" || return
 
+	init_check_command can_build "xargs" || return
 	init_check_command can_watch "fswatch" || return
 	init_check_command can_serve "tcpserver and caddy" || return
 }
@@ -5912,7 +6102,9 @@ init_temp_source_style() {
 
 	paths_split_raw "$ION_SOURCE_STYLES" | {
 		while IFS= read -r ek__path; do
-			printf '@import "%s";\n' "$ek__path" >> "$TEMP_SOURCE_STYLES" || continue
+			if test "$ek__path"; then
+				printf '@import "%s";\n' "$ek__path" >> "$TEMP_SOURCE_STYLES" || continue
+			fi
 		done
 	}
 }
@@ -5931,23 +6123,19 @@ init_temp_source_script() {
 
 	paths_split_raw "$ION_SOURCE_SCRIPTS" | {
 		el__i=0
-		
+
 		while IFS= read -r el__path; do
 			el__i=$((el__i+1))
 
-			printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$TEMP_SOURCE_SCRIPTS" || continue
-			printf 'typeof f%d === "function" && f%d();\n' "$el__i" "$el__i" >> "$TEMP_SOURCE_SCRIPTS" || continue
+			if test "$el__path"; then
+				printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$TEMP_SOURCE_SCRIPTS" || continue
+				printf 'typeof f%d === "function" && f%d();\n' "$el__i" "$el__i" >> "$TEMP_SOURCE_SCRIPTS" || continue
+			fi
 		done
 	}
 
 	if test "$ION_BUILD_JS_GLOBAL"; then
 		printf 'components_start();\n' >> "$TEMP_SOURCE_SCRIPTS" || return
-	fi
-}
-
-init_temp_compiled() {
-	if ! test "$TEMP_COMPILED"; then
-		TEMP_COMPILED="$(start_temp_dir compiled)" || return
 	fi
 }
 
@@ -5983,7 +6171,6 @@ init_temp() {
 	init_temp_template_html || return
 	init_temp_source_style || return
 	init_temp_source_script || return
-	init_temp_compiled || return
 	init_temp_served || return
 	init_temp_build || return
 }
@@ -6003,18 +6190,18 @@ init() {
 		init_parent "$@" || return
 	fi
 
-	if have_parent && test "$ION_START_ID" = 1; then
-		ION_START_ID=$$
+	if test "$ION_START_ID" = 1; then
+		export ION_START_ID=$$
 	fi
 }
 
-test_self() {
+test_all() {
+	note "$ION__MSG_RUNNING_TESTS"
+
 	if have_shellcheck; then
-		start "$ION_BIN_SHELLCHECK" "$ION_BIN_SELF"
+		start "$ION_BIN_SHELLCHECK" "$ION_BIN_SELF" || return
 	fi
-}
 
-test_scripts() {
 	if have_luac; then
 		start "$ION_BIN_LUAC" -p \
 			"$TEMP_FILTER_EMPTY" \
@@ -6023,22 +6210,16 @@ test_scripts() {
 			"$TEMP_FILTER_MERGE" \
 			"$TEMP_FILTER_EXTRACT" \
 			"$TEMP_FILTER_DOCUMENT" \
-			"$TEMP_FILTER_TEMPLATE"
+			"$TEMP_FILTER_TEMPLATE" || return
 	fi
-}
 
-test_all() {
-	note "$ION__MSG_RUNNING_TESTS"
-
-	if should_test; then
-		test_self || return
-		test_scripts || return
+	if have_pandoc; then
 		start_pandoc_tests || return
 	fi
 }
 
 usage() {
-	env
+	echo hello world
 }
 
 main() {
@@ -6046,18 +6227,22 @@ main() {
 
 	if should_help; then
 		usage || exit 2
+	elif should_build; then
+		start_building "$@" || exit 3
 	elif ! have_parent; then
-		test_all || exit 3
-
-		if should_serve && ! start_server; then
-			exit 4
+		if should_test; then
+			test_all || exit 4
 		fi
 
-		if should_watch && ! start_watcher; then
-			exit 5
+		if should_serve; then
+			start_server || exit 5
 		fi
 
-		start_builder || exit 6
+		if should_watch; then
+			start_watcher || exit 6
+		fi
+
+		start_builder || exit 7
 	fi
 }
 
