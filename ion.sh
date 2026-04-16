@@ -3,6 +3,9 @@
 # ῖon
 # ===
 # 
+# - 0.2.1; 2026-4-16 19:27
+#   - the build system now integrates the server
+#   - added rough support for document output
 # - 0.2.0; 2026-4-15 17:18
 #   - finished the build system
 #   - every build now includes its log
@@ -632,7 +635,7 @@
 # so that functions can call other functions without potentially getting
 # their own variables overwritten. This wouldn't help in the case of
 # recursive functions. This will likely be replaced with the local
-# keyword at some point. The last prefix used was: fa
+# keyword at some point. The last prefix used was: fb
 
 export ION___ERROR_PREFIX_MAIN="${ION___ERROR_PREFIX_MAIN:-"- "}"
 export ION___ERROR_PREFIX_SUB="${ION___ERROR_PREFIX_SUB:-"  - "}"
@@ -667,6 +670,7 @@ export ION__EXT_JS="${ION__EXT_JS:-"js"}"
 export ION__EXT_CSS="${ION__EXT_CSS:-"css"}"
 export ION__EXT_HTML="${ION__EXT_HTML:-"html"}"
 export ION__EXT_JSON="${ION__EXT_JSON:-"json"}"
+export ION__EXT_PANDOC="${ION__EXT_PANDOC:-"pandoc"}"
 
 export ION__WORD_INFO="${ION__WORD_INFO:-"info"}"
 export ION__WORD_NOTE="${ION__WORD_NOTE:-"note"}"
@@ -682,8 +686,8 @@ export ION__NAME_LOG="${ION__NAME_LOG:-".$ION__WORD_LOG"}"
 export ION__NAME_PLAN="${ION__NAME_PLAN:-".$ION__WORD_BUILD"}"
 export ION__NAME_ROOT="${ION__NAME_ROOT:-".$ION__WORD_INDEX"}"
 export ION__NAME_BRANCH="${ION__NAME_BRANCH:-"$ION__WORD_INDEX"}"
-export ION__NAME_INDEX_CSS="${ION__NAME_INDEX_CSS:-"$ION__WORD_INDEX.$ION__EXT_CSS"}"
-export ION__NAME_INDEX_JS="${ION__NAME_INDEX_JS:-"$ION__WORD_INDEX.$ION__EXT_JS"}"
+export ION__NAME_INDEX_CSS="${ION__NAME_INDEX_CSS:-"$ION__NAME_BRANCH.$ION__EXT_CSS"}"
+export ION__NAME_INDEX_JS="${ION__NAME_INDEX_JS:-"$ION__NAME_BRANCH.$ION__EXT_JS"}"
 export ION__NAME_MAIN_CSS="${ION__NAME_MAIN_CSS:-"$ION__WORD_MAIN.$ION__EXT_CSS"}"
 export ION__NAME_MAIN_JS="${ION__NAME_MAIN_JS:-"$ION__WORD_MAIN.$ION__EXT_JS"}"
 
@@ -707,6 +711,8 @@ export ION__MSG_NOTICED_CHANGE="${ION__MSG_NOTICED_CHANGE:-"one moment..."}"
 export ION__MSG_BUILD_START="${ION__MSG_BUILD_START:-"building"}"
 export ION__MSG_BUILD_STEP="${ION__MSG_BUILD_STEP:-"build step"}"
 export ION__MSG_BUILD_ACTION="${ION__MSG_BUILD_ACTION:-"build action"}"
+export ION__MSG_BUILD_IO_READ="${ION__MSG_BUILD_IO_READ:-"could not read the input"}"
+export ION__MSG_BUILD_IO_WRITE="${ION__MSG_BUILD_IO_WRITE:-"could not write the input"}"
 export ION__MSG_STARTING_SERVERS="${ION__MSG_STARTING_SERVERS:-"starting the servers"}"
 export ION__MSG_STARTING_WATCHER="${ION__MSG_STARTING_WATCHER:-"starting the watcher"}"
 export ION__MSG_STOPPING_WATCHER="${ION__MSG_STOPPING_WATCHER:-"stopping the watcher"}"
@@ -850,7 +856,6 @@ export ION_BIN_XARGS_GNU="${ION_BIN_XARGS_GNU:-}"
 export ION_DEV_URANDOM="${ION_DEV_URANDOM:-"/dev/urandom"}"
 
 export ION_SERVE="${ION_SERVE:-2}"
-export ION_SERVED="${ION_SERVED:-}"
 export ION_SERVE_PRODUCTION="${ION_SERVE_PRODUCTION:-}"
 export ION_SERVE_PORT="${ION_SERVE_PORT:-}"
 export ION_SERVE_WWW="${ION_SERVE_WWW:-}"
@@ -877,7 +882,7 @@ export ION_INBOX_PORT="${ION_INBOX_PORT:-8000}"
 export ION_INBOX_RATES="${ION_INBOX_RATES:-8192}"
 
 export ION_LINK_PREFIX="${ION_LINK_PREFIX:-"."}"
-export ION_LINK_PROTOCOL="${ION_LINK_PROTOCOL:-1}"
+export ION_LINK_PROTOCOL="${ION_LINK_PROTOCOL:-}"
 export ION_LINK_DOMAIN="${ION_LINK_DOMAIN:-1}"
 export ION_LINK_TRIM="${ION_LINK_TRIM:-1}"
 
@@ -902,7 +907,7 @@ export ION_COGNATES="${ION_COGNATES:-"inventori:inventory"}"
 
 export ION_TEMP="${ION_TEMP:-"${TMPDIR:-/tmp}"}"
 export ION_TEST="${ION_TEST:-}"
-export ION_WORDS="${ION_WORDS:-1}"
+export ION_WORDS="${ION_WORDS:-}"
 
 export ION_VOLUME="${ION_VOLUME:-3}"
 export ION_MINIFY="${ION_MINIFY:-0}"
@@ -922,7 +927,6 @@ START_PID=
 
 SERVER_PID=
 SERVER_STARTED=
-SERVED_TEMP=
 
 WATCHER_PID_INPUT=
 WATCHER_PID_SOURCE=
@@ -933,6 +937,7 @@ TEMP_SED=
 TEMP_BLANK=
 TEMP_WATCH_LOCK=
 TEMP_WATCH_STREAM=
+TEMP_SERVER_CONFIG=
 TEMP_FILTER_EMPTY=
 TEMP_FILTER_TEST=
 TEMP_FILTER_SPLIT=
@@ -1092,7 +1097,7 @@ START_ID = env("START_ID")
 
 BIN_SELF = env("BIN_SELF")
 
-LINK_PROTOCOL = envb("LINK_PROTOCOL")
+LINK_PROTOCOL = envb("LINK_PROTOCOL", false)
 LINK_DOMAIN = envb("LINK_DOMAIN")
 LINK_PREFIX = env("LINK_PREFIX")
 LINK_TRIM = envb("LINK_TRIM")
@@ -1104,9 +1109,9 @@ EXTRACT_SUFFIX = env("EXTRACT_SUFFIX", "")
 EXTRACT_MAXIMUM = envn("EXTRACT_MAXIMUM", 0)
 
 COGNATES = env("COGNATES")
-TESTING = envb("TEST")
+TESTING = envb("TEST", false)
 VOLUME = envn("VOLUME", 3)
-WORDS = envb("WORDS")
+WORDS = envb("WORDS", false)
 
 FILTER_PATH = env("FILTER_PATH")
 FILTER_TARGET = env("FILTER_TARGET")
@@ -1772,7 +1777,7 @@ end
 function file_open(path, write, binary)
 	info(_MSG_OPENING_FILE, path)
 	local mode = (write and "w" or "r")..(binary and "b" or "")
-	return assert(io.open(path, mode), _MSG_OPENING_FILE)
+	return io.open(path, mode)
 end
 
 function file_close(file)
@@ -1794,9 +1799,12 @@ end
 function file_read(file, amount)
 	if is_string(file) then
 		local f = file_open(file)
-		local content = file_read(f, amount)
-		file_close(f)
-		return content
+
+		if f then
+			local content = file_read(f, amount)
+			file_close(f)
+			return content
+		end
 	else
 		return file:read(amount or "a")
 	end
@@ -1814,9 +1822,12 @@ end
 function file_write(file, ...)
 	if is_string(file) then
 		local f = file_open(file, true)
-		local r = file_write(f, ...)
-		file_close(f)
-		return r
+
+		if f then
+			local r = file_write(f, ...)
+			file_close(f)
+			return r
+		end
 	else
 		return file:write(...)
 	end
@@ -1829,23 +1840,25 @@ function file_copy(src, dst)
 	local dst_file = file_open(dst, true, true)
 	local src_size, dst_size = 0, 0
 
-	while true do
-		local block = file_read(src_file, 2^13)
-
-		if not block then
-			src_size = file_seek(src_file, "end")
-			break
+	if src_file and dst_file then
+		while true do
+			local block = file_read(src_file, 2^13)
+	
+			if not block then
+				src_size = file_seek(src_file, "end")
+				break
+			end
+	
+			file_write(dst_file, block)
 		end
-
-		file_write(dst_file, block)
+	
+		dst_size = file_seek(dst_file, "end")
+	
+		file_close(src_file)
+		file_close(dst_file)
+	
+		return src_size == dst_size
 	end
-
-	dst_size = file_seek(dst_file, "end")
-
-	file_close(src_file)
-	file_close(dst_file)
-
-	return src_size == dst_size
 end
 
 function location_is_all(location)
@@ -2443,7 +2456,7 @@ function Query:input(input)
 	if is_function(input) then
 		return input
 	elseif is_table(input) then
-		if getmetatable(input) == Index then
+		if input.scan_file then
 			return input:all()
 		else
 			return self:input_table(input)
@@ -2696,6 +2709,8 @@ function index_open(output)
 	end
 
 	CACHED_INDEX = Index.open(output or FILTER_OUTPUT)
+
+	return CACHED_INDEX
 end
 
 function meta(q, options)
@@ -3076,7 +3091,7 @@ function template_defaults(tree)
 	end
 
 	if not tree.meta["template-encoding"] then
-		tree.meta["template-encoding"] = meta(_META_ENCODING)
+		tree.meta["template-encoding"] = meta(_META_ENCODING) or "UTF-8"
 	end
 
 	if not tree.meta["template-language"] then
@@ -3275,6 +3290,7 @@ TEMPLATE_HTML="$(cat <<'EOF'
 	$endif$
 
 	<style>
+	/*
 		:root:not(.$template-class-no-js$) > body :not(.$template-class-component$),
 		:root:not(.$template-class-no-js$) > body :not(.$template-class-component$)::before,
 		:root:not(.$template-class-no-js$) > body :not(.$template-class-component$)::after {
@@ -3282,6 +3298,7 @@ TEMPLATE_HTML="$(cat <<'EOF'
 			user-select: none;
 			opacity: 0;
 		}
+	*/
 	</style>
 
 	<script>
@@ -4713,19 +4730,21 @@ stop_watcher() {
 }
 
 start_tcpserver() {
-	cv__old_run_cmd="$ION_START_CMD"
-	cv__old_run_args="$ION_START_ARGS"
-
-	export ION_START_CMD="$ION_BIN_TCPSERVER"
-	export ION_START_ARGS="-q -U -H -R 127.0.0.1 $ION_INBOX_PORT env"
-
-	# shellcheck disable=SC2119
-	start_bg || return
-
-	SERVER_PID="$START_PID"
-
-	export ION_START_CMD="$cv__old_run_cmd"
-	export ION_START_ARGS="$cv__old_run_args"
+	if ! test "$SERVER_PID"; then
+		cv__old_run_cmd="$ION_START_CMD"
+		cv__old_run_args="$ION_START_ARGS"
+	
+		export ION_START_CMD="$ION_BIN_TCPSERVER"
+		export ION_START_ARGS="-q -U -H -R 127.0.0.1 $ION_INBOX_PORT env"
+	
+		# shellcheck disable=SC2119
+		start_bg || return
+	
+		SERVER_PID="$START_PID"
+	
+		export ION_START_CMD="$cv__old_run_cmd"
+		export ION_START_ARGS="$cv__old_run_args"
+	fi
 }
 
 stop_tcpserver() {
@@ -4771,7 +4790,7 @@ start_caddy_config_raw() {
 
 start_caddy_config() {
 	start_template || return
-	start_template_add ROOT_DIRECTORY "$ION_SERVED" || return
+	start_template_add ROOT_DIRECTORY "$1" || return
 	start_template_add PROTOCOL "$(start_caddy_protocol)" || return
 	start_template_add SERVE_PORT "$(start_caddy_port)" || return
 	start_template_add DOMAIN_NAME "$ION_DOMAIN" || return
@@ -4780,20 +4799,15 @@ start_caddy_config() {
 }
 
 start_caddy() {
-	cm__ret=0
-	cm__temp="$(start_temp_file config caddyfile)" || return
-	start_caddy_config > "$cm__temp" || return
+	start_caddy_config "$1" > "$TEMP_SERVER_CONFIG" || return
 
-	start "$ION_BIN_CADDY" reload --config "$cm__temp" 2>/dev/null || {
-		if start "$ION_BIN_CADDY" start --config "$cm__temp" >/dev/null 2>&1; then
+	start "$ION_BIN_CADDY" reload --adapter caddyfile --config "$TEMP_SERVER_CONFIG" 2>/dev/null || {
+		if start "$ION_BIN_CADDY" start --adapter caddyfile --config "$TEMP_SERVER_CONFIG" >/dev/null 2>&1; then
 			SERVER_STARTED=1
 		else
-			cm__ret=$?
+			return 1
 		fi
 	}
-
-	file_remove "$cm__temp"
-	return $cm__ret
 }
 
 stop_caddy() {
@@ -4813,16 +4827,12 @@ start_server() {
 		return 1
 	fi
 
-	if ! path_is_dir "$ION_SERVED"; then
-		dir_make_all "$ION_SERVED" || return
-	fi
-
 	if have_tcpserver; then
 		start_tcpserver || return
 	fi
 
 	if have_caddy; then
-		start_caddy || return
+		start_caddy "$1" || return
 	fi
 }
 
@@ -4880,15 +4890,15 @@ start_pandoc() {
 		;;
 		partial)
 			ax__filter="$TEMP_FILTER_DOCUMENT"
-			ax__target="$ION__EXT_HTML"
-			ax__format="html"
+			ax__target="$ION__EXT_PANDOC"
+			ax__format="json"
 		;;
 		full)
 			ax__args="--standalone"
 			ax__filter="$TEMP_FILTER_TEMPLATE"
 			ax__template="$TEMP_TEMPLATE_HTML"
 			ax__target="$ION__EXT_HTML"
-			ax__format="html"
+			ax__format="html5"
 		;;
 		extract)
 			ax__filter="$TEMP_FILTER_EXTRACT"
@@ -4924,6 +4934,10 @@ start_pandoc() {
 		ax__args="$ax__args+short_subsuperscripts"
 		ax__args="$ax__args+emoji"
 		ax__args="$ax__args-raw_html"
+	fi
+
+	if test "$ax__ext" = "$ION__EXT_PANDOC"; then
+		ax__args="$ax__args --from=json"
 	fi
 
 	ax__old_path="$ION_FILTER_PATH"
@@ -5048,7 +5062,7 @@ start_esbuild() {
 
 	# shellcheck disable=SC2086
 	start "$ION_BIN_ESBUILD" \
-		--outdir="$de__out" \
+		--outfile="$de__out/$ION__NAME_BRANCH.$de__in" \
 		--loader="$de__in" \
 		--bundle \
 		--target=es6 \
@@ -5210,6 +5224,9 @@ start_build_internal() {
 	ez__plan="$2"
 	ez__rebuild="$3"
 	ez__recompile="$4"
+
+	export ION_BUILD_PREVIOUS=
+	export ION_BUILD_CURRENT="$ez__build"
 	
 	if test "$ez__recompile"; then
 		start_compile "$ez__build" || return
@@ -5217,41 +5234,39 @@ start_build_internal() {
 
 	start_plan "$ez__plan" "$ez__rebuild" "$ez__recompile" || return
 	start_run "$ez__plan" || return
+
+	dir_remove "$ez__plan" || return
 }
 
 start_build() {
 	do__rebuild="$1"
 	do__recompile="$2"
-	do__ret=0
 
 	do__time="$(timestamp)" || return
 	do__space="$(start_random 16)" || return
+
 	do__build="$ION_BUILD/$do__time-$do__space"
 	do__index="$do__build/$ION__NAME_ROOT"
 	do__plan="$do__index/$ION__NAME_PLAN"
-	do__log="$do__build/$ION__NAME_LOG"
+	do__log="$do__index/$ION__NAME_LOG"
 
 	mkdir -- \
 		"$do__build" \
 		"$do__index" \
 		"$do__plan" \
-	|| do__ret=$?
+	|| return
 
-	if test "$do__ret" -eq 0; then
-		export ION_BUILD_PREVIOUS=
-		export ION_BUILD_CURRENT="$do__build"
+	{ start_build_internal "$do__build" "$do__plan" "$do__rebuild" "$do__recompile" 2>&1 1>&4 | tee "$do__log" 1>&2; } 4>&1 || return
 
-		{ start_build_internal "$do__build" "$do__plan" "$do__rebuild" "$do__recompile" 2>&1 1>&4 | tee "$do__log" 1>&2; } 4>&1
-
-		do__after="$(timestamp)" || return
-		do__duration=$((do__after-do__time)) || return
-		note "$ION__MSG_STOPPING_BUILD" "$do__duration""$ION___SUFFIX_SECONDS"
+	if should_serve; then
+		start_server "$do__build" || return
 	fi
 
-	dir_remove "$do__plan" || return
 	start_prune "$do__time" || return
 
-	return "$do__ret"
+	do__after="$(timestamp)" || return
+	do__duration=$((do__after-do__time)) || return
+	note "$ION__MSG_STOPPING_BUILD" "$do__duration""$ION___SUFFIX_SECONDS"
 }
 
 start_bouncing() {
@@ -5350,7 +5365,25 @@ start_builder() {
 			dj__first=
 		done
 	else
-		start_build "" "" || return
+		start_build || return
+	fi
+}
+
+start_indexing() {
+	fb__path="$1"
+	fb__input="$2"
+	fb__output="$3"
+	fb__type="$4"
+	fb__size="$5"
+	fb__time="$6"
+	fb__iteration="$7"
+
+	if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
+		
+		#cp "$fb__input" "$fb__output"
+		
+		start_pandoc_filter "$fb__path" "$fb__input" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" || return
+		start_pandoc_template "$fb__path" "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_HTML")" || return
 	fi
 }
 
@@ -5363,6 +5396,16 @@ start_building() {
 		IFS="$fa__ifs"
 
 		info "$ION__MSG_BUILD_ACTION" "$ION_BUILD_STEP" "$@"
+
+		fa__action="$1"; shift
+		fa__path="$1"; shift
+
+		fa__input="$ION_INPUT""$fa__path"
+		fa__output="$ION_BUILD_CURRENT""$fa__path"
+
+		if test "$fa__action" = "$ION__ACTION_INDEX"; then
+			start_indexing "$fa__path" "$fa__input" "$fa__output" "$@" || continue
+		fi
 	done
 }
 
@@ -5371,6 +5414,7 @@ stop_temp() {
 	file_remove "$TEMP_BLANK" || true
 	file_remove "$TEMP_WATCH_LOCK" || true
 	file_remove "$TEMP_WATCH_STREAM" || true
+	file_remove "$TEMP_SERVER_CONFIG" || true
 	file_remove "$TEMP_FILTER_EMPTY" || true
 	file_remove "$TEMP_FILTER_TEST" || true
 	file_remove "$TEMP_FILTER_SPLIT" || true
@@ -5386,11 +5430,6 @@ stop_temp() {
 	if test "$BUILD_TEMP"; then
 		dir_remove "$ION_BUILD" || true
 		BUILD_TEMP=
-	fi
-	
-	if test "$SERVED_TEMP"; then
-		dir_remove "$ION_SERVED" || true
-		SERVED_TEMP=
 	fi
 }
 
@@ -5584,13 +5623,6 @@ init_env_build() {
 	fi
 }
 
-init_env_served() {
-	if test "$ION_SERVED"; then
-		dx__normal="$(path_normal "$ION_SERVED")" || return
-		export ION_SERVED="$dx__normal"
-	fi
-}
-
 init_env_mirrors() {
 	if test "$ION_MIRRORS"; then
 		dy__normal="$(paths_normal "$ION_MIRRORS")" || return
@@ -5610,7 +5642,6 @@ init_env() {
 	init_env_source || return
 	init_env_input || return
 	init_env_build || return
-	init_env_served || return
 	init_env_mirrors || return
 	init_env_inbox || return
 }
@@ -5735,6 +5766,7 @@ init_check_env() {
 	init_check_name ION__EXT_CSS "$ION__EXT_CSS" || return
 	init_check_name ION__EXT_HTML "$ION__EXT_HTML" || return
 	init_check_name ION__EXT_JSON "$ION__EXT_JSON" || return
+	init_check_name ION__EXT_PANDOC "$ION__EXT_PANDOC" || return
 
 	init_check_name ION__WORD_INFO "$ION__WORD_INFO" || return
 	init_check_name ION__WORD_NOTE "$ION__WORD_NOTE" || return
@@ -5775,6 +5807,8 @@ init_check_env() {
 	init_check_string ION__MSG_NOTICED_CHANGE "$ION__MSG_NOTICED_CHANGE" || return
 	init_check_string ION__MSG_BUILD_STEP "$ION__MSG_BUILD_STEP" || return
 	init_check_string ION__MSG_BUILD_ACTION "$ION__MSG_BUILD_ACTION" || return
+	init_check_string ION__MSG_BUILD_IO_READ "$ION__MSG_BUILD_IO_READ" || return
+	init_check_string ION__MSG_BUILD_IO_WRITE "$ION__MSG_BUILD_IO_WRITE" || return
 	init_check_string ION__MSG_STARTING_SERVERS "$ION__MSG_STARTING_SERVERS" || return
 	init_check_string ION__MSG_STARTING_WATCHER "$ION__MSG_STARTING_WATCHER" || return
 	init_check_string ION__MSG_STOPPING_WATCHER "$ION__MSG_STOPPING_WATCHER" || return
@@ -5881,7 +5915,6 @@ init_check_env() {
 	init_check_path ION_DEV_URANDOM "$ION_DEV_URANDOM" || return
 
 	init_check_uint ION_SERVE "$ION_SERVE" || return
-	! test "$ION_SERVED" || init_check_dir ION_SERVED "$ION_SERVED" || return
 	init_check_bool ION_SERVE_WWW "$ION_SERVE_WWW" || return
 	init_check_bool ION_SERVE_PRODUCTION "$ION_SERVE_PRODUCTION" || return
 	! test "$ION_SERVE_PORT" || init_check_uint ION_SERVE_PORT "$ION_SERVE_PORT" || return
@@ -6019,6 +6052,12 @@ init_temp_watch_stream() {
 	fi
 }
 
+init_temp_server_config() {
+	if ! test "$TEMP_SERVER_CONFIG"; then
+		TEMP_SERVER_CONFIG="$(start_temp_file server-config)" || return
+	fi
+}
+
 init_temp_filter_empty() {
 	if ! test "$TEMP_FILTER_EMPTY"; then
 		TEMP_FILTER_EMPTY="$(start_temp_file filter-empty lua)" || return
@@ -6139,14 +6178,6 @@ init_temp_source_script() {
 	fi
 }
 
-init_temp_served() {
-	if ! test "$ION_SERVED"; then
-		dr__temp="$(start_temp_dir served)" || return
-		export ION_SERVED="$dr__temp"
-		SERVED_TEMP=1
-	fi
-}
-
 init_temp_build() {
 	if ! test "$ION_BUILD"; then
 		ds__temp="$(start_temp_dir build)" || return
@@ -6155,11 +6186,9 @@ init_temp_build() {
 	fi
 }
 
-init_temp() {
+init_temp_shared() {
 	init_temp_sed || return
 	init_temp_blank || return
-	init_temp_watch_lock || return
-	init_temp_watch_stream || return
 	init_temp_filter_empty || return
 	init_temp_filter_test || return
 	init_temp_filter_split || return
@@ -6169,30 +6198,37 @@ init_temp() {
 	init_temp_filter_template || return
 	init_temp_template_json || return
 	init_temp_template_html || return
+}
+
+init_temp_parent() {
+	init_temp_watch_lock || return
+	init_temp_watch_stream || return
+	init_temp_server_config || return
 	init_temp_source_style || return
 	init_temp_source_script || return
-	init_temp_served || return
 	init_temp_build || return
 }
 
-init_parent() {
-	init_env || return
-	init_check || return
-	init_temp || return
-}
-
 init() {
+	if test "$STARTED"; then
+		return
+	fi
+
 	init_signals || return
 	init_basics || return
+	init_temp_shared || return
 
-	if ! have_parent && ! test "$STARTED"; then
-		STARTED=1
-		init_parent "$@" || return
+	if ! have_parent; then
+		init_env || return
+		init_check || return
+		init_temp_parent || return
 	fi
 
 	if test "$ION_START_ID" = 1; then
 		export ION_START_ID=$$
 	fi
+
+	STARTED=1
 }
 
 test_all() {
@@ -6234,15 +6270,11 @@ main() {
 			test_all || exit 4
 		fi
 
-		if should_serve; then
-			start_server || exit 5
-		fi
-
 		if should_watch; then
-			start_watcher || exit 6
+			start_watcher || exit 5
 		fi
 
-		start_builder || exit 7
+		start_builder || exit 6
 	fi
 }
 
