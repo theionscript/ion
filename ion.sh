@@ -3,7 +3,10 @@
 # ῖon
 # ===
 # 
-# - 0.2.1; 2026-4-16 19:27
+# - 0.4.0; 2026-4-19 00:00
+#   - added the frontend component system
+#   - added basic post support
+# - 0.3.0; 2026-4-16 19:27
 #   - the build system now integrates the server
 #   - added rough support for document output
 # - 0.2.0; 2026-4-15 17:18
@@ -748,14 +751,14 @@ export ION__META_TYPE_FILE="${ION__META_TYPE_FILE:-"file"}"
 export ION__META_TYPE_DATA="${ION__META_TYPE_DATA:-"data"}"
 export ION__META_TYPE_DOCUMENT="${ION__META_TYPE_DOCUMENT:-"document"}"
 export ION__META_TYPE_CODE="${ION__META_TYPE_CODE:-"code"}"
-export ION__META_TYPE_STYLE="${ION__META_TYPE_STYLE:-"style"}"
-export ION__META_TYPE_SCRIPT="${ION__META_TYPE_SCRIPT:-"script"}"
 export ION__META_TYPE_IMAGE="${ION__META_TYPE_IMAGE:-"image"}"
 export ION__META_TYPE_AUDIO="${ION__META_TYPE_AUDIO:-"audio"}"
 export ION__META_TYPE_VIDEO="${ION__META_TYPE_VIDEO:-"video"}"
 export ION__META_TYPE_MAP="${ION__META_TYPE_MAP:-"map"}"
 export ION__META_TYPE_OBJECT="${ION__META_TYPE_OBJECT:-"object"}"
 export ION__META_TYPE_FONT="${ION__META_TYPE_FONT:-"font"}"
+export ION__META_TYPE_STYLE="${ION__META_TYPE_STYLE:-"style"}"
+export ION__META_TYPE_SCRIPT="${ION__META_TYPE_SCRIPT:-"script"}"
 
 export ION__META_SCAN="${ION__META_SCAN:-"scan"}"
 
@@ -816,14 +819,19 @@ export ION__ATTR_KEY="${ION__ATTR_KEY:-"data-key"}"
 export ION__ATTR_TYPE="${ION__ATTR_TYPE:-"data-type"}"
 export ION__ATTR_VALUE="${ION__ATTR_VALUE:-"data-value"}"
 export ION__ATTR_NAME="${ION__ATTR_NAME:-"data-name"}"
+export ION__ATTR_STATE="${ION__ATTR_STATE:-"data-state"}"
 
 export ION__CLASS_INDEX="${ION__CLASS_INDEX:-"index"}"
-export ION__CLASS_WORD="${ION__CLASS_WORD:-"word"}"
 export ION__CLASS_PAGE="${ION__CLASS_PAGE:-"page"}"
-export ION__CLASS_FORM="${ION__CLASS_FORM:-"form"}"
+export ION__CLASS_WORD="${ION__CLASS_WORD:-"word"}"
 export ION__CLASS_HEADER="${ION__CLASS_HEADER:-"header"}"
-export ION__CLASS_REQUIRED="${ION__CLASS_REQUIRED:-"required"}"
+export ION__CLASS_FORM="${ION__CLASS_FORM:-"form"}"
+export ION__CLASS_INPUT="${ION__CLASS_INPUT:-"input"}"
+export ION__CLASS_MESSAGE="${ION__CLASS_MESSAGE:-"message"}"
+export ION__CLASS_CHOICE="${ION__CLASS_CHOICE:-"choice"}"
+export ION__CLASS_REQUIRED="${ION__CLASS_REQUIRED:-"-required"}"
 export ION__CLASS_COMPONENT="${ION__CLASS_COMPONENT:-"component"}"
+export ION__CLASS_STARTED="${ION__CLASS_STARTED:-"-started"}"
 export ION__CLASS_NO_JS="${ION__CLASS_NO_JS:-"no-js"}"
 
 export ION_BIN_SELF="${ION_BIN_SELF:-"$0"}"
@@ -856,8 +864,8 @@ export ION_BIN_XARGS_GNU="${ION_BIN_XARGS_GNU:-}"
 export ION_DEV_URANDOM="${ION_DEV_URANDOM:-"/dev/urandom"}"
 
 export ION_SERVE="${ION_SERVE:-2}"
-export ION_SERVE_PRODUCTION="${ION_SERVE_PRODUCTION:-}"
 export ION_SERVE_PORT="${ION_SERVE_PORT:-}"
+export ION_SERVE_PRODUCTION="${ION_SERVE_PRODUCTION:-}"
 export ION_SERVE_WWW="${ION_SERVE_WWW:-}"
 
 export ION_WATCH="${ION_WATCH:-2}"
@@ -899,6 +907,7 @@ export ION_FILTER_TARGET="${ION_FILTER_TARGET:-}"
 
 export ION_START_ID="${ION_START_ID:-0}"
 export ION_START_CMD="${ION_START_CMD:-"env"}"
+export ION_START_CMD_POST="${ION_START_CMD_POST:-}"
 export ION_START_ARGS="${ION_START_ARGS:-}"
 
 export ION_DOMAIN="${ION_DOMAIN:-"localhost"}"
@@ -940,8 +949,6 @@ TEMP_WATCH_STREAM=
 TEMP_SERVER_CONFIG=
 TEMP_FILTER_EMPTY=
 TEMP_FILTER_TEST=
-TEMP_FILTER_SPLIT=
-TEMP_FILTER_MERGE=
 TEMP_FILTER_EXTRACT=
 TEMP_FILTER_DOCUMENT=
 TEMP_FILTER_TEMPLATE=
@@ -3001,7 +3008,12 @@ function filter_images(tree)
 end
 
 function filter_classes(tree)
+	local is_component = function(cls)
+		return not not cls:match("^[^_-]")
+	end
+
 	local filter_element = function(element)
+		local found_component = false
 		local classes = {}
 
 		for i, v in ipairs(element.classes) do
@@ -3011,6 +3023,14 @@ function filter_classes(tree)
 			if t ~= v then
 				table.insert(classes, t)
 			end
+
+			if is_component(v) or is_component(t) then
+				found_component = true
+			end
+		end
+
+		if found_component then
+			table.insert(classes, _CLASS_COMPONENT)
 		end
 
 		element.classes = classes
@@ -3080,6 +3100,10 @@ function template_defaults(tree)
 
 	if not tree.meta["template-class-component"] then
 		tree.meta["template-class-component"] = _CLASS_COMPONENT
+	end
+
+	if not tree.meta["template-class-started"] then
+		tree.meta["template-class-started"] = _CLASS_STARTED
 	end
 
 	if not tree.meta["template-icon"] then
@@ -3160,26 +3184,6 @@ end
 EOF
 )"
 
-FILTER_SPLIT="$(cat <<'EOF'
-Pandoc = function(tree)
-	index_open()
-	query(__QUERY_ALL, file_decode(io.stdin), io.stdout)
-	index_close()
-	os.exit(0)
-end
-EOF
-)"
-
-FILTER_MERGE="$(cat <<'EOF'
-Pandoc = function(tree)
-	index_open()
-	tree.meta = query(__QUERY_ALL, io.stdin)
-	index_close()
-	return tree
-end
-EOF
-)"
-
 FILTER_EXTRACT="$(cat <<'EOF'
 Pandoc = function(tree)
 	tree = extract_defaults(tree)
@@ -3219,47 +3223,341 @@ EOF
 )"
 
 GLOBAL_CSS="$(cat <<EOF
+:root {
+	/* inherit the strings and form class names */
+}
 
+[$ION__ATTR_QUERY]:empty::before,
+[$ION__ATTR_QUERY]:empty [$ION__ATTR_VALUE]::before {
+	content: attr($ION__ATTR_VALUE);
+}
+
+.form [type=submit]::before {
+	content: var(--text-send, "Send");
+}
+
+.form[data-state="100"] [type="submit"]::before {
+	content: var(--text-sending, "Sending…");
+}
+
+.form[data-state="200"] [type="submit"]::before {
+	content: var(--text-sent, "Sent!");
+}
+
+.form[data-state="400"] [type="submit"]::before {
+	content: var(--text-error-invalid, "Error: invalid request");
+}
+
+.form[data-state="411"] [type="submit"]::before {
+	content: var(--text-error-malformed, "Error: malformed request");
+}
+
+.form[data-state="413"] [type="submit"]::before {
+	content: var(--text-error-length, "Error: message too long");
+}
+
+.form[data-state="500"] [type="submit"]::before {
+	content: var(--text-error-server, "Error: server error");
+}
 EOF
 )"
 
 GLOBAL_JS_ENV="$(cat <<EOF
+const _ATTR_STATE = "$ION__ATTR_STATE";
 
+const _CLASS_COMPONENT = "$ION__CLASS_COMPONENT";
+const _CLASS_STARTED = "$ION__CLASS_STARTED";
+const _CLASS_FORM = "$ION__CLASS_FORM";
+const _CLASS_INPUT = "$ION__CLASS_INPUT";
+const _CLASS_MESSAGE = "$ION__CLASS_MESSAGE";
+const _CLASS_CHOICE = "$ION__CLASS_CHOICE";
 EOF
 )"
 
 GLOBAL_JS="$(cat <<'EOF'
-	var COMPONENTS = {};
+let COMPONENTS = {};
 
-	function document_ready(node, f) {
-		if (node.readyState === "loading") {
-			node.addEventListener("DOMContentLoaded", f);
+function document_ready(f) {
+	// see: youmightnotneedjquery.com/#ready
+	if (document.readyState !== "loading") {
+		f();
+	} else {
+		document.addEventListener("DOMContentLoaded", f);
+	}
+}
+
+function component_add(name, f) {
+	if (!Array.isArray(COMPONENTS[name])) {
+		COMPONENTS[name] = [];
+	}
+
+	COMPONENTS[name].push(f);
+}
+
+function components_run() {
+	const components = document.querySelectorAll(`.${_CLASS_COMPONENT}`);
+
+	for (let component of components) {
+		let passed = true;
+
+		component: for (const name of component.classList) {
+			if (name.match(/^[_-]/)) {
+				continue;
+			}
+
+			for (const f of COMPONENTS[name] || []) {
+				const fr = f(component);
+
+				if (fr === false) {
+					passed = false;
+					break component;
+				} else if (fr) {
+					component = fr;
+				}
+			}
+		}
+
+		if (passed) {
+			component.classList.add(_CLASS_STARTED);
+		}
+	}
+}
+
+function node_create(tag) {
+	return document.createElement(tag);
+}
+
+function node_create_text(text) {
+	return document.createTextNode(text);
+}
+
+function node_move_children(previous, next) {
+	while (previous.firstChild) {
+		next.appendChild(previous.firstChild);
+	}
+}
+
+function node_remove_children(node) {
+	while (node.firstChild) {
+		node.removeChild(node.lastChild);
+	}
+}
+
+function node_copy_attributes(previous, next) {
+	// see: stackoverflow.com/a/15086834/22451530
+	for (let i = previous.attributes.length-1; i >= 0; i--) {
+		const attribute = previous.attributes[i].cloneNode();
+		next.attributes.setNamedItem(attribute);
+	}
+}
+
+function node_replace(previous, next) {
+	previous.parentNode.replaceChild(next, previous)
+}
+
+function node_change_tag(node, tag) {
+	const changed = node_create(tag);
+	node_move_children(node, changed);
+	node_copy_attributes(node, changed);
+	node_replace(node, changed);
+	return changed;
+}
+
+function form_preview(form) {
+	const content = form.cloneNode(true);
+	const inputs = content.getElementsByTagName("input");
+	const textareas = content.getElementsByTagName("textarea");
+	const buttons = content.getElementsByTagName("button");
+	const labels = content.getElementsByTagName("label");
+	const all_inputs = [];
+
+	for (let i = inputs.length-1; i >= 0; i--) {
+		const input = inputs[i];
+
+		const label = input.parentNode;
+		const select = label.parentNode;
+		const kind = input.getAttribute("type");
+		const is_radio = kind === "radio";
+
+		if (is_radio && input.checked) {
+			label.removeChild(input);
+		} else if (is_radio) {
+			select.removeChild(label);
 		} else {
-			f();
+			const text = node_create_text(input.value);
+			const strong = node_change_tag(input, "strong");
+			strong.appendChild(text);
+			all_inputs.push(strong);
 		}
 	}
 
-	function component_add(name, f) {
-		if (!Array.isArray(COMPONENTS[name])) {
-			COMPONENTS[name] = [];
+	for (let i = textareas.length-1; i >= 0; i--) {
+		const text = textareas[i].value;
+		const textarea = node_change_tag(textareas[i], "strong");
+		textarea.innerHTML = text.replace(/\n/g, "<br>");
+		all_inputs.push(textarea);
+	}
+
+	for (let i = all_inputs.length-1; i >= 0; i--) {
+		const input = all_inputs[i];
+
+		if (!content.isSameNode(input.parentNode)) {
+			node_change_tag(input.parentNode, "p");
 		}
-		
-		COMPONENTS[name].push(f);
+
+		input.removeAttribute("placeholder");
+		input.removeAttribute("type");
+		input.removeAttribute("name");
 	}
 
-	function components_run() {
-		
+	for (let i = buttons.length-1; i >= 0; i--) {
+		buttons[i].remove();
 	}
 
-	function components_start() {
-		document_ready(document, components_run);
+	for (let i = labels.length-1; i >= 0; i--) {
+		labels[i].outerHTML = labels[i].innerHTML;
 	}
+
+	return content;
+}
+
+function form_url() {
+	const protocol = window.location.protocol.replace(/:$/, "");
+	const hostname = window.location.hostname || "localhost";
+	return protocol == "file" ? `http://${hostname}/` : "/";
+}
+
+function form_submit_xhr_request(body, callback) {
+	const http = new XMLHttpRequest();
+	http.open("POST", form_url(), true);
+	http.setRequestHeader("Content-Type", "text/plain");
+	http.onreadystatechange = function() { callback(http); };
+	http.send(body);
+}
+
+function form_submit_xhr(form, preview) {
+	const body = "html="+preview.innerHTML;
+
+	// replace this with a new 'info' function
+	console.log("sending:", body);
+
+	form_submit_xhr_request(body, function(http) {
+		if (http.readyState === 4) {
+			form.setAttribute(_ATTR_STATE, http.status);
+		}
+	});
+}
+
+function form_submit_none(form, preview) {
+	form.setAttribute(_ATTR_STATE, 0);
+	// log error with a new function
+}
+
+function form_submit(form) {
+	const preview = form_preview(form);
+
+	form.setAttribute(_ATTR_STATE, 100);
+
+	if ("XMLHttpRequest" in window) {
+		form_submit_xhr(form, preview);
+	} else {
+		form_submit_none(form, preview);
+	}
+}
+
+function form_handle(event) {
+	form_submit(event.currentTarget);
+	event.preventDefault();
+}
+
+function init_form_input_choice(form, root) {
+	const root_name = root.getAttribute("name");
+
+	for (let i = root.children.length-1; i >= 0; i--) {
+		const content = root.children[i].cloneNode(true);
+		const input = node_create("input");
+		const label = node_create("label");
+
+		input.setAttribute("type", "radio");
+		input.setAttribute("name", root_name);
+		if (i === 0) input.setAttribute("checked", true);
+
+		label.appendChild(input);
+		label.appendChild(content);
+
+		root.replaceChild(label, root.children[i]);
+	}
+
+	root.removeAttribute("placeholder");
+	return root;
+}
+
+function init_form_input_text(form, input, tag) {
+	node_remove_children(input);
+
+	input = node_change_tag(input, tag || "input");
+
+	if (!form.isSameNode(input.parentNode)) {
+		node_change_tag(input.parentNode, "label");
+	}
+
+	return input;
+}
+
+function init_form_input_message(form, input) {
+	return init_form_input_text(form, input, "textarea");
+}
+
+function init_form_input(form, input) {
+	const kind = input.getAttribute("type");
+
+	if (kind === _CLASS_MESSAGE) {
+		return init_form_input_message(form, input);
+	} else if (kind === _CLASS_CHOICE) {
+		return init_form_input_choice(form, input);
+	} else {
+		return init_form_input_text(form, input);
+	}
+}
+
+function init_form_inputs(form) {
+	const inputs = form.getElementsByTagName("span");
+
+	for (let i = inputs.length-1; i >= 0; i--) {
+		init_form_input(form, inputs[i]);
+	}
+}
+
+function init_form_buttons(form) {
+	const reset = node_create("button");
+	const submit = node_create("button");
+
+	reset.setAttribute("type", "reset");
+	submit.setAttribute("type", "submit");
+
+	form.appendChild(reset);
+	form.appendChild(submit);
+}
+
+function init_form(form) {
+	init_form_inputs(form);
+	init_form_buttons(form);
+	form = node_change_tag(form, "form");
+	form.addEventListener("submit", form_handle);
+	form.setAttribute(_ATTR_STATE, "");
+	return form;
+}
+
+function main() {
+	component_add(_CLASS_FORM, init_form);
+	document_ready(components_run);
+}
 EOF
 )"
 
 TEMPLATE_HTML="$(cat <<'EOF'
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"$if(template-language)$ lang="$template-language$" xml:lang="$template-language$"$endif$$if(template-direction)$ dir="$template-direction$"$endif$ class="$template-no-js$">
+<html class="$template-no-js$" xmlns="http://www.w3.org/1999/xhtml"$if(template-language)$ lang="$template-language$" xml:lang="$template-language$"$endif$$if(template-direction)$ dir="$template-direction$"$endif$>
 <head>
 	<meta charset="$template-encoding$" />
 	<meta name="generator" content="$template-generator$" />
@@ -3289,22 +3587,21 @@ TEMPLATE_HTML="$(cat <<'EOF'
 		<title>$template-title$</title>
 	$endif$
 
+	<script>
+		if (typeof Symbol === "function") {
+			document.documentElement.classList.remove("$template-class-no-js$");
+		}
+	</script>
+
 	<style>
-	/*
-		:root:not(.$template-class-no-js$) > body :not(.$template-class-component$),
-		:root:not(.$template-class-no-js$) > body :not(.$template-class-component$)::before,
-		:root:not(.$template-class-no-js$) > body :not(.$template-class-component$)::after {
+		:root:not(.$template-class-no-js$) .$template-class-component$:not(.$template-class-started$),
+		:root:not(.$template-class-no-js$) .$template-class-component$:not(.$template-class-started$)::before,
+		:root:not(.$template-class-no-js$) .$template-class-component$:not(.$template-class-started$)::after {
 			pointer-events: none;
 			user-select: none;
 			opacity: 0;
 		}
-	*/
 	</style>
-
-	<script>
-		var JS = typeof Symbol === "function";
-		if (JS) document.documentElement.classList.remove("$template-class-no-js$");
-	</script>
 
 	$if(template-link-js)$
 		<script src="$template-link-js$" defer></script>
@@ -3575,6 +3872,10 @@ should_serve() {
 			test "$ION_SERVE" = 2 && have_server
 		}
 	}
+}
+
+should_handle() {
+	test "${TCPREMOTEIP:-}"
 }
 
 can_build() {
@@ -4257,10 +4558,10 @@ start() {
 	export ION_START_ID=1
 
 	# shellcheck disable=SC2086
-	info "$ION__MSG_RUNNING_COMMAND" "$ION_START_CMD" $ION_START_ARGS "$@"
+	info "$ION__MSG_RUNNING_COMMAND" "$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@"
 
 	# shellcheck disable=SC2086
-	"$ION_START_CMD" $ION_START_ARGS "$@" || eh__ret=$?
+	"$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@" || eh__ret=$?
 
 	export ION_START_ID="$eh__start_id"
 	IFS="$eh__ifs"
@@ -4277,10 +4578,10 @@ start_bg() {
 	export ION_START_ID=1
 
 	# shellcheck disable=SC2086
-	info "$ION__MSG_RUNNING_COMMAND_BG" "$ION_START_CMD" $ION_START_ARGS "$@"
+	info "$ION__MSG_RUNNING_COMMAND_BG" "$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@"
 
 	# shellcheck disable=SC2086
-	"$ION_START_CMD" $ION_START_ARGS "$@" &
+	"$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@" &
 
 	START_PID=$!
 	IFS="$em__ifs"
@@ -4329,10 +4630,10 @@ start_many() {
 		export ION_VOLUME="$ev__volume"
 
 		# shellcheck disable=SC2086
-		info "$ION__MSG_RUNNING_COMMAND_MANY" "$ION_START_CMD" $ION_START_ARGS "$@"
+		info "$ION__MSG_RUNNING_COMMAND_MANY" "$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@"
 
 		# shellcheck disable=SC2086
-		"$ev__cmd" $ev__args "$ION_START_CMD" $ION_START_ARGS "$@" || ev__ret=$?
+		"$ev__cmd" $ev__args "$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@" || ev__ret=$?
 
 		export ION_START_ID="$ev__start_id"
 		export ION_VOLUME="$ev__old_volume"
@@ -4731,19 +5032,21 @@ stop_watcher() {
 
 start_tcpserver() {
 	if ! test "$SERVER_PID"; then
-		cv__old_run_cmd="$ION_START_CMD"
-		cv__old_run_args="$ION_START_ARGS"
-	
+		cv__start_cmd="$ION_START_CMD"
+		cv__start_args="$ION_START_ARGS"
+		cv__start_cmd_post="$ION_START_CMD_POST"
+
 		export ION_START_CMD="$ION_BIN_TCPSERVER"
-		export ION_START_ARGS="-q -U -H -R 127.0.0.1 $ION_INBOX_PORT env"
-	
+		export ION_START_ARGS="-q -U -H -R 127.0.0.1 $ION_INBOX_PORT sh"
+		export ION_START_CMD_POST="$ION_BIN_SELF"
+
 		# shellcheck disable=SC2119
 		start_bg || return
-	
 		SERVER_PID="$START_PID"
-	
-		export ION_START_CMD="$cv__old_run_cmd"
-		export ION_START_ARGS="$cv__old_run_args"
+
+		export ION_START_CMD="$cv__start_cmd"
+		export ION_START_ARGS="$cv__start_args"
+		export ION_START_CMD_POST="$cv__start_cmd_post"
 	fi
 }
 
@@ -4863,10 +5166,10 @@ start_pandoc_internal() {
 }
 
 start_pandoc() {
-	ax__filter="$1"; shift
-	ax__path="$1"; shift
-	ax__full="${1:-"$TEMP_BLANK"}"; shift
-	ax__output="$1"; shift
+	ax__filter="$1"
+	ax__full="${2:-"$TEMP_BLANK"}"
+	ax__path="${3:-}"
+	ax__output="${4:-}"
 
 	ax__ret=0
 	ax__format="plain"
@@ -4877,41 +5180,31 @@ start_pandoc() {
 	ax__ext="$(path_ext_get "$ax__full")" || return
 
 	case "$ax__filter" in
-		test)
+		tests)
 			ax__filter="$TEMP_FILTER_TEST"
 			ax__target="$ION__EXT_HTML"
 		;;
-		split)
-			ax__filter="$TEMP_FILTER_SPLIT"
+		extract)
+			ax__filter="$TEMP_FILTER_EXTRACT"
+			ax__target="$ION__EXT_JSON"
 		;;
-		merge)
-			ax__filter="$TEMP_FILTER_MERGE"
-			ax__template="$TEMP_TEMPLATE_JSON"
-		;;
-		partial)
+		filter)
 			ax__filter="$TEMP_FILTER_DOCUMENT"
 			ax__target="$ION__EXT_PANDOC"
 			ax__format="json"
 		;;
-		full)
+		template)
 			ax__args="--standalone"
 			ax__filter="$TEMP_FILTER_TEMPLATE"
 			ax__template="$TEMP_TEMPLATE_HTML"
 			ax__target="$ION__EXT_HTML"
 			ax__format="html5"
 		;;
-		extract)
-			ax__filter="$TEMP_FILTER_EXTRACT"
-			ax__target="$ION__EXT_JSON"
-		;;
 		sandbox)
 			ax__args="--sandbox"
 			ax__filter="$TEMP_FILTER_EMPTY"
 			ax__target="md"
 			ax__format="commonmark_x"
-		;;
-		*)
-			ax__filter="$TEMP_FILTER_EMPTY"
 		;;
 	esac
 
@@ -4956,7 +5249,7 @@ start_pandoc() {
 		--lua-filter="$ax__filter" \
 		"$ax__full" \
 		$ax__args \
-		"$@" || ax__ret=$?
+	|| ax__ret=$?
 
 	export ION_FILTER_PATH="$ax__old_path"
 	export ION_FILTER_OUTPUT="$ax__old_output"
@@ -4964,45 +5257,6 @@ start_pandoc() {
 
 	IFS="$ax__old_ifs"
 	return $ax__ret
-}
-
-start_pandoc_tests() {
-	start_pandoc test "$TEMP_BLANK" "$TEMP_BLANK" "" >/dev/null
-}
-
-start_pandoc_split() {
-	start_pandoc split "" "" "$1"
-}
-
-start_pandoc_merge() {
-	start_pandoc merge "" "" "$1"
-}
-
-start_pandoc_extract() {
-	ae__path="$1"; shift
-	ae__full="$1"; shift
-	ae__output="$1"; shift
-	start_pandoc extract "$ae__path" "$ae__full" "$ae__output" "$@"
-}
-
-start_pandoc_filter() {
-	bw__path="$1"; shift
-	bw__full="$1"; shift
-	bw__output="$1"; shift
-	start_pandoc partial "$bw__path" "$bw__full" "$bw__output" "$@"
-}
-
-start_pandoc_template() {
-	by__path="$1"; shift
-	by__full="$1"; shift
-	by__output="$1"; shift
-	start_pandoc full "$by__path" "$by__full" "$by__output" "$@"
-}
-
-start_pandoc_sandbox() {
-	bt__path="$1"; shift
-	bt__full="$1"; shift
-	start_pandoc sandbox "$bt__path" "$bt__full" "" "$@"
 }
 
 start_tidy() {
@@ -5034,14 +5288,6 @@ start_tidy() {
 	else
 		return 0
 	fi
-}
-
-start_tidy_partial() {
-	start_tidy yes "$@"
-}
-
-start_tidy_standalone() {
-	start_tidy no "$@"
 }
 
 start_esbuild() {
@@ -5082,22 +5328,8 @@ start_esbuild() {
 	return $de__ret
 }
 
-start_esbuild_style() {
-	start_esbuild css "$1" < "$TEMP_SOURCE_STYLES"
-}
-
-start_esbuild_script() {
-	start_esbuild js "$1" < "$TEMP_SOURCE_SCRIPTS"
-}
-
-start_compile() {
-	start_esbuild_style "$1" || return
-	start_esbuild_script "$1" || return
-}
-
 start_step() {
 	eu__step="$1"
-	eu__count="$2"
 
 	start_find "$eu__step" 1 | while IFS= read -r eu__action_line; do
 		eu__action_name="${eu__action_line#./}"
@@ -5229,7 +5461,8 @@ start_build_internal() {
 	export ION_BUILD_CURRENT="$ez__build"
 	
 	if test "$ez__recompile"; then
-		start_compile "$ez__build" || return
+		start_esbuild css "$ez__build" < "$TEMP_SOURCE_STYLES" || return
+		start_esbuild js "$ez__build" < "$TEMP_SOURCE_SCRIPTS" || return
 	fi
 
 	start_plan "$ez__plan" "$ez__rebuild" "$ez__recompile" || return
@@ -5378,12 +5611,11 @@ start_indexing() {
 	fb__time="$6"
 	fb__iteration="$7"
 
+	# temporary
+
 	if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
-		
-		#cp "$fb__input" "$fb__output"
-		
-		start_pandoc_filter "$fb__path" "$fb__input" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" || return
-		start_pandoc_template "$fb__path" "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_HTML")" || return
+		start_pandoc filter "$fb__input" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" || return
+		start_pandoc template "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_HTML")" || return
 	fi
 }
 
@@ -5399,7 +5631,6 @@ start_building() {
 
 		fa__action="$1"; shift
 		fa__path="$1"; shift
-
 		fa__input="$ION_INPUT""$fa__path"
 		fa__output="$ION_BUILD_CURRENT""$fa__path"
 
@@ -5409,21 +5640,221 @@ start_building() {
 	done
 }
 
-stop_temp() {
+	# this http parser is for temporary demos
+	# it is intended to be replaced soon
+	
+	is_char() {
+		case "$1" in
+			[[:alnum:]]) return 0 ;;
+			*) return 1 ;;
+		esac
+	}
+	
+	http_request() {
+		# only performs one read syscall
+		# whole message might not be in buffer
+		# would need to loop until content length is reached past the headers
+		# or until eof is reached in the headers or body
+		dd count=1 bs="8192" 2>/dev/null
+	}
+	
+	http_request_byte() {
+		# see section 3 of: www.etalabs.net/sh_tricks.html
+		dd count=1 bs=1 2>/dev/null
+	}
+	
+	http_request_body() {
+		cat
+	}
+	
+	http_status_left() {
+		print "${1%%[![:graph:]]*}"
+	}
+	
+	http_status_middle() {
+		string_trim "$(string_trim_graph "$1")"
+	}
+	
+	http_status_right() {
+		print "${1##*[![:graph:]]}"
+	}
+	
+	http_header_left() {
+		string_trim "${1%%:*}"
+	}
+	
+	http_header_right() {
+		string_trim "${1#*:}"
+	}
+	
+	http_respond() {
+		# should include: Content-Type: text/plain; charset=utf-8
+		printf '%s %s\r\n%s\r\n\r\n' "HTTP/1.1" "$1" "Content-Length: 0"
+	}
+	
+	http_respond_ok() {
+		http_respond "200 OK"
+	}
+	
+	http_respond_bad_request() {
+		http_respond "400 Bad Request"
+	}
+	
+	http_respond_length_required() {
+		http_respond "411 Length Required"
+	}
+	
+	http_respond_too_large() {
+		http_respond "413 Payload Too Large"
+	}
+	
+	http_respond_internal_error() {
+		http_respond "500 Internal Server Error"
+	}
+	
+	http_post_path() {
+		ca__extension="$1"
+		ca__inbox="$2"
+	
+		ca__noise="$(start_random 8)" || return
+		ca__date="$(date +"%Y-%m-%d %H-%M-%S")" || return
+		ca__name="$ca__date $ca__noise"
+	
+		if test "$ca__extension"; then
+			ca__name="$ca__name.$ca__extension"
+		fi
+	
+		print "$ca__inbox"/"$ca__name"
+	}
+	
+	http_post() {
+		bz__content="$1"
+	
+		if test "$ION_INBOX"; then
+			bz__temp="$(start_temp_file post md)" || return
+			bz__output="$(http_post_path md "$ION_INBOX")" || return
+			start_pandoc sandbox "$bz__content" > "$bz__temp" || return
+			mv -- "$bz__temp" "$bz__output" || return
+		fi
+	}
+	
+	http_response() {
+		br__method=
+		br__version=
+		br__resource=
+		br__extension=
+		br__length=
+	
+		br__line_pos=0
+		br__head_pos=0
+		br__body_pos=0
+	
+		br__valid=1
+		br__valid_size=1
+		br__valid_length=1
+	
+		# this is weak as it is unlimited
+		while IFS= read -r br__line; do
+			br__line="$(string_trim "$br__line")" || return
+			br__head_pos=$((br__head_pos+${#br__line}+2))
+			br__line_pos=$((br__line_pos+1))
+	
+			if test -z "$br__line"; then
+				break
+			elif test "$br__line_pos" -eq 1; then
+				br__method="$(http_status_left "$br__line")" || return
+				br__resource="$(http_status_middle "$br__line")" || return
+				br__version="$(http_status_right "$br__line")" || return
+			else
+				br__key="$(http_header_left "$br__line")" || return
+				br__value="$(http_header_right "$br__line")" || return
+	
+				# should be case insensitive
+				if test "$br__key" = "Content-Length"; then
+					br__length="$br__value"
+				fi
+			fi
+		done
+	
+		if ! is_uint "$br__length"; then
+			br__valid_length=0
+			br__valid=0
+		fi
+	
+		if test $((br__head_pos+br__length)) -gt 8192; then
+			br__valid_size=0
+			br__valid=0
+		fi
+	
+		if test "$br__method" = "POST" && test "$br__valid" -eq 1; then
+			while test $((br__body_pos+1)) -le "$br__length"; do
+				br__byte="$(http_request_byte)" || return
+				br__body_pos=$((br__body_pos+${#br__byte}))
+	
+				if ! is_char "$br__byte"; then
+					if test "$br__byte" != "="; then
+						br__valid=0
+					fi
+	
+					break
+				fi
+	
+				br__extension="$br__extension$br__byte"
+	
+				if test ${#br__extension} -gt 32; then # env var
+					br__valid=0
+					break
+				fi
+			done
+	
+			if test -z "$br__extension"; then
+				br__valid=0
+			fi
+		fi
+	
+		if test "$br__valid" -eq 0; then
+			if test "$br__valid_length" -eq 0; then
+				http_respond_length_required || return
+			elif test "$br__valid_size" -eq 0; then
+				http_respond_too_large || return
+			else
+				http_respond_bad_request || return
+			fi
+		else
+			# will silently drop post if there's no inbox
+			if test "$br__method" = "POST"; then
+				br__temp="$(start_temp_file request "$br__extension")" || return
+				http_request_body > "$br__temp" && http_post "$br__temp"
+				rm -f -- "$br__temp"
+			fi
+	
+			http_respond_ok || return
+		fi
+	}
+	
+	http_handle() {
+		{ http_request | http_response; } || {
+			http_respond_internal_error
+			return 1
+		}
+	}
+
+stop_temp_shared() {
 	file_remove "$TEMP_SED" || true
 	file_remove "$TEMP_BLANK" || true
-	file_remove "$TEMP_WATCH_LOCK" || true
-	file_remove "$TEMP_WATCH_STREAM" || true
-	file_remove "$TEMP_SERVER_CONFIG" || true
 	file_remove "$TEMP_FILTER_EMPTY" || true
 	file_remove "$TEMP_FILTER_TEST" || true
-	file_remove "$TEMP_FILTER_SPLIT" || true
-	file_remove "$TEMP_FILTER_MERGE" || true
 	file_remove "$TEMP_FILTER_EXTRACT" || true
 	file_remove "$TEMP_FILTER_DOCUMENT" || true
 	file_remove "$TEMP_FILTER_TEMPLATE" || true
 	file_remove "$TEMP_TEMPLATE_JSON" || true
 	file_remove "$TEMP_TEMPLATE_HTML" || true
+}
+
+stop_temp_parent() {
+	file_remove "$TEMP_WATCH_LOCK" || true
+	file_remove "$TEMP_WATCH_STREAM" || true
+	file_remove "$TEMP_SERVER_CONFIG" || true
 	file_remove "$TEMP_SOURCE_STYLES" || true
 	file_remove "$TEMP_SOURCE_SCRIPTS" || true
 	
@@ -5433,15 +5864,16 @@ stop_temp() {
 	fi
 }
 
-deinit_main() {
-	stop_watcher || true
-	stop_server || true
-	stop_temp || true
-}
-
 deinit() {
-	if ! have_parent && test "$STARTED"; then
-		deinit_main
+	if test "$STARTED"; then
+		if have_parent; then
+			stop_temp_shared || true
+		else
+			stop_server || true
+			stop_watcher || true
+			stop_temp_parent || true
+		fi
+
 		STARTED=
 	fi
 }
@@ -5902,14 +6334,19 @@ init_check_env() {
 	init_check_string ION__ATTR_TYPE "$ION__ATTR_TYPE" || return
 	init_check_string ION__ATTR_VALUE "$ION__ATTR_VALUE" || return
 	init_check_string ION__ATTR_NAME "$ION__ATTR_NAME" || return
+	init_check_string ION__ATTR_STATE "$ION__ATTR_STATE" || return
 
 	init_check_name ION__CLASS_INDEX "$ION__CLASS_INDEX" || return
-	init_check_name ION__CLASS_WORD "$ION__CLASS_WORD" || return
 	init_check_name ION__CLASS_PAGE "$ION__CLASS_PAGE" || return
-	init_check_name ION__CLASS_FORM "$ION__CLASS_FORM" || return
+	init_check_name ION__CLASS_WORD "$ION__CLASS_WORD" || return
 	init_check_name ION__CLASS_HEADER "$ION__CLASS_HEADER" || return
+	init_check_name ION__CLASS_FORM "$ION__CLASS_FORM" || return
+	init_check_name ION__CLASS_INPUT "$ION__CLASS_INPUT" || return
+	init_check_name ION__CLASS_MESSAGE "$ION__CLASS_MESSAGE" || return
+	init_check_name ION__CLASS_CHOICE "$ION__CLASS_CHOICE" || return
 	init_check_name ION__CLASS_REQUIRED "$ION__CLASS_REQUIRED" || return
 	init_check_name ION__CLASS_COMPONENT "$ION__CLASS_COMPONENT" || return
+	init_check_name ION__CLASS_STARTED "$ION__CLASS_STARTED" || return
 	init_check_name ION__CLASS_NO_JS "$ION__CLASS_NO_JS" || return
 
 	init_check_path ION_DEV_URANDOM "$ION_DEV_URANDOM" || return
@@ -5954,6 +6391,7 @@ init_check_env() {
 
 	init_check_uint ION_START_ID "$ION_START_ID" || return
 	init_check_string ION_START_CMD "$ION_START_CMD" || return
+	init_check_string ION_START_CMD_POST "$ION_START_CMD_POST" || return
 	! test "$ION_START_ARGS" || init_check_string ION_START_ARGS "$ION_START_ARGS" || return
 
 	init_check_name ION_DOMAIN "$ION_DOMAIN" || return
@@ -6074,22 +6512,6 @@ init_temp_filter_test() {
 	fi
 }
 
-init_temp_filter_split() {
-	if ! test "$TEMP_FILTER_SPLIT"; then
-		TEMP_FILTER_SPLIT="$(start_temp_file filter-split lua)" || return
-		print "$SHARED_LUA" > "$TEMP_FILTER_SPLIT" || return
-		print "$FILTER_SPLIT" >> "$TEMP_FILTER_SPLIT" || return
-	fi
-}
-
-init_temp_filter_merge() {
-	if ! test "$TEMP_FILTER_MERGE"; then
-		TEMP_FILTER_MERGE="$(start_temp_file filter-merge lua)" || return
-		print "$SHARED_LUA" > "$TEMP_FILTER_MERGE" || return
-		print "$FILTER_MERGE" >> "$TEMP_FILTER_MERGE" || return
-	fi
-}
-
 init_temp_filter_extract() {
 	if ! test "$TEMP_FILTER_EXTRACT"; then
 		TEMP_FILTER_EXTRACT="$(start_temp_file filter-extract lua)" || return
@@ -6129,7 +6551,7 @@ init_temp_template_html() {
 }
 
 init_temp_source_style() {
-	if test "$TEMP_SOURCE_STYLES"; then
+	if test "$TEMP_SOURCE_STYLES"; then # are these checks needed?
 		return
 	fi
 
@@ -6156,25 +6578,30 @@ init_temp_source_script() {
 	TEMP_SOURCE_SCRIPTS="$(start_temp_file src js)" || return
 
 	if test "$ION_BUILD_JS_GLOBAL"; then
-		print "$GLOBAL_JS_ENV" > "$TEMP_SOURCE_SCRIPTS" || return
-		print "$GLOBAL_JS" >> "$TEMP_SOURCE_SCRIPTS" || return
+		print "'use strict';" > "$TEMP_SOURCE_SCRIPTS" || return
 	fi
 
 	paths_split_raw "$ION_SOURCE_SCRIPTS" | {
 		el__i=0
-
 		while IFS= read -r el__path; do
 			el__i=$((el__i+1))
-
-			if test "$el__path"; then
-				printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$TEMP_SOURCE_SCRIPTS" || continue
-				printf 'typeof f%d === "function" && f%d();\n' "$el__i" "$el__i" >> "$TEMP_SOURCE_SCRIPTS" || continue
-			fi
+			printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$TEMP_SOURCE_SCRIPTS" || continue
 		done
 	}
 
 	if test "$ION_BUILD_JS_GLOBAL"; then
-		printf 'components_start();\n' >> "$TEMP_SOURCE_SCRIPTS" || return
+		print "$GLOBAL_JS_ENV" >> "$TEMP_SOURCE_SCRIPTS" || return
+		print "$GLOBAL_JS" >> "$TEMP_SOURCE_SCRIPTS" || return
+	fi
+
+	el__j=0
+	while test "$el__j" -lt "$el__i"; do
+		el__j=$((el__j+1))
+		printf 'typeof f%d === "function" && f%d();\n' "$el__j" "$el__j" >> "$TEMP_SOURCE_SCRIPTS" || continue
+	done
+
+	if test "$ION_BUILD_JS_GLOBAL"; then
+		printf 'main();\n' >> "$TEMP_SOURCE_SCRIPTS" || return
 	fi
 }
 
@@ -6191,8 +6618,6 @@ init_temp_shared() {
 	init_temp_blank || return
 	init_temp_filter_empty || return
 	init_temp_filter_test || return
-	init_temp_filter_split || return
-	init_temp_filter_merge || return
 	init_temp_filter_extract || return
 	init_temp_filter_document || return
 	init_temp_filter_template || return
@@ -6214,8 +6639,10 @@ init() {
 		return
 	fi
 
-	init_signals || return
+	STARTED=1
+
 	init_basics || return
+	init_signals || return
 	init_temp_shared || return
 
 	if ! have_parent; then
@@ -6227,8 +6654,6 @@ init() {
 	if test "$ION_START_ID" = 1; then
 		export ION_START_ID=$$
 	fi
-
-	STARTED=1
 }
 
 test_all() {
@@ -6242,15 +6667,13 @@ test_all() {
 		start "$ION_BIN_LUAC" -p \
 			"$TEMP_FILTER_EMPTY" \
 			"$TEMP_FILTER_TEST" \
-			"$TEMP_FILTER_SPLIT" \
-			"$TEMP_FILTER_MERGE" \
 			"$TEMP_FILTER_EXTRACT" \
 			"$TEMP_FILTER_DOCUMENT" \
 			"$TEMP_FILTER_TEMPLATE" || return
 	fi
 
 	if have_pandoc; then
-		start_pandoc_tests || return
+		start_pandoc tests || return
 	fi
 }
 
@@ -6263,18 +6686,20 @@ main() {
 
 	if should_help; then
 		usage || exit 2
+	elif should_handle; then
+		http_handle || exit 3
 	elif should_build; then
-		start_building "$@" || exit 3
+		start_building "$@" || exit 4
 	elif ! have_parent; then
 		if should_test; then
-			test_all || exit 4
+			test_all || exit 5
 		fi
 
 		if should_watch; then
-			start_watcher || exit 5
+			start_watcher || exit 6
 		fi
 
-		start_builder || exit 6
+		start_builder || exit 7
 	fi
 }
 
