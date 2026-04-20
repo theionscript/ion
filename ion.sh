@@ -3,7 +3,9 @@
 # ῖon
 # ===
 # 
-# - 0.4.0; 2026-4-19 00:00
+# - 0.5.0; 2026-4-20 20:10
+#   - rough mvp
+# - 0.4.0; 2026-4-19 14:05
 #   - added the frontend component system
 #   - added basic post support
 # - 0.3.0; 2026-4-16 19:27
@@ -869,7 +871,7 @@ export ION_SERVE_PRODUCTION="${ION_SERVE_PRODUCTION:-}"
 export ION_SERVE_WWW="${ION_SERVE_WWW:-}"
 
 export ION_WATCH="${ION_WATCH:-2}"
-export ION_WATCH_CLEAR="${ION_WATCH_CLEAR:-1}"
+export ION_WATCH_CLEAR="${ION_WATCH_CLEAR:-}"
 export ION_WATCH_THROTTLE="${ION_WATCH_THROTTLE:-0.1}"
 export ION_WATCH_DEBOUNCE="${ION_WATCH_DEBOUNCE:-0.1}"
 export ION_WATCH_POLLING="${ION_WATCH_POLLING:-}"
@@ -906,8 +908,8 @@ export ION_FILTER_OUTPUT="${ION_FILTER_OUTPUT:-}"
 export ION_FILTER_TARGET="${ION_FILTER_TARGET:-}"
 
 export ION_START_ID="${ION_START_ID:-0}"
-export ION_START_CMD="${ION_START_CMD:-"env"}"
-export ION_START_CMD_POST="${ION_START_CMD_POST:-}"
+export ION_START_PRE="${ION_START_PRE:-"env"}"
+export ION_START_POST="${ION_START_POST:-}"
 export ION_START_ARGS="${ION_START_ARGS:-}"
 
 export ION_DOMAIN="${ION_DOMAIN:-"localhost"}"
@@ -1098,9 +1100,10 @@ _CLASS_FORM = env("_CLASS_FORM")
 _CLASS_HEADER = env("_CLASS_HEADER")
 _CLASS_REQUIRED = env("_CLASS_REQUIRED")
 _CLASS_COMPONENT = env("_CLASS_COMPONENT")
+_CLASS_STARTED = env("_CLASS_STARTED")
 _CLASS_NO_JS = env("_CLASS_NO_JS")
 
-START_ID = env("START_ID")
+START_ID = envn("START_ID")
 
 BIN_SELF = env("BIN_SELF")
 
@@ -1120,7 +1123,7 @@ TESTING = envb("TEST", false)
 VOLUME = envn("VOLUME", 3)
 WORDS = envb("WORDS", false)
 
-FILTER_PATH = env("FILTER_PATH")
+FILTER_PATH = env("FILTER_PATH", false)
 FILTER_TARGET = env("FILTER_TARGET")
 FILTER_OUTPUT = env("FILTER_OUTPUT", false)
 
@@ -4549,6 +4552,7 @@ stop() {
 	fi
 }
 
+# fix
 start() {
 	eh__ret=0
 	eh__ifs="$IFS"
@@ -4558,34 +4562,15 @@ start() {
 	export ION_START_ID=1
 
 	# shellcheck disable=SC2086
-	info "$ION__MSG_RUNNING_COMMAND" "$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@"
+	info "$ION__MSG_RUNNING_COMMAND" "$ION_START_PRE" $ION_START_ARGS ${ION_START_POST:+"$ION_START_POST"} "$@"
 
 	# shellcheck disable=SC2086
-	"$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@" || eh__ret=$?
+	"$ION_START_PRE" $ION_START_ARGS ${ION_START_POST:+"$ION_START_POST"} "$@" || eh__ret=$?
 
 	export ION_START_ID="$eh__start_id"
 	IFS="$eh__ifs"
 
 	return "$eh__ret"
-}
-
-# shellcheck disable=SC2120
-start_bg() {
-	em__ifs="$IFS"
-	em__start_id="$ION_START_ID"
-	IFS=" "
-
-	export ION_START_ID=1
-
-	# shellcheck disable=SC2086
-	info "$ION__MSG_RUNNING_COMMAND_BG" "$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@"
-
-	# shellcheck disable=SC2086
-	"$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@" &
-
-	START_PID=$!
-	IFS="$em__ifs"
-	export ION_START_ID="$em__start_id"
 }
 
 start_many() {
@@ -4630,10 +4615,10 @@ start_many() {
 		export ION_VOLUME="$ev__volume"
 
 		# shellcheck disable=SC2086
-		info "$ION__MSG_RUNNING_COMMAND_MANY" "$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@"
+		info "$ION__MSG_RUNNING_COMMAND_MANY" "$ION_START_PRE" $ION_START_ARGS ${ION_START_POST:+"$ION_START_POST"} "$@"
 
 		# shellcheck disable=SC2086
-		"$ev__cmd" $ev__args "$ION_START_CMD" $ION_START_ARGS "$ION_START_CMD_POST" "$@" || ev__ret=$?
+		"$ev__cmd" $ev__args "$ION_START_PRE" $ION_START_ARGS ${ION_START_POST:+"$ION_START_POST"} "$@" || ev__ret=$?
 
 		export ION_START_ID="$ev__start_id"
 		export ION_VOLUME="$ev__old_volume"
@@ -5032,23 +5017,26 @@ stop_watcher() {
 
 start_tcpserver() {
 	if ! test "$SERVER_PID"; then
-		cv__start_cmd="$ION_START_CMD"
-		cv__start_args="$ION_START_ARGS"
-		cv__start_cmd_post="$ION_START_CMD_POST"
-
-		export ION_START_CMD="$ION_BIN_TCPSERVER"
-		export ION_START_ARGS="-q -U -H -R 127.0.0.1 $ION_INBOX_PORT sh"
-		export ION_START_CMD_POST="$ION_BIN_SELF"
-
-		# shellcheck disable=SC2119
-		start_bg || return
-		SERVER_PID="$START_PID"
-
-		export ION_START_CMD="$cv__start_cmd"
-		export ION_START_ARGS="$cv__start_args"
-		export ION_START_CMD_POST="$cv__start_cmd_post"
+		set -m
+		start "$ION_BIN_TCPSERVER" -q -U -H -R 127.0.0.1 "$ION_INBOX_PORT" sh "$ION_BIN_SELF" &
+		SERVER_PID="$!"
+		set +m
 	fi
 }
+
+#start_tcpserver() {
+#	if ! test "$SERVER_PID"; then
+#		SERVER_PID=$(
+#			export ION_START_PRE="$ION_BIN_TCPSERVER"
+#			export ION_START_ARGS="-q -U -H -R 127.0.0.1 $ION_INBOX_PORT sh"
+#			export ION_START_POST="$ION_BIN_SELF"
+#
+#			# shellcheck disable=SC2119
+#			start_bg || return
+#			print "$START_PID"
+#		)
+#	fi
+#}
 
 stop_tcpserver() {
 	if test "$SERVER_PID"; then
@@ -5454,8 +5442,11 @@ start_prune() {
 start_build_internal() {
 	ez__build="$1"
 	ez__plan="$2"
-	ez__rebuild="$3"
-	ez__recompile="$4"
+
+	# defaulting to 1 is a hack - fix later
+	# without this, subsequent 'i' builds wont have any source files
+	ez__rebuild="${3:-1}"
+	ez__recompile="${4:-1}"
 
 	export ION_BUILD_PREVIOUS=
 	export ION_BUILD_CURRENT="$ez__build"
@@ -5729,13 +5720,10 @@ start_building() {
 	
 	http_post() {
 		bz__content="$1"
-	
-		if test "$ION_INBOX"; then
-			bz__temp="$(start_temp_file post md)" || return
-			bz__output="$(http_post_path md "$ION_INBOX")" || return
-			start_pandoc sandbox "$bz__content" > "$bz__temp" || return
-			mv -- "$bz__temp" "$bz__output" || return
-		fi
+		bz__temp="$(start_temp_file post md)" || return
+		bz__output="$(http_post_path md "$ION_INBOX")" || return
+		start_pandoc sandbox "$bz__content" > "$bz__temp" || return
+		mv -- "$bz__temp" "$bz__output" || return
 	}
 	
 	http_response() {
@@ -5822,9 +5810,11 @@ start_building() {
 			fi
 		else
 			# will silently drop post if there's no inbox
-			if test "$br__method" = "POST"; then
+			if test "$br__method" = "POST" && test "$ION_INBOX"; then
 				br__temp="$(start_temp_file request "$br__extension")" || return
-				http_request_body > "$br__temp" && http_post "$br__temp"
+				http_request_body > "$br__temp"
+				info "post received" "$br__temp" "$(cat "$br__temp")"
+				http_post "$br__temp"
 				rm -f -- "$br__temp"
 			fi
 	
@@ -6390,8 +6380,8 @@ init_check_env() {
 	init_check_paths ION_SOURCE_SCRIPTS "$ION_SOURCE_SCRIPTS" || return
 
 	init_check_uint ION_START_ID "$ION_START_ID" || return
-	init_check_string ION_START_CMD "$ION_START_CMD" || return
-	init_check_string ION_START_CMD_POST "$ION_START_CMD_POST" || return
+	init_check_string ION_START_PRE "$ION_START_PRE" || return
+	! test "$ION_START_POST" || init_check_string ION_START_POST "$ION_START_POST" || return
 	! test "$ION_START_ARGS" || init_check_string ION_START_ARGS "$ION_START_ARGS" || return
 
 	init_check_name ION_DOMAIN "$ION_DOMAIN" || return
@@ -6551,10 +6541,6 @@ init_temp_template_html() {
 }
 
 init_temp_source_style() {
-	if test "$TEMP_SOURCE_STYLES"; then # are these checks needed?
-		return
-	fi
-
 	TEMP_SOURCE_STYLES="$(start_temp_file src css)" || return
 
 	if test "$ION_BUILD_CSS_GLOBAL"; then
@@ -6571,10 +6557,6 @@ init_temp_source_style() {
 }
 
 init_temp_source_script() {
-	if test "$TEMP_SOURCE_SCRIPTS"; then
-		return
-	fi
-
 	TEMP_SOURCE_SCRIPTS="$(start_temp_file src js)" || return
 
 	if test "$ION_BUILD_JS_GLOBAL"; then
@@ -6585,7 +6567,7 @@ init_temp_source_script() {
 		el__i=0
 		while IFS= read -r el__path; do
 			el__i=$((el__i+1))
-			printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$TEMP_SOURCE_SCRIPTS" || continue
+			test "$el__path" && printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$TEMP_SOURCE_SCRIPTS" || continue
 		done
 	}
 
@@ -6594,11 +6576,13 @@ init_temp_source_script() {
 		print "$GLOBAL_JS" >> "$TEMP_SOURCE_SCRIPTS" || return
 	fi
 
-	el__j=0
-	while test "$el__j" -lt "$el__i"; do
-		el__j=$((el__j+1))
-		printf 'typeof f%d === "function" && f%d();\n' "$el__j" "$el__j" >> "$TEMP_SOURCE_SCRIPTS" || continue
-	done
+	paths_split_raw "$ION_SOURCE_SCRIPTS" | {
+		el__i=0
+		while IFS= read -r _; do
+			el__i=$((el__i+1))
+			printf 'typeof f%d === "function" && f%d();\n' "$el__i" "$el__i" >> "$TEMP_SOURCE_SCRIPTS" || continue
+		done
+	}
 
 	if test "$ION_BUILD_JS_GLOBAL"; then
 		printf 'main();\n' >> "$TEMP_SOURCE_SCRIPTS" || return
