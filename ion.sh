@@ -3,6 +3,8 @@
 # ῖon
 # ===
 # 
+# - 0.6.0; 2026-4-26 20:20
+#   - added ION_SPIN
 # - 0.5.0; 2026-4-20 20:10
 #   - rough mvp
 # - 0.4.0; 2026-4-19 14:05
@@ -703,6 +705,7 @@ export ION__MSG_INVALID_ENVIRONMENT="${ION__MSG_INVALID_ENVIRONMENT:-"an invalid
 export ION__MSG_INVALID_REPLACEMENT="${ION__MSG_INVALID_REPLACEMENT:-"a sed replacement contains a newline"}"
 export ION__MSG_LINKING_FILE="${ION__MSG_LINKING_FILE:-"unable to create a hard link; reverting to copying"}"
 export ION__MSG_NOT_SLEEPING="${ION__MSG_NOT_SLEEPING:-"sub-second sleep seemingly not possible"}"
+export ION__MSG_SLEEPING="${ION__MSG_SLEEPING:-"sleeping"}"
 export ION__MSG_MAKING_DIR="${ION__MSG_MAKING_DIR:-"making a directory"}"
 export ION__MSG_MAKING_FILE="${ION__MSG_MAKING_FILE:-"making a file"}"
 export ION__MSG_MOVING_FILE="${ION__MSG_MOVING_FILE:-"moving a file"}"
@@ -870,11 +873,15 @@ export ION_SERVE_PORT="${ION_SERVE_PORT:-}"
 export ION_SERVE_PRODUCTION="${ION_SERVE_PRODUCTION:-}"
 export ION_SERVE_WWW="${ION_SERVE_WWW:-}"
 
-export ION_WATCH="${ION_WATCH:-2}"
+export ION_WATCH="${ION_WATCH:-}"
 export ION_WATCH_CLEAR="${ION_WATCH_CLEAR:-}"
 export ION_WATCH_THROTTLE="${ION_WATCH_THROTTLE:-0.1}"
 export ION_WATCH_DEBOUNCE="${ION_WATCH_DEBOUNCE:-0.1}"
 export ION_WATCH_POLLING="${ION_WATCH_POLLING:-}"
+
+export ION_SPIN="${ION_SPIN:-}"
+export ION_SPIN_START="${ION_SPIN_START:-}"
+export ION_SPIN_INTERVAL="${ION_SPIN_INTERVAL:-60}"
 
 export ION_BUILD="${ION_BUILD:-}"
 export ION_BUILD_STEP="${ION_BUILD_STEP:-}"
@@ -943,6 +950,7 @@ WATCHER_PID_INPUT=
 WATCHER_PID_SOURCE=
 
 BUILD_TEMP=
+BUILD_COUNT=0
 
 TEMP_SED=
 TEMP_BLANK=
@@ -3861,12 +3869,12 @@ should_build() {
 	test "$ION_BUILD_CURRENT"
 }
 
+should_spin() {
+	! should_help && ! have_parent && test "$ION_SPIN" = 1
+}
+
 should_watch() {
-	! should_help && ! have_parent && {
-		test "$ION_WATCH" = 1 || {
-			test "$ION_WATCH" = 2 && have_watcher
-		}
-	}
+	! should_help && ! have_parent && ! should_spin && test "$ION_WATCH" = 1
 }
 
 should_serve() {
@@ -4354,6 +4362,7 @@ path_type() {
 	eq__indicator="$1"
 	eq__extension="$2"
 
+	# ${indicator%"${indicator#?}"}
 	eq__character="$(printf '%s' "$eq__indicator" | cut -c1-1)" || return
 
 	if test "$eq__character" = "d"; then
@@ -5443,7 +5452,7 @@ start_build_internal() {
 	ez__build="$1"
 	ez__plan="$2"
 
-	# defaulting to 1 is a hack - fix later
+	# defaulting to 1 is a hack - fix later and check callers
 	# without this, subsequent 'i' builds wont have any source files
 	ez__rebuild="${3:-1}"
 	ez__recompile="${4:-1}"
@@ -5524,22 +5533,21 @@ start_bouncing() {
 }
 
 start_receiving() {
-	dn__first="$1"
 	dn__size=0
 	dn__pid=
 
-	if test "$dn__first" && test "$ION_BUILD_INITIAL"; then
+	if test "$BUILD_COUNT" = 1 && test "$ION_BUILD_INITIAL"; then
 		start_signal "$ION___SIGNAL_ALL" || return
 	fi
 
 	start_watch "$TEMP_WATCH_STREAM"
 	dn__pid="$START_PID"
 
-	dn__size="$(start_size "$TEMP_WATCH_STREAM")" || return
-
 	if ! test "$dn__pid"; then
 		return 1
 	fi
+
+	dn__size="$(start_size "$TEMP_WATCH_STREAM")" || return
 
 	if test "$dn__size" -eq 0; then
 		wait "$dn__pid" || return
@@ -5568,29 +5576,50 @@ start_receiving() {
 		*) dn__recompile= ;;
 	esac
 
-	if ! test "$dn__first"; then
+	if test "$BUILD_COUNT" -gt 1; then
 		start_bouncing || return
 	fi
 
 	start_build "$dn__rebuild" "$dn__recompile"
 }
 
-start_builder() {
-	dj__first=1
-	
-	if should_watch; then
-		while :; do
-			if ! test "$dj__first"; then
-				terminal_clear || true
-			fi
+start_spinning() {
+	dj__now=$(timestamp) || return
 
-			start_receiving "$dj__first" || return
-
-			dj__first=
-		done
-	else
-		start_build || return
+	if ! test "$ION_SPIN_START"; then
+		export ION_SPIN_START="$dj__now"
 	fi
+
+	if test "$BUILD_COUNT" -gt 1; then
+		BUILD_COUNT=$((((dj__now-ION_SPIN_START)/ION_SPIN_INTERVAL)+1))
+
+		dj__next=$((ION_SPIN_START+(BUILD_COUNT*ION_SPIN_INTERVAL)))
+		dj__delta=$((dj__next-dj__now))
+
+		note "$ION__MSG_SLEEPING" "$dj__delta""$ION___SUFFIX_SECONDS"
+		sleep "$dj__delta" || return
+	fi
+
+	start_build
+}
+
+start_builder() {
+	while :; do
+		BUILD_COUNT=$((BUILD_COUNT+1))
+
+		if test "$BUILD_COUNT" -gt 1; then
+			terminal_clear || true
+		fi
+
+		if should_spin; then
+			start_spinning || return
+		elif should_watch; then
+			start_receiving || return
+		else
+			start_build || return
+			break
+		fi
+	done
 }
 
 start_indexing() {
@@ -5645,7 +5674,7 @@ start_building() {
 		# only performs one read syscall
 		# whole message might not be in buffer
 		# would need to loop until content length is reached past the headers
-		# or until eof is reached in the headers or body
+		# or until eof is reached in the headers or body (loop until \r\n\r\n then read until Content-Length or eof)
 		dd count=1 bs="8192" 2>/dev/null
 	}
 	
@@ -6216,6 +6245,7 @@ init_check_env() {
 	init_check_string ION__MSG_INVALID_REPLACEMENT "$ION__MSG_INVALID_REPLACEMENT" || return
 	init_check_string ION__MSG_LINKING_FILE "$ION__MSG_LINKING_FILE" || return
 	init_check_string ION__MSG_NOT_SLEEPING "$ION__MSG_NOT_SLEEPING" || return
+	init_check_string ION__MSG_SLEEPING "$ION__MSG_SLEEPING" || return
 	init_check_string ION__MSG_BUILD_START "$ION__MSG_BUILD_START" || return
 	init_check_string ION__MSG_MAKING_DIR "$ION__MSG_MAKING_DIR" || return
 	init_check_string ION__MSG_MAKING_FILE "$ION__MSG_MAKING_FILE" || return
@@ -6346,7 +6376,11 @@ init_check_env() {
 	init_check_bool ION_SERVE_PRODUCTION "$ION_SERVE_PRODUCTION" || return
 	! test "$ION_SERVE_PORT" || init_check_uint ION_SERVE_PORT "$ION_SERVE_PORT" || return
 
-	init_check_uint ION_WATCH "$ION_WATCH" || return
+	init_check_bool ION_SPIN "$ION_SPIN" || return
+	! test "$ION_SPIN_START" || init_check_uint ION_SPIN_START "$ION_SPIN_START" || return
+	init_check_uint ION_SPIN_INTERVAL "$ION_SPIN_INTERVAL" || return
+
+	init_check_bool ION_WATCH "$ION_WATCH" || return
 	init_check_bool ION_WATCH_CLEAR "$ION_WATCH_CLEAR" || return
 	! test "$ION_WATCH_THROTTLE" || init_check_unum ION_WATCH_THROTTLE "$ION_WATCH_THROTTLE" || return
 	! test "$ION_WATCH_DEBOUNCE" || init_check_unum ION_WATCH_DEBOUNCE "$ION_WATCH_DEBOUNCE" || return
@@ -6565,9 +6599,13 @@ init_temp_source_script() {
 
 	paths_split_raw "$ION_SOURCE_SCRIPTS" | {
 		el__i=0
+
 		while IFS= read -r el__path; do
 			el__i=$((el__i+1))
-			test "$el__path" && printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$TEMP_SOURCE_SCRIPTS" || continue
+
+			if test "$el__path"; then
+				printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$TEMP_SOURCE_SCRIPTS" || continue
+			fi
 		done
 	}
 
@@ -6578,6 +6616,7 @@ init_temp_source_script() {
 
 	paths_split_raw "$ION_SOURCE_SCRIPTS" | {
 		el__i=0
+
 		while IFS= read -r _; do
 			el__i=$((el__i+1))
 			printf 'typeof f%d === "function" && f%d();\n' "$el__i" "$el__i" >> "$TEMP_SOURCE_SCRIPTS" || continue
