@@ -3894,7 +3894,7 @@ can_build() {
 }
 
 can_watch() {
-	test "$ION_WATCH" = 0 || test "$ION_WATCH" = 2 || {
+	! test "$ION_WATCH" || test "$ION_WATCH" = 0 || {
 		test "$ION_WATCH" = 1 && have_watcher
 	}
 }
@@ -5475,6 +5475,8 @@ start_build() {
 	do__rebuild="$1"
 	do__recompile="$2"
 
+	note "$ION__MSG_BUILD_START"
+
 	do__time="$(timestamp)" || return
 	do__space="$(start_random 16)" || return
 
@@ -5558,9 +5560,7 @@ start_receiving() {
 
 	dn__change="$(stop_signal)" || return
 
-	if test "$dn__change"; then
-		note "$ION__MSG_BUILD_START"
-	else
+	if ! test "$dn__change"; then
 		return
 	fi
 
