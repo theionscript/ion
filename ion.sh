@@ -1,8 +1,8 @@
 #!/bin/sh
-# 
+#
 # ῖon
 # ===
-# 
+#
 # - 0.6.0; 2026-4-26 20:20
 #   - added ION_SPIN
 # - 0.5.0; 2026-4-20 20:10
@@ -20,7 +20,7 @@
 #   - updated the licence
 # - 0.1.0; 2026-3-30 22:32
 #   - initial release
-# 
+#
 # References
 # ==========
 #
@@ -29,59 +29,59 @@
 # - lua.org/manual/5.4/manual.html
 # - pandoc.org/MANUAL.html#pandocs-markdown
 # - pandoc.org/lua-filters.html
-# 
+#
 # Licence
 # =======
-# 
+#
 # The source of this software is open to all, and free to all those
 # who are open; use of this software to provide a service requires full
 # transparency of the service stack, or otherwise a separate licence can
 # be obtained.
-# 
+#
 # This licence is based on the SSPL from MongoDB, Inc. which itself was
 # derived from the AGPL from the Free Software Foundation. The Contributions
 # section that follows after the Licence was derived from the CLAs of the Apache
 # Software Foundation and Project Harmony. The aim is to remain true to the
 # spirit of free and open source software while supporting its long-term
 # stability and reducing ambiguity for private enterprises.
-# 
+#
 # 0. Definitions
 # --------------
-# 
+#
 # “The Author” refers to the copyright holder,
 # or the rightful heirs and assigns thereof.
 #
 # “This Licence” refers to the Libra Public Licence,
 # that is the licence attached to the head of this file.
-# 
+#
 # “Copyright” also means copyright-like laws that apply
 # to other kinds of works, such as semiconductor masks.
-# 
-# “The Program” refers to any copyrightable work licensed 
+#
+# “The Program” refers to any copyrightable work licensed
 # under this Licence. Each licensee is addressed as “you”.
 # “Licensees” and “recipients” may be individuals or organisations.
-# 
+#
 # To “modify” a work means to copy from, adapt, or translate all or part
 # of the work in a fashion requiring copyright permission, including but
 # not limited to the use of automated translation tools such as language
 # models or other machine learning methods, other than the making of an
 # exact copy. The resulting work is called a “modified version” of the
 # earlier work or a work “based on” the earlier work.
-# 
+#
 # A “covered work” means either the unmodified Program or a work based on
 # the Program.
-# 
+#
 # To “propagate” a work means to do anything with it that, without
 # permission, would make you directly or secondarily liable for
 # infringement under applicable copyright law, except executing it on a
 # computer or modifying a private copy. Propagation includes copying,
 # distribution (with or without modification), making available to the
 # public, and in some countries other activities as well.
-# 
+#
 # To “convey” a work means any kind of propagation that enables other
 # parties to make or receive copies. Mere interaction with a user through
 # a computer network, with no transfer of a copy, is not conveying.
-# 
+#
 # An interactive user interface displays “Appropriate Legal Notices” to
 # the extent that it includes a convenient and prominently visible feature
 # that (1) displays an appropriate copyright notice, and (2) tells the
@@ -90,30 +90,30 @@
 # Licence, and how to view a copy of this Licence. If the interface
 # presents a list of user commands or options, such as a menu, a prominent
 # item in the list meets this criterion.
-# 
+#
 # 1. Source Code
 # --------------
-# 
+#
 # The “source code” for a work means the preferred form of the work for
 # making modifications to it. “Object code” means any non-source form of a
 # work.
-# 
+#
 # A “Standard Interface” means an interface that either is an official
 # standard defined by a recognised standards body, or, in the case of
 # interfaces specified for a particular programming language, one that is
 # widely used among developers working in that language.
-# 
+#
 # The “System Libraries” of an executable work include anything, other
 # than the work as a whole, that (a) is included in the normal form of
 # packaging a Major Component, but which is not part of that Major Component,
 # and (b) serves only to enable use of the work with that Major Component,
-# or to implement a Standard Interface for which an implementation is available 
+# or to implement a Standard Interface for which an implementation is available
 # to the public in source code form. A “Major Component”, in this context,
 # means a major essential component (kernel, window system, and so on) of
 # the specific operating system (if any) on which the executable work runs,
 # or a compiler used to produce the work, or an object code interpreter
 # used to run it.
-# 
+#
 # The “Corresponding Source” for a work in object code form means all the
 # source code needed to generate, install, and (for an executable work)
 # run the object code and to modify the work, including scripts to control
@@ -126,16 +126,16 @@
 # subprograms that the work is specifically designed to require, such as
 # by intimate data communication or control flow between those subprograms
 # and other parts of the work.
-# 
+#
 # The Corresponding Source need not include anything that users can
 # regenerate automatically from other parts of the Corresponding Source.
-# 
+#
 # The Corresponding Source for a work in source code form is that same
 # work.
-# 
+#
 # 2. Basic Permissions
 # --------------------
-# 
+#
 # All rights granted under this Licence are granted for the term of
 # copyright on the Program, and are irrevocable provided the stated
 # conditions are met. This Licence explicitly affirms your unlimited
@@ -144,7 +144,7 @@
 # the output, given its content, constitutes a covered work. This Licence
 # acknowledges your rights of fair use or other equivalent, as provided by
 # copyright law.
-# 
+#
 # Subject to section 13, you may make, run and propagate covered works
 # that you do not convey, without conditions so long as your licence
 # otherwise remains in force. You may convey covered works to others for
@@ -155,19 +155,19 @@
 # covered works for you must do so exclusively on your behalf, under your
 # direction and control, on terms that prohibit them from making any
 # copies of your copyrighted material outside their relationship with you.
-# 
+#
 # Conveying under any other circumstances is permitted solely under the
 # conditions stated below. Sublicensing is not allowed; section 10 makes
 # it unnecessary.
-# 
+#
 # 3. Protecting Users' Legal Rights From Anti-Circumvention Law
 # -------------------------------------------------------------
-# 
+#
 # No covered work shall be deemed part of an effective technological
 # measure under any applicable law fulfilling obligations under article 11
 # of the WIPO copyright treaty adopted on 20 December 1996, or similar
 # laws prohibiting or restricting circumvention of such measures.
-# 
+#
 # When you convey a covered work, you waive any legal power to forbid
 # circumvention of technological measures to the extent such circumvention
 # is effected by exercising rights under this Licence with respect to the
@@ -175,10 +175,10 @@
 # modification of the work as a means of enforcing, against the work's
 # users, your or third parties' legal rights to forbid circumvention of
 # technological measures.
-# 
+#
 # 4. Conveying Verbatim Copies
 # ----------------------------
-# 
+#
 # You may convey verbatim copies of the Program's source code as you
 # receive it, in any medium, provided that you conspicuously and
 # appropriately publish on each copy an appropriate copyright notice; keep
@@ -186,17 +186,17 @@
 # terms added in accord with section 7 apply to the code; keep intact all
 # notices of the absence of any warranty; and give all recipients a copy
 # of this Licence along with the Program.
-# 
+#
 # You may charge any price or no price for each copy that you convey, and
 # you may offer support or warranty protection for a fee.
-# 
+#
 # 5. Conveying Modified Source Versions
 # -------------------------------------
-# 
+#
 # You may convey a work based on the Program, or the modifications to
 # produce it from the Program, in the form of source code under the terms
 # of section 4, provided that you also meet all of these conditions:
-# 
+#
 # - a) The work must carry prominent notices stating that you modified
 #   it, and giving a relevant date.
 # - b) The work must carry prominent notices stating that it is released
@@ -214,7 +214,7 @@
 #   Appropriate Legal Notices; however, if the Program has interactive
 #   interfaces that do not display Appropriate Legal Notices, your work
 #   need not make them do so.
-# 
+#
 # A compilation of a covered work with other separate and independent
 # works, which are not by their nature extensions of the covered work, and
 # which are not combined with it such as to form a larger program, in or
@@ -224,15 +224,15 @@
 # what the individual works permit. Inclusion of a covered work in an
 # aggregate does not cause this Licence to apply to the other parts of the
 # aggregate.
-# 
+#
 # 6. Conveying Non-Source Forms
 # -----------------------------
-# 
+#
 # You may convey a covered work in object code form under the terms of
 # sections 4 and 5, provided that you also convey the machine-readable
 # Corresponding Source under the terms of this Licence, in one of these
 # ways:
-# 
+#
 # - a) Convey the object code in, or embodied in, a physical product
 #   (including a physical distribution medium), accompanied by the
 #   Corresponding Source fixed on a durable physical medium customarily
@@ -268,11 +268,11 @@
 #   you inform other peers where the object code and Corresponding Source
 #   of the work are being offered to the general public at no charge under
 #   subsection 6d.
-# 
+#
 # A separable portion of the object code, whose source code is excluded
 # from the Corresponding Source as a System Library, need not be included
 # in conveying the object code work.
-# 
+#
 # A “User Product” is either (1) a “consumer product”, which means any
 # tangible personal property which is normally used for personal, family,
 # or household purposes, or (2) anything designed or sold for
@@ -286,7 +286,7 @@
 # product has substantial commercial, industrial or non-consumer uses,
 # unless such uses represent the only significant mode of use of the
 # product.
-# 
+#
 # “Installation Information” for a User Product means any methods,
 # procedures, authorisation keys, or other information required to install
 # and execute modified versions of a covered work in that User Product
@@ -294,7 +294,7 @@
 # must suffice to ensure that the continued functioning of the modified
 # object code is in no case prevented or interfered with solely because
 # modification has been made.
-# 
+#
 # If you convey an object code work under this section in, or with, or
 # specifically for use in, a User Product, and the conveying occurs as
 # part of a transaction in which the right of possession and use of the
@@ -305,7 +305,7 @@
 # neither you nor any third party retains the ability to install modified
 # object code on the User Product (for example, the work has been
 # installed in ROM).
-# 
+#
 # The requirement to provide Installation Information does not include a
 # requirement to continue to provide support service, warranty, or updates
 # for a work that has been modified or installed by the recipient, or for
@@ -313,16 +313,16 @@
 # network may be denied when the modification itself materially and
 # adversely affects the operation of the network or violates the rules and
 # protocols for communication across the network.
-# 
+#
 # Corresponding Source conveyed, and Installation Information provided, in
 # accord with this section must be in a format that is publicly documented
 # (and with an implementation available to the public in source code
 # form), and must require no special password or key for unpacking,
 # reading or copying.
-# 
+#
 # 7. Additional Terms
 # -------------------
-# 
+#
 # “Additional permissions” are terms that supplement the terms of this
 # Licence by making exceptions from one or more of its conditions.
 # Additional permissions that are applicable to the entire Program shall
@@ -331,18 +331,18 @@
 # apply only to part of the Program, that part may be used separately
 # under those permissions, but the entire Program remains governed by this
 # Licence without regard to the additional permissions.
-# 
+#
 # When you convey a copy of a covered work, you may at your option remove
 # any additional permissions from that copy, or from any part of it.
 # (Additional permissions may be written to require their own removal in
 # certain cases when you modify the work.) You may place additional
 # permissions on material, added by you to a covered work, for which you
 # have or can give appropriate copyright permission.
-# 
+#
 # Notwithstanding any other provision of this Licence, for material you
 # add to a covered work, you may (if authorised by the copyright holders
 # of that material) supplement the terms of this Licence with terms:
-# 
+#
 # - a) Disclaiming warranty or limiting liability differently from the
 #   terms of sections 15 and 16 of this Licence; or
 # - b) Requiring preservation of specified reasonable legal notices or
@@ -360,7 +360,7 @@
 #   it) with contractual assumptions of liability to the recipient, for
 #   any liability that these contractual assumptions directly impose on
 #   those licensors and authors.
-# 
+#
 # All other non-permissive additional terms are considered “further
 # restrictions” within the meaning of section 10. If the Program as you
 # received it, or any part of it, contains a notice stating that it is
@@ -370,48 +370,48 @@
 # Licence, you may add to a covered work material governed by the terms of
 # that licence document, provided that the further restriction does not
 # survive such relicensing or conveying.
-# 
+#
 # If you add terms to a covered work in accord with this section, you must
 # place, in the relevant source files, a statement of the additional terms
 # that apply to those files, or a notice indicating where to find the
 # applicable terms.
-# 
+#
 # Additional terms, permissive or non-permissive, may be stated in the
 # form of a separately written licence, or stated as exceptions; the above
 # requirements apply either way.
-# 
+#
 # 8. Termination
 # --------------
-# 
+#
 # You may not propagate or modify a covered work except as expressly
 # provided under this Licence. Any attempt otherwise to propagate or
 # modify it is void, and will automatically terminate your rights under
 # this Licence (including any patent licences granted under the third
 # paragraph of section 11).
-# 
+#
 # However, if you cease all violation of this Licence, then your licence
 # from a particular copyright holder is reinstated (a) provisionally,
 # unless and until the copyright holder explicitly and finally terminates
 # your licence, and (b) permanently, if the copyright holder fails to
 # notify you of the violation by some reasonable means prior to 60 days
 # after the cessation.
-# 
+#
 # Moreover, your licence from a particular copyright holder is reinstated
 # permanently if the copyright holder notifies you of the violation by
 # some reasonable means, this is the first time you have received notice
 # of violation of this Licence (for any work) from that copyright holder,
 # and you cure the violation prior to 30 days after your receipt of the
 # notice.
-# 
+#
 # Termination of your rights under this section does not terminate the
 # licences of parties who have received copies or rights from you under
 # this Licence. If your rights have been terminated and not permanently
 # reinstated, you do not qualify to receive new licences for the same
 # material under section 10.
-# 
+#
 # 9. Acceptance Not Required for Having Copies
 # --------------------------------------------
-# 
+#
 # You are not required to accept this Licence in order to receive or run a
 # copy of the Program. Ancillary propagation of a covered work occurring
 # solely as a consequence of using peer-to-peer transmission to receive a
@@ -420,15 +420,15 @@
 # work. These actions infringe copyright if you do not accept this
 # Licence. Therefore, by modifying or propagating a covered work, you
 # indicate your acceptance of this Licence to do so.
-# 
+#
 # 10. Automatic Licensing of Downstream Recipients
 # ------------------------------------------------
-# 
+#
 # Each time you convey a covered work, the recipient automatically
 # receives a licence from the original licensors, to run, modify and
 # propagate that work, subject to this Licence. You are not responsible
 # for enforcing compliance by third parties with this Licence.
-# 
+#
 # An “entity transaction” is a transaction transferring control of an
 # organisation, or substantially all assets of one, or subdividing an
 # organisation, or merging organisations. If propagation of a covered work
@@ -438,7 +438,7 @@
 # paragraph, plus a right to possession of the Corresponding Source of the
 # work from the predecessor in interest, if the predecessor has it or can
 # get it with reasonable efforts.
-# 
+#
 # You may not impose any further restrictions on the exercise of the
 # rights granted or affirmed under this Licence. For example, you may not
 # impose a licence fee, royalty, or other charge for exercise of rights
@@ -446,14 +446,14 @@
 # (including a cross-claim or counterclaim in a lawsuit) alleging that any
 # patent claim is infringed by making, using, selling, offering for sale,
 # or importing the Program or any portion of it.
-# 
+#
 # 11. Patents
 # -----------
-# 
+#
 # A “contributor” is a copyright holder who authorises use under this
 # Licence of the Program or a work on which the Program is based. The work
 # thus licensed is called the contributor's “contributor version”.
-# 
+#
 # A contributor's “essential patent claims” are all patent claims owned or
 # controlled by the contributor, whether already acquired or hereafter
 # acquired, that would be infringed by some manner, permitted by this
@@ -462,19 +462,19 @@
 # further modification of the contributor version. For purposes of this
 # definition, “control” includes the right to grant patent sublicences in
 # a manner consistent with the requirements of this Licence.
-# 
+#
 # Each contributor grants you a non-exclusive, worldwide, royalty-free
 # patent licence under the contributor's essential patent claims, to make,
 # use, sell, offer for sale, import and otherwise run, modify and
 # propagate the contents of its contributor version.
-# 
+#
 # In the following three paragraphs, a “patent licence” is any express
 # agreement or commitment, however denominated, not to enforce a patent
 # (such as an express permission to practise a patent or covenant not to
 # sue for patent infringement). To “grant” such a patent licence to a
 # party means to make such an agreement or commitment not to enforce a
 # patent against the party.
-# 
+#
 # If you convey a covered work, knowingly relying on a patent licence, and
 # the Corresponding Source of the work is not available for anyone to
 # copy, free of charge and under the terms of this Licence, through a
@@ -488,7 +488,7 @@
 # covered work in a country, or your recipient's use of the covered work
 # in a country, would infringe one or more identifiable patents in that
 # country that you have reason to believe are valid.
-# 
+#
 # If, pursuant to or in connection with a single transaction or
 # arrangement, you convey, or propagate by procuring conveyance of, a
 # covered work, and grant a patent licence to some of the parties
@@ -496,7 +496,7 @@
 # convey a specific copy of the covered work, then the patent licence you
 # grant is automatically extended to all recipients of the covered work
 # and works based on it.
-# 
+#
 # A patent licence is “discriminatory” if it does not include within the
 # scope of its coverage, prohibits the exercise of, or is conditioned on
 # the non-exercise of one or more of the rights that are specifically
@@ -511,14 +511,14 @@
 # specific products or compilations that contain the covered work, unless
 # you entered into that arrangement, or that patent licence was granted,
 # prior to 28 March 2007.
-# 
+#
 # Nothing in this Licence shall be construed as excluding or limiting any
 # implied licence or other defences to infringement that may otherwise be
 # available to you under applicable patent law.
-# 
+#
 # 12. No Surrender of Others' Freedom
 # -----------------------------------
-# 
+#
 # If conditions are imposed on you (whether by court order, agreement or
 # otherwise) that contradict the conditions of this Licence, they do not
 # excuse you from the conditions of this Licence. If you cannot use,
@@ -529,10 +529,10 @@
 # for further conveying from those to whom you convey the Program, the
 # only way you could satisfy both those terms and this Licence would be to
 # refrain entirely from conveying the Program.
-# 
+#
 # 13. Offering the Program as a Service
 # -------------------------------------
-# 
+#
 # If you make the functionality of the Program or a modified version
 # available to third parties as a service, you must either
 # obtain a separate licence from the Author, or otherwise
@@ -545,7 +545,7 @@
 # of which entirely or primarily derives from the value of the Program or
 # modified version, or offering a service that accomplishes for users the
 # primary purpose of the Program or modified version.
-# 
+#
 # “Service Source Code” means the Corresponding Source for the Program or
 # the modified version, and the Corresponding Source for all programs that
 # you use to make the Program or modified version available as a service,
@@ -554,15 +554,15 @@
 # software, backup software, storage software and hosting software, all
 # such that a user could run an instance of the service using the Service
 # Source Code you make available.
-# 
+#
 # 14. Revised Versions of this Licence
 # ------------------------------------
-# 
+#
 # The Author may publish revised and/or new versions of the Libra
 # Public Licence from time to time. Such new versions will be similar in
 # spirit to the present version, but may differ in detail to address new
 # problems or concerns.
-# 
+#
 # Each version is given a distinguishing version number. If the Program
 # specifies that a certain numbered version of the Libra Public
 # Licence “or any later version” applies to it, you have the option of
@@ -570,19 +570,19 @@
 # any later version published by the Author. If the Program does not
 # specify a version number of the Libra Public Licence, you may
 # choose any version ever published by the Author.
-# 
+#
 # If the Program specifies that a proxy can decide which future versions
 # of the Libra Public Licence can be used, that proxy's public
 # statement of acceptance of a version permanently authorises you to
 # choose that version for the Program.
-# 
+#
 # Later licence versions may give you additional or different permissions.
 # However, no additional obligations are imposed on any author or
 # copyright holder as a result of your choosing to follow a later version.
-# 
+#
 # 15. Disclaimer of Warranty
 # --------------------------
-# 
+#
 # THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
 # APPLICABLE LAW. EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
 # HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM “AS IS” WITHOUT
@@ -591,10 +591,10 @@
 # PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF
 # THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME
 # THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
-# 
+#
 # 16. Limitation of Liability
 # ---------------------------
-# 
+#
 # IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
 # WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR
 # CONVEYS THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,
@@ -604,20 +604,20 @@
 # SUSTAINED BY YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE
 # WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-# 
+#
 # 17. Interpretation of Sections 15 and 16
 # ----------------------------------------
-# 
+#
 # If the disclaimer of warranty and limitation of liability provided above
 # cannot be given local legal effect according to their terms, reviewing
 # courts shall apply local law that most closely approximates an absolute
 # waiver of all civil liability in connection with the Program, unless a
 # warranty or assumption of liability accompanies a copy of the Program in
 # return for a fee.
-# 
+#
 # Contributions
 # =============
-# 
+#
 # By submitting a contribution to this project, you grant the Author
 # perpetual, worldwide, non-exclusive, no-charge, royalty-free, transferable,
 # and irrevocable licence to import, use, run, reproduce, modify, prepare, display,
@@ -625,7 +625,7 @@
 # multiple tiers of sublicensees, your contributions and such derivative works,
 # including patent licences for any patent claims you own or control that are
 # necessarily infringed by your contribution.
-# 
+#
 # The Author provides no warranty regarding the acceptance or use of
 # your contribution, for which you represent that you have the legal authority
 # to grant the above licence, and that it is your original work or that you
@@ -633,16 +633,16 @@
 # necessary details regarding its origin and any licence restrictions,
 # including, but not limited to, related patents, trademarks, and any
 # employer's intellectual property rights.
-# 
+#
 # Developers
 # ==========
-# 
+#
 # Due to the lack of variable scoping in POSIX shell scripts, all shell
 # variables declared within functions are prefixed with a unique string,
 # so that functions can call other functions without potentially getting
 # their own variables overwritten. This wouldn't help in the case of
 # recursive functions. This will likely be replaced with the local
-# keyword at some point. The last prefix used was: fb
+# keyword at some point. The last prefix used was: fd
 
 export ION___ERROR_PREFIX_MAIN="${ION___ERROR_PREFIX_MAIN:-"- "}"
 export ION___ERROR_PREFIX_SUB="${ION___ERROR_PREFIX_SUB:-"  - "}"
@@ -675,6 +675,7 @@ export ION___SIGNAL_SOURCE="${ION___SIGNAL_SOURCE:-"s"}"
 
 export ION__EXT_JS="${ION__EXT_JS:-"js"}"
 export ION__EXT_CSS="${ION__EXT_CSS:-"css"}"
+export ION__EXT_MAP="${ION__EXT_MAP:-"map"}"
 export ION__EXT_HTML="${ION__EXT_HTML:-"html"}"
 export ION__EXT_JSON="${ION__EXT_JSON:-"json"}"
 export ION__EXT_PANDOC="${ION__EXT_PANDOC:-"pandoc"}"
@@ -698,6 +699,7 @@ export ION__NAME_INDEX_JS="${ION__NAME_INDEX_JS:-"$ION__NAME_BRANCH.$ION__EXT_JS
 export ION__NAME_MAIN_CSS="${ION__NAME_MAIN_CSS:-"$ION__WORD_MAIN.$ION__EXT_CSS"}"
 export ION__NAME_MAIN_JS="${ION__NAME_MAIN_JS:-"$ION__WORD_MAIN.$ION__EXT_JS"}"
 
+export ION__MSG_DEV="${ION__MSG_DEV:-"developer"}"
 export ION__MSG_COMMAND_NOT_FOUND="${ION__MSG_COMMAND_NOT_FOUND:-"command not found"}"
 export ION__MSG_COMMAND_NOT_EXEC="${ION__MSG_COMMAND_NOT_EXEC:-"command not executable"}"
 export ION__MSG_COMMAND_NOT_RECOGNISED="${ION__MSG_COMMAND_NOT_RECOGNISED:-"command not recognised"}"
@@ -744,6 +746,7 @@ export ION__TYPE_STRING="${ION__TYPE_STRING:-"string"}"
 export ION__TYPE_NUMBER="${ION__TYPE_NUMBER:-"number"}"
 export ION__TYPE_BOOLEAN="${ION__TYPE_BOOLEAN:-"boolean"}"
 export ION__TYPE_NULL="${ION__TYPE_NULL:-"null"}"
+export ION__TYPE_NAME="${ION__TYPE_NAME:-"name"}"
 export ION__TYPE_TEXT="${ION__TYPE_TEXT:-"text"}"
 export ION__TYPE_PATH="${ION__TYPE_PATH:-"path"}"
 export ION__TYPE_PATHS="${ION__TYPE_PATHS:-"paths"}"
@@ -1018,6 +1021,7 @@ _NAME_BRANCH = env("_NAME_BRANCH")
 _NAME_INDEX_JS = env("_NAME_INDEX_JS")
 _NAME_INDEX_CSS = env("_NAME_INDEX_CSS")
 
+_MSG_DEV = env("_MSG_DEV")
 _MSG_OPENING_FILE = env("_MSG_OPENING_FILE")
 _MSG_QUERYING_THE_INDEX = env("_MSG_QUERYING_THE_INDEX")
 _MSG_QUERY_FOUND_AN_ENTRY = env("_MSG_QUERY_FOUND_AN_ENTRY")
@@ -1134,6 +1138,8 @@ WORDS = envb("WORDS", false)
 FILTER_PATH = env("FILTER_PATH", false)
 FILTER_TARGET = env("FILTER_TARGET")
 FILTER_OUTPUT = env("FILTER_OUTPUT", false)
+
+BUILD_CURRENT = env("BUILD_CURRENT", false)
 
 CACHED_COGNATES = nil
 CACHED_INDEX = nil
@@ -1847,7 +1853,7 @@ function file_write(file, ...)
 			return r
 		end
 	else
-		return file:write(...)
+		return file:write(...) and true or false
 	end
 end
 
@@ -1861,20 +1867,22 @@ function file_copy(src, dst)
 	if src_file and dst_file then
 		while true do
 			local block = file_read(src_file, 2^13)
-	
+
 			if not block then
 				src_size = file_seek(src_file, "end")
 				break
 			end
-	
-			file_write(dst_file, block)
+
+			if not file_write(dst_file, block) then
+				break
+			end
 		end
-	
+
 		dst_size = file_seek(dst_file, "end")
-	
+
 		file_close(src_file)
 		file_close(dst_file)
-	
+
 		return src_size == dst_size
 	end
 end
@@ -2112,7 +2120,7 @@ function decode_cognates()
 			decoded[k] = v
 		end
 	end
-	
+
 	return decoded
 end
 
@@ -2499,7 +2507,7 @@ function Query:output_table(output, entry, path)
 end
 
 function Query:output_stream(output, entry, path)
-	file_write(output, json_encode(entry), "\n")
+	return file_write(output, json_encode(entry), "\n")
 end
 
 function Query:output(output, entry, path)
@@ -2593,7 +2601,7 @@ function Query:filter(input, output)
 
 		if found then
 			self:output(output, found, path)
-	
+
 			if path == self.path and not self.multiple then
 				break
 			end
@@ -2611,45 +2619,6 @@ function query__test()
 
 end
 
-function Index.part(part)
-	if part:find("^[^/,]*$") and path_is_safe(part) and #part <= 64 then
-		return part:gsub("%.+", ".")
-	end
-end
-
-function Index.name(key, kind)
-	key = Index.part(key)
-	kind = Index.part(kind)
-
-	if is_stringy(key) and is_stringy(kind) then
-		return key..","..kind
-	end
-end
-
-function Index:path(path, key, kind)
-	local root = path_join(self.output, _NAME_ROOT)
-	local name = Index.name(key, kind)
-	return name and path_join(root, path, name)
-end
-
-function Index:file_internal(write, binary, ...)
-	local path = self:path(...)
-	return path and file_open(path, write, binary)
-end
-
-function Index:file(...)
-	return self:file_internal(false, false, ...)
-end
-
-function Index.open(output)
-	local self = setmetatable({}, { __index = Index })
-
-	self.output = output
-	self.scan_file = output and self:file(_NAME_BRANCH, _META_SCAN, subtype_array(_TYPE_PATHS))
-
-	return self.scan_file and self
-end
-
 function Index:close()
 	if self.scan_file then
 		file_close(self.scan_file)
@@ -2657,8 +2626,66 @@ function Index:close()
 	end
 end
 
+function Index.open(output)
+	local self = setmetatable({}, { __index = Index })
+	self.output = output
+	return self
+end
+
+function Index.file_part(part)
+	if part:find("^[^/,]*$") and path_is_safe(part) and #part <= 64 then
+		return part:gsub("%.+", ".")
+	end
+end
+
+function Index.file_name(key, kind)
+	key = Index.file_part(key)
+	kind = Index.file_part(kind)
+
+	if is_stringy(key) and is_stringy(kind) then
+		return key..","..kind
+	end
+end
+
+function Index:file_path(path, key, kind)
+	local name = Index.file_name(key, kind)
+	return name and path_join(self.output, _NAME_ROOT, path, name)
+end
+
+function Index:file_open_internal(write, binary, ...)
+	local path = self:file_path(...)
+	return path and file_open(path, write, binary)
+end
+
+function Index:file_open(...)
+	return self:file_open_internal(false, false, ...)
+end
+
+function Index:file_openw(...)
+	return self:file_open_internal(true, false, ...)
+end
+
+function Index:write(path, key, kind, ...)
+	local file = self:file_openw(path, key, kind)
+	
+	if file then
+		local r = file_write(file, ...)
+		file_flush(file)
+		file_close(file)
+		return r
+	end
+end
+
+function Index:scan_start()
+	if not self.scan_file then
+		self.scan_file = self:file_open(_NAME_BRANCH, _META_SCAN, subtype_array(_TYPE_PATHS))
+	end
+
+	return self.scan_file and file_lines(self.scan_file)
+end
+
 function Index:scan_lines(f)
-	self.scan_iterator = self.scan_file and file_lines(self.scan_file)
+	self.scan_iterator = self:scan_start()
 
 	return function()
 		if self.scan_iterator then
@@ -2726,9 +2753,14 @@ function index_open(output)
 		index_close()
 	end
 
-	CACHED_INDEX = Index.open(output or FILTER_OUTPUT)
+	output = output or BUILD_CURRENT
+	CACHED_INDEX = output and Index.open(output)
 
 	return CACHED_INDEX
+end
+
+function index_write(...)
+	return CACHED_INDEX and CACHED_INDEX:write(FILTER_PATH, ...)
 end
 
 function meta(q, options)
@@ -2818,7 +2850,7 @@ function extract_copy(tree, maximum)
 		table.insert(extract, pandoc.Str(extract_suffix()))
 	end
 
-	return #extract > 0 and extract or nil
+	return #extract > 0 and pandoc.Inlines(extract) or nil
 end
 
 function extract_string(tree, maximum)
@@ -2920,31 +2952,48 @@ function extract_icon()
 end
 
 function extract_defaults(tree)
-	if tree.meta[_META_NAME] == nil then
-		tree.meta[_META_NAME] = path_name(FILTER_PATH)
-	end
-
 	if tree.meta[_META_TITLE] == nil then
-		tree.meta[_META_TITLE] = extract_header(tree.blocks)
-	end
-
-	if tree.meta[_META_TITLE] == nil then
-		tree.meta[_META_TITLE] = tree.meta[_META_NAME]
+		local header = extract_header(tree.blocks)
+		tree.meta[_META_TITLE] = header and pandoc.MetaInlines(header)
 	end
 
 	if tree.meta[_META_DESCRIPTION] == nil then
-		tree.meta[_META_DESCRIPTION] = extract_copy(tree.blocks, extract_length())
+		local description = extract_copy(tree.blocks, extract_length())
+		tree.meta[_META_DESCRIPTION] = description and pandoc.MetaInlines(description)
 	end
 
 	if tree.meta[_META_LENGTH] == nil then
-		tree.meta[_META_LENGTH] = extract_wordcount(tree.blocks)
+		local length = extract_wordcount(tree.blocks)
+		tree.meta[_META_LENGTH] = length
 	end
 
 	return tree
 end
 
 function extract_references(tree)
-	return tree
+	return tree -- todo: add this
+end
+
+function extract_meta(tree)
+	tree = extract_defaults(tree)
+	tree = extract_references(tree)
+
+	for k, v in pairs(tree.meta) do
+		local vt = pandoc.utils.type(v)
+
+		if vt == "Blocks" or vt == "Inlines" then
+			v = pandoc.utils.stringify(v)
+			vt = "string"
+		end
+
+		if vt == "boolean" then
+			index_write(k, _TYPE_BOOLEAN, v and _TYPE_TRUE or _TYPE_FALSE)
+		elseif vt == "number" then
+			index_write(k, _TYPE_NUMBER, tostring(v))
+		elseif vt == "string" then
+			index_write(k, _TYPE_STRING, v)
+		end
+	end
 end
 
 function filter_divs(tree)
@@ -3197,9 +3246,10 @@ EOF
 
 FILTER_EXTRACT="$(cat <<'EOF'
 Pandoc = function(tree)
-	tree = extract_defaults(tree)
-	tree = extract_references(tree)
-	return tree
+	index_open()
+	extract_meta(tree)
+	index_close()
+	os.exit(0)
 end
 EOF
 )"
@@ -3802,7 +3852,7 @@ have_hash() {
 }
 
 have_stat() {
-	test "$ION_BIN_STAT" 
+	test "$ION_BIN_STAT"
 }
 
 have_stat_gnu() {
@@ -3865,7 +3915,7 @@ should_test() {
 	! have_parent && test "$ION_TEST" = 1
 }
 
-should_build() {
+should_derive() {
 	test "$ION_BUILD_CURRENT"
 }
 
@@ -3921,7 +3971,7 @@ printe() {
 	if have_parent; then
 		ab__prefix="$ION___ERROR_PREFIX_SUB"
 
-		if test "$ION_START_ID" != 1; then
+		if test "$ION_START_ID" != 0; then
 			ab__prefix="$ab__prefix$ION___ERROR_PREFIX_SUBL$ION_START_ID$ION___ERROR_PREFIX_SUBR"
 		fi
 	else
@@ -4396,11 +4446,11 @@ path_type() {
 
 path_absolute_from() {
 	ct__cwd="$(pwd)" || return
-	
+
 	if test -d "$1"; then
-		cd -- "$1" || return
+		cd "$1" || return
 		ct__path="$(pwd)" || return
-		cd -- "$ct__cwd" || return
+		cd "$ct__cwd" || return
 		print "$ct__path"
 	fi
 }
@@ -4457,7 +4507,7 @@ paths_split() {
 	paths_split_raw "$@" | while IFS= read -r cw__path; do
 		if test "$cw__path"; then
 			cw__normal="$(path_normal "$cw__path")" || return
-	
+
 			if path_is_safe "$cw__normal"; then
 				print "$cw__normal"
 			fi
@@ -4486,28 +4536,28 @@ paths_normal() {
 				cy__paths="$cy__path"
 			fi
 		done
-	
+
 		print "$cy__paths"
 	}
 }
 
 file_make() {
-	touch -- "$1" || error "$ION__MSG_MAKING_FILE" "$1"
+	touch "$1" || error "$ION__MSG_MAKING_FILE" "$1"
 }
 
 file_remove() {
-	! test "$1" || rm -f -- "$1" || error "$ION__MSG_REMOVING_FILE" "$1"
+	! test "$1" || rm -f "$1" || error "$ION__MSG_REMOVING_FILE" "$1"
 }
 
 file_move() {
-	mv -- "$1" "$2" || error "$ION__MSG_MOVING_FILE" "$1" "$2"
+	mv "$1" "$2" || error "$ION__MSG_MOVING_FILE" "$1" "$2"
 }
 
 file_copy() {
 	co__result=1
 
 	if have_ln; then
-		"$ION_BIN_LN" -f -- "$@" 2>/dev/null || co__result=$?
+		"$ION_BIN_LN" -f "$@" 2>/dev/null || co__result=$?
 
 		if test "$co__result" -ne 0; then
 			note "$ION__MSG_LINKING_FILE" "$@"
@@ -4516,16 +4566,16 @@ file_copy() {
 	fi
 
 	if test "$co__result" -ne 0; then
-		cp -f -- "$@" || return
+		cp -f "$@" || return
 	fi
 }
 
 dir_make() {
-	mkdir -- "$1" || error "$ION__MSG_MAKING_DIR" "$1"
+	mkdir "$1" || error "$ION__MSG_MAKING_DIR" "$1"
 }
 
 dir_make_all() {
-	mkdir -p -- "$1" || error "$ION__MSG_MAKING_DIR" "$1"
+	mkdir -p "$1" || error "$ION__MSG_MAKING_DIR" "$1"
 }
 
 dir_empty() {
@@ -4534,7 +4584,7 @@ dir_empty() {
 
 	if test -d "$eo__path" && test "$eo__path" != "/"; then
 		set +f
-		rm -rf -- \
+		rm -rf \
 			"${eo__path:?}"/* \
 			"${eo__path:?}"/.[!.]* \
 			"${eo__path:?}"/..?* \
@@ -4548,7 +4598,7 @@ dir_remove() {
 	df__ret=0
 
 	if test -d "$df__path" && test "$df__path" != "/"; then
-		rm -rf -- "$df__path" 2>/dev/null || df__ret=$?
+		rm -rf "$df__path" 2>/dev/null || df__ret=$?
 	fi
 
 	return "$df__ret"
@@ -4561,7 +4611,6 @@ stop() {
 	fi
 }
 
-# fix
 start() {
 	eh__ret=0
 	eh__ifs="$IFS"
@@ -4655,7 +4704,7 @@ start_stat_size() {
 
 start_size_ls() {
 	# from: stackoverflow.com/a/40167066
-	dk__output="$(ls -dn -- "$1")" || return
+	dk__output="$(ls -dn "$1")" || return
 
 	dk__ifs="$IFS"
 	IFS=" "
@@ -4725,7 +4774,7 @@ start_find() {
 	fi
 
 	(
-		cd -- "$cn__dir" || exit
+		cd "$cn__dir" || exit
 
 		IFS="$NEWLINE"
 
@@ -4947,7 +4996,7 @@ start_fswatch() {
 
 	ch__ifs="$IFS"
 	IFS=" "
-	
+
 	if ! test "$ch__signal"; then
 		ch__args="$ch__args""1"
 	fi
@@ -5089,6 +5138,8 @@ start_caddy_config_raw() {
 }
 
 start_caddy_config() {
+	# todo: set the verbosity; config log.level
+
 	start_template || return
 	start_template_add ROOT_DIRECTORY "$1" || return
 	start_template_add PROTOCOL "$(start_caddy_protocol)" || return
@@ -5101,8 +5152,8 @@ start_caddy_config() {
 start_caddy() {
 	start_caddy_config "$1" > "$TEMP_SERVER_CONFIG" || return
 
-	start "$ION_BIN_CADDY" reload --adapter caddyfile --config "$TEMP_SERVER_CONFIG" 2>/dev/null || {
-		if start "$ION_BIN_CADDY" start --adapter caddyfile --config "$TEMP_SERVER_CONFIG" >/dev/null 2>&1; then
+	start "$ION_BIN_CADDY" reload --adapter caddyfile --config "$TEMP_SERVER_CONFIG" || {
+		if start "$ION_BIN_CADDY" start --adapter caddyfile --config "$TEMP_SERVER_CONFIG"; then
 			SERVER_STARTED=1
 		else
 			return 1
@@ -5173,7 +5224,7 @@ start_pandoc() {
 	ax__template=
 	ax__target=
 	ax__args=
-	
+
 	ax__ext="$(path_ext_get "$ax__full")" || return
 
 	case "$ax__filter" in
@@ -5209,7 +5260,7 @@ start_pandoc() {
 	ax__args="$ax__args --to=$ax__format"
 	ax__args="$ax__args --number-sections"
 	ax__args="$ax__args --shift-heading-level-by=1"
-	ax__args="$ax__args --highlight-style=$ION_SYNTAX"
+	ax__args="$ax__args --syntax-highlighting=$ION_SYNTAX"
 	ax__args="$ax__args --email-obfuscation=references"
 	ax__args="$ax__args --reference-location=document"
 	ax__args="$ax__args --preserve-tabs"
@@ -5395,7 +5446,7 @@ start_plan() {
 	er__index="$er__step/$ION__ACTION_INDEX"
 	er__source="$er__step/$ION__ACTION_SOURCE"
 
-	mkdir -- \
+	mkdir \
 		"$er__step" \
 		"$er__index" \
 		"$er__source" \
@@ -5406,24 +5457,24 @@ start_plan() {
 	fi
 
 	if test "$er__recompile"; then
-		touch -- "$er__source/$ION__NAME_BRANCH"
+		touch "$er__source/$ION__NAME_BRANCH"
 	fi
 
 	if test "$er__rebuild"; then
 		start_scan | while IFS= read -r er__line; do
 			er__ifs="$IFS"
 			IFS=":"
-	
+
 			# shellcheck disable=SC2086
 			set -- $er__line
-	
+
 			er__path="$1"; shift
 			er__parent="$er__index""$(path_parent "$er__path")" || return
 			er__indexed="$er__index""$er__path"
-	
-			mkdir -p -- "$er__parent" || continue
+
+			mkdir -p "$er__parent" || continue
 			printf '%s\n' "$*" > "$er__indexed" || continue
-	
+
 			IFS="$er__ifs"
 		done
 	fi
@@ -5459,7 +5510,7 @@ start_build_internal() {
 
 	export ION_BUILD_PREVIOUS=
 	export ION_BUILD_CURRENT="$ez__build"
-	
+
 	if test "$ez__recompile"; then
 		start_esbuild css "$ez__build" < "$TEMP_SOURCE_STYLES" || return
 		start_esbuild js "$ez__build" < "$TEMP_SOURCE_SCRIPTS" || return
@@ -5485,7 +5536,7 @@ start_build() {
 	do__plan="$do__index/$ION__NAME_PLAN"
 	do__log="$do__index/$ION__NAME_LOG"
 
-	mkdir -- \
+	mkdir \
 		"$do__build" \
 		"$do__index" \
 		"$do__plan" \
@@ -5515,9 +5566,9 @@ start_bouncing() {
 
 	while :; do
 		dp__ret=0
-	
+
 		sleep "$ION_WATCH_DEBOUNCE" 2>/dev/null || dp__ret=$?
-	
+
 		if test "$dp__ret" -ne 0 && is_unum "$ION_WATCH_DEBOUNCE"; then
 			note "$ION__MSG_NOT_SLEEPING"
 			ION_WATCH_DEBOUNCE="$(floor "$ION_WATCH_DEBOUNCE")" || return
@@ -5622,24 +5673,106 @@ start_builder() {
 	done
 }
 
-start_indexing() {
-	fb__path="$1"
-	fb__input="$2"
-	fb__output="$3"
-	fb__type="$4"
-	fb__size="$5"
-	fb__time="$6"
-	fb__iteration="$7"
+index_open() {
+	fc__meta="$1"
+	fc__key="$2"
+	fc__type="$3"
+	fc__value="$4"
 
-	# temporary
+	fc__name="$fc__key,$fc__type"
+	fc__full="$(path_join "$fc__meta" "$fc__name")" || return
 
-	if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
-		start_pandoc filter "$fb__input" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" || return
-		start_pandoc template "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_HTML")" || return
+	# note: useless cats?
+
+	if test "$fc__value" = "+"; then
+		cat "$fc__full"
+	elif test "$fc__value" = "-"; then
+		cat > "$fc__full"
+	else
+		printf '%s' "$fc__value" > "$fc__full"
 	fi
 }
 
-start_building() {
+derive_index() {
+	fb__path="$1"
+	fb__input="$2"
+	fb__output="${3:-}"
+	fb__type="${4:-"$ION__META_TYPE_FILE"}"
+	fb__size="${5:-"$(start_size "$fb__input")"}" || return
+	fb__time="${6:-"$(start_stat_time "$fb__input")"}" || return
+	fb__iteration="${7:-}"
+	fb__parent="${8:-}"
+
+	fb__root="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT")" || return
+	fb__plan="$(path_join "$fb__root" "$ION__NAME_PLAN")" || return
+	fb__meta="$(path_join "$fb__root" "$fb__path")" || return
+
+	if ! test -d "$fb__meta"; then
+		mkdir -p "$fb__meta"
+	fi
+
+	index_open "$fb__meta" "$ION__META_SIZE" "$ION__TYPE_NUMBER" "$fb__size" || return
+	index_open "$fb__meta" "$ION__META_MODIFIED" "$ION__TYPE_NUMBER" "$fb__time" || return
+	index_open "$fb__meta" "$ION__META_ITERATION" "$ION__TYPE_NUMBER" "$fb__iteration" || return
+	index_open "$fb__meta" "$ION__META_TYPE" "$ION__TYPE_NAME" "$fb__type" || return
+
+	if test "$fb__parent"; then
+		index_open "$fb__meta" "$ION__META_PARENT" "$ION__TYPE_PATH" "$fb__parent" || return
+	fi
+
+	if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
+		start_pandoc extract "$fb__input" "$fb__path" "$ION_BUILD_CURRENT" || return
+	fi
+
+
+
+
+
+
+
+
+
+	note "$ION__MSG_DEV" INDEX "$@"
+
+	# temporary
+
+	#if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
+	#	start_pandoc filter "$fb__input" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" || return
+	#	start_pandoc template "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_HTML")" || return
+	#fi
+}
+
+derive_source() {
+	fd__output="$3"
+
+	fd__path_js=$(path_ext_set "$fd__output" "$ION__EXT_JS") || return
+	fd__path_js_map=$(path_ext_set "$fd__output" "$ION__EXT_JS.$ION__EXT_MAP") || return
+	fd__path_css_map=$(path_ext_set "$fd__output" "$ION__EXT_CSS.$ION__EXT_MAP") || return
+	fd__path_css=$(path_ext_set "$fd__output" "$ION__EXT_CSS") || return
+
+	fd__name_js=$(path_file "$fd__path_js") || return
+	fd__name_js_map=$(path_file "$fd__path_js_map") || return
+	fd__name_css_map=$(path_file "$fd__path_css_map") || return
+	fd__name_css=$(path_file "$fd__path_css") || return
+
+	if test -f "$fd__path_js"; then
+		derive_index "$fd__name_js" "$fd__path_js" "" "$ION__META_TYPE_SCRIPT" || return
+	fi
+
+	if test -f "$fd__path_css"; then
+		derive_index "$fd__name_css" "$fd__path_css" "" "$ION__META_TYPE_STYLE" || return
+	fi
+
+	if test -f "$fd__path_js_map"; then
+		derive_index "$fd__name_js_map" "$fd__path_js_map" "" "" "" "" "" "$fd__path_js" || return
+	fi
+
+	if test -f "$fd__path_css_map"; then
+		derive_index "$fd__name_css_map" "$fd__path_css_map" "" "" "" "" "" "$fd__path_css" || return
+	fi
+}
+
+derive() {
 	for fa__line in "$@"; do
 		fa__ifs="$IFS"
 		IFS=":"
@@ -5651,25 +5784,30 @@ start_building() {
 
 		fa__action="$1"; shift
 		fa__path="$1"; shift
+
 		fa__input="$ION_INPUT""$fa__path"
 		fa__output="$ION_BUILD_CURRENT""$fa__path"
 
-		if test "$fa__action" = "$ION__ACTION_INDEX"; then
-			start_indexing "$fa__path" "$fa__input" "$fa__output" "$@" || continue
-		fi
+		case "$fa__action" in
+			"$ION__ACTION_INDEX") fa__derive=derive_index ;;
+			"$ION__ACTION_SOURCE") fa__derive=derive_source ;;
+			*) continue ;;
+		esac
+
+		"$fa__derive" "$fa__path" "$fa__input" "$fa__output" "$@" || continue
 	done
 }
 
 	# this http parser is for temporary demos
 	# it is intended to be replaced soon
-	
+
 	is_char() {
 		case "$1" in
 			[[:alnum:]]) return 0 ;;
 			*) return 1 ;;
 		esac
 	}
-	
+
 	http_request() {
 		# only performs one read syscall
 		# whole message might not be in buffer
@@ -5677,105 +5815,105 @@ start_building() {
 		# or until eof is reached in the headers or body (loop until \r\n\r\n then read until Content-Length or eof)
 		dd count=1 bs="8192" 2>/dev/null
 	}
-	
+
 	http_request_byte() {
 		# see section 3 of: www.etalabs.net/sh_tricks.html
 		dd count=1 bs=1 2>/dev/null
 	}
-	
+
 	http_request_body() {
 		cat
 	}
-	
+
 	http_status_left() {
 		print "${1%%[![:graph:]]*}"
 	}
-	
+
 	http_status_middle() {
 		string_trim "$(string_trim_graph "$1")"
 	}
-	
+
 	http_status_right() {
 		print "${1##*[![:graph:]]}"
 	}
-	
+
 	http_header_left() {
 		string_trim "${1%%:*}"
 	}
-	
+
 	http_header_right() {
 		string_trim "${1#*:}"
 	}
-	
+
 	http_respond() {
 		# should include: Content-Type: text/plain; charset=utf-8
 		printf '%s %s\r\n%s\r\n\r\n' "HTTP/1.1" "$1" "Content-Length: 0"
 	}
-	
+
 	http_respond_ok() {
 		http_respond "200 OK"
 	}
-	
+
 	http_respond_bad_request() {
 		http_respond "400 Bad Request"
 	}
-	
+
 	http_respond_length_required() {
 		http_respond "411 Length Required"
 	}
-	
+
 	http_respond_too_large() {
 		http_respond "413 Payload Too Large"
 	}
-	
+
 	http_respond_internal_error() {
 		http_respond "500 Internal Server Error"
 	}
-	
+
 	http_post_path() {
 		ca__extension="$1"
 		ca__inbox="$2"
-	
+
 		ca__noise="$(start_random 8)" || return
 		ca__date="$(date +"%Y-%m-%d %H-%M-%S")" || return
 		ca__name="$ca__date $ca__noise"
-	
+
 		if test "$ca__extension"; then
 			ca__name="$ca__name.$ca__extension"
 		fi
-	
+
 		print "$ca__inbox"/"$ca__name"
 	}
-	
+
 	http_post() {
 		bz__content="$1"
 		bz__temp="$(start_temp_file post md)" || return
 		bz__output="$(http_post_path md "$ION_INBOX")" || return
 		start_pandoc sandbox "$bz__content" > "$bz__temp" || return
-		mv -- "$bz__temp" "$bz__output" || return
+		mv "$bz__temp" "$bz__output" || return
 	}
-	
+
 	http_response() {
 		br__method=
 		br__version=
 		br__resource=
 		br__extension=
 		br__length=
-	
+
 		br__line_pos=0
 		br__head_pos=0
 		br__body_pos=0
-	
+
 		br__valid=1
 		br__valid_size=1
 		br__valid_length=1
-	
+
 		# this is weak as it is unlimited
 		while IFS= read -r br__line; do
 			br__line="$(string_trim "$br__line")" || return
 			br__head_pos=$((br__head_pos+${#br__line}+2))
 			br__line_pos=$((br__line_pos+1))
-	
+
 			if test -z "$br__line"; then
 				break
 			elif test "$br__line_pos" -eq 1; then
@@ -5785,50 +5923,50 @@ start_building() {
 			else
 				br__key="$(http_header_left "$br__line")" || return
 				br__value="$(http_header_right "$br__line")" || return
-	
+
 				# should be case insensitive
 				if test "$br__key" = "Content-Length"; then
 					br__length="$br__value"
 				fi
 			fi
 		done
-	
+
 		if ! is_uint "$br__length"; then
 			br__valid_length=0
 			br__valid=0
 		fi
-	
+
 		if test $((br__head_pos+br__length)) -gt 8192; then
 			br__valid_size=0
 			br__valid=0
 		fi
-	
+
 		if test "$br__method" = "POST" && test "$br__valid" -eq 1; then
 			while test $((br__body_pos+1)) -le "$br__length"; do
 				br__byte="$(http_request_byte)" || return
 				br__body_pos=$((br__body_pos+${#br__byte}))
-	
+
 				if ! is_char "$br__byte"; then
 					if test "$br__byte" != "="; then
 						br__valid=0
 					fi
-	
+
 					break
 				fi
-	
+
 				br__extension="$br__extension$br__byte"
-	
+
 				if test ${#br__extension} -gt 32; then # env var
 					br__valid=0
 					break
 				fi
 			done
-	
+
 			if test -z "$br__extension"; then
 				br__valid=0
 			fi
 		fi
-	
+
 		if test "$br__valid" -eq 0; then
 			if test "$br__valid_length" -eq 0; then
 				http_respond_length_required || return
@@ -5844,13 +5982,13 @@ start_building() {
 				http_request_body > "$br__temp"
 				info "post received" "$br__temp" "$(cat "$br__temp")"
 				http_post "$br__temp"
-				rm -f -- "$br__temp"
+				rm -f "$br__temp"
 			fi
-	
+
 			http_respond_ok || return
 		fi
 	}
-	
+
 	http_handle() {
 		{ http_request | http_response; } || {
 			http_respond_internal_error
@@ -5876,7 +6014,7 @@ stop_temp_parent() {
 	file_remove "$TEMP_SERVER_CONFIG" || true
 	file_remove "$TEMP_SOURCE_STYLES" || true
 	file_remove "$TEMP_SOURCE_SCRIPTS" || true
-	
+
 	if test "$BUILD_TEMP"; then
 		dir_remove "$ION_BUILD" || true
 		BUILD_TEMP=
@@ -5923,7 +6061,7 @@ init_env_bin() {
 	elif test "$cs__command"; then
 		cs__absolute="$(path_normal "$cs__command")" || return
 	fi
-	
+
 	if path_is_name "$cs__absolute"; then
 		cs__self=1
 	fi
@@ -5931,7 +6069,7 @@ init_env_bin() {
 	if path_is_absolute "$cs__absolute" && ! test "$cs__self" && ! path_is_exec "$cs__absolute"; then
 		error "$ION__MSG_COMMAND_NOT_EXEC" "$cs__command" "$cs__absolute" || return
 	fi
-	
+
 	if ! test "$cs__absolute" || path_is_safe "$cs__absolute"; then
 		print "$cs__absolute"
 	else
@@ -6013,7 +6151,7 @@ init_env_input() {
 init_env_styles() {
 	paths_split_raw "$1" | {
 		eb__styles=
-		
+
 		while IFS= read -r eb__path; do
 			if path_is_dir "$eb__path"; then
 				eb__path="$(path_join "$eb__path" "$ION__NAME_MAIN_CSS")" || continue
@@ -6025,7 +6163,7 @@ init_env_styles() {
 				eb__styles="$(paths_join "$eb__styles" "$eb__path")"
 			fi
 		done
-		
+
 		print "$eb__styles"
 	}
 }
@@ -6215,6 +6353,7 @@ init_check_env() {
 
 	init_check_name ION__EXT_JS "$ION__EXT_JS" || return
 	init_check_name ION__EXT_CSS "$ION__EXT_CSS" || return
+	init_check_name ION__EXT_MAP "$ION__EXT_MAP" || return
 	init_check_name ION__EXT_HTML "$ION__EXT_HTML" || return
 	init_check_name ION__EXT_JSON "$ION__EXT_JSON" || return
 	init_check_name ION__EXT_PANDOC "$ION__EXT_PANDOC" || return
@@ -6238,6 +6377,7 @@ init_check_env() {
 	init_check_name ION__NAME_MAIN_CSS "$ION__NAME_MAIN_CSS" || return
 	init_check_name ION__NAME_MAIN_JS "$ION__NAME_MAIN_JS" || return
 
+	init_check_string ION__MSG_DEV "$ION__MSG_DEV" || return
 	init_check_string ION__MSG_COMMAND_NOT_FOUND "$ION__MSG_COMMAND_NOT_FOUND" || return
 	init_check_string ION__MSG_COMMAND_NOT_EXEC "$ION__MSG_COMMAND_NOT_EXEC" || return
 	init_check_string ION__MSG_COMMAND_NOT_RECOGNISED "$ION__MSG_COMMAND_NOT_RECOGNISED" || return
@@ -6283,6 +6423,7 @@ init_check_env() {
 	init_check_name ION__TYPE_NUMBER "$ION__TYPE_NUMBER" || return
 	init_check_name ION__TYPE_BOOLEAN "$ION__TYPE_BOOLEAN" || return
 	init_check_name ION__TYPE_NULL "$ION__TYPE_NULL" || return
+	init_check_name ION__TYPE_NAME "$ION__TYPE_NAME" || return
 	init_check_name ION__TYPE_TEXT "$ION__TYPE_TEXT" || return
 	init_check_name ION__TYPE_PATH "$ION__TYPE_PATH" || return
 	init_check_name ION__TYPE_PATHS "$ION__TYPE_PATHS" || return
@@ -6711,8 +6852,8 @@ main() {
 		usage || exit 2
 	elif should_handle; then
 		http_handle || exit 3
-	elif should_build; then
-		start_building "$@" || exit 4
+	elif should_derive; then
+		derive "$@" || exit 4
 	elif ! have_parent; then
 		if should_test; then
 			test_all || exit 5
