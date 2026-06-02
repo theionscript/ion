@@ -3,6 +3,10 @@
 # ῖon
 # ===
 #
+# - 0.8.0; 2026-6-2 14:47
+#   - added metadata extraction
+# - 0.7.0; 2026-6-1 19:15
+#   - added derivation
 # - 0.6.0; 2026-4-26 20:20
 #   - added ION_SPIN
 # - 0.5.0; 2026-4-20 20:10
@@ -642,7 +646,7 @@
 # so that functions can call other functions without potentially getting
 # their own variables overwritten. This wouldn't help in the case of
 # recursive functions. This will likely be replaced with the local
-# keyword at some point. The last prefix used was: fd
+# keyword at some point. The last prefix used was: fg
 
 export ION___ERROR_PREFIX_MAIN="${ION___ERROR_PREFIX_MAIN:-"- "}"
 export ION___ERROR_PREFIX_SUB="${ION___ERROR_PREFIX_SUB:-"  - "}"
@@ -689,6 +693,7 @@ export ION__WORD_INDEX="${ION__WORD_INDEX:-"index"}"
 export ION__WORD_BUILD="${ION__WORD_BUILD:-"build"}"
 export ION__WORD_SOURCE="${ION__WORD_SOURCE:-"source"}"
 export ION__WORD_MAIN="${ION__WORD_MAIN:-"main"}"
+export ION__WORD_META="${ION__WORD_META:-"meta"}"
 
 export ION__NAME_LOG="${ION__NAME_LOG:-".$ION__WORD_LOG"}"
 export ION__NAME_PLAN="${ION__NAME_PLAN:-".$ION__WORD_BUILD"}"
@@ -735,6 +740,7 @@ export ION__MSG_QUERY_FOUND_AN_ENTRY="${ION__MSG_QUERY_FOUND_AN_ENTRY:-"found a 
 
 export ION__ACTION_SOURCE="${ION__ACTION_SOURCE:-"$ION__WORD_SOURCE"}"
 export ION__ACTION_INDEX="${ION__ACTION_INDEX:-"$ION__WORD_INDEX"}"
+export ION__ACTION_META="${ION__ACTION_META:-"$ION__WORD_META"}"
 
 export ION__VERB_IDENTITY="${ION__VERB_IDENTITY:-"identity"}"
 
@@ -963,6 +969,7 @@ TEMP_SERVER_CONFIG=
 TEMP_FILTER_EMPTY=
 TEMP_FILTER_TEST=
 TEMP_FILTER_EXTRACT=
+TEMP_FILTER_META=
 TEMP_FILTER_DOCUMENT=
 TEMP_FILTER_TEMPLATE=
 TEMP_TEMPLATE_JSON=
@@ -1454,7 +1461,7 @@ function array_deduplicated__test()
 end
 
 function string_trim(str)
-	return str:gsub("^%s*(.-)%s*$", "%1")
+	return str and str:gsub("^%s*(.-)%s*$", "%1")
 end
 
 function string_trim_lr(str, l, r)
@@ -1480,7 +1487,7 @@ function string_escape(s)
 end
 
 function string_split(str, pattern, f, strip, plain)
-	str = strip and string_trim(str) or str
+	str = strip and string_trim(str) or str or ""
 
 	local split = {}
 	local i = 1
@@ -2632,23 +2639,27 @@ function Index.open(output)
 	return self
 end
 
-function Index.file_part(part)
-	if part:find("^[^/,]*$") and path_is_safe(part) and #part <= 64 then
-		return part:gsub("%.+", ".")
+function Index.name_check(part)
+	if is_stringy(part) and part:find("^[^/,]*$") and path_is_safe(part) and #part <= 64 then -- todo: 64 should be env
+		return part
 	end
 end
 
-function Index.file_name(key, kind)
-	key = Index.file_part(key)
-	kind = Index.file_part(kind)
+function Index.name_construct(key, kind)
+	key = Index.name_check(key)
+	kind = Index.name_check(kind)
+	return key and kind and key..","..kind
+end
 
-	if is_stringy(key) and is_stringy(kind) then
-		return key..","..kind
-	end
+function Index.name_deconstruct(name)
+	local key, kind = string_split_plain(name, ",")
+	key = Index.name_check(key)
+	kind = Index.name_check(kind)
+	return kind and key, kind
 end
 
 function Index:file_path(path, key, kind)
-	local name = Index.file_name(key, kind)
+	local name = Index.name_construct(key, kind)
 	return name and path_join(self.output, _NAME_ROOT, path, name)
 end
 
@@ -2742,6 +2753,50 @@ function Index:all()
 	return self:scan_entries()
 end
 
+-- todo: support deep trees
+--       perhaps ast import/export for text/inlines/blocks
+
+function Index:export(tree, path)
+	for k, v in pairs(tree.meta) do
+		local vt = pandoc.utils.type(v)
+
+		if vt == "Inlines" then
+			v = pandoc.utils.stringify(v)
+			vt = "string"
+		end
+
+		if vt == "boolean" then
+			self:write(path, k, _TYPE_BOOLEAN, v and _TYPE_TRUE or _TYPE_FALSE)
+		elseif vt == "number" then
+			self:write(path, k, _TYPE_NUMBER, tostring(v))
+		elseif vt == "string" then
+			self:write(path, k, _TYPE_STRING, v)
+		end
+	end
+end
+
+function Index:import(tree, lines)
+	for path in lines do
+		local name = path_file(path)
+		local key, kind = Index.name_deconstruct(name)
+		local content = kind and file_read(path)
+		
+		if kind == _TYPE_BOOLEAN then
+			if content == _TYPE_TRUE then
+				tree.meta[key] = true
+			elseif content == _TYPE_FALSE then
+				tree.meta[key] = false
+			end
+		elseif kind == _TYPE_NUMBER then
+			tree.meta[key] = tonumber(content)
+		elseif kind == _TYPE_STRING then
+			tree.meta[key] = content
+		end
+	end
+
+	return tree
+end
+
 function index_close()
 	if CACHED_INDEX then
 		CACHED_INDEX:close()
@@ -2760,7 +2815,15 @@ function index_open(output)
 end
 
 function index_write(...)
-	return CACHED_INDEX and CACHED_INDEX:write(FILTER_PATH, ...)
+	return CACHED_INDEX and CACHED_INDEX:write(...)
+end
+
+function index_export(tree, path)
+	return CACHED_INDEX and CACHED_INDEX:export(tree, path)
+end
+
+function index_import(tree, lines)
+	return CACHED_INDEX and CACHED_INDEX:import(tree, lines)
 end
 
 function meta(q, options)
@@ -2972,28 +3035,6 @@ end
 
 function extract_references(tree)
 	return tree -- todo: add this
-end
-
-function extract_meta(tree)
-	tree = extract_defaults(tree)
-	tree = extract_references(tree)
-
-	for k, v in pairs(tree.meta) do
-		local vt = pandoc.utils.type(v)
-
-		if vt == "Blocks" or vt == "Inlines" then
-			v = pandoc.utils.stringify(v)
-			vt = "string"
-		end
-
-		if vt == "boolean" then
-			index_write(k, _TYPE_BOOLEAN, v and _TYPE_TRUE or _TYPE_FALSE)
-		elseif vt == "number" then
-			index_write(k, _TYPE_NUMBER, tostring(v))
-		elseif vt == "string" then
-			index_write(k, _TYPE_STRING, v)
-		end
-	end
 end
 
 function filter_divs(tree)
@@ -3247,9 +3288,21 @@ EOF
 FILTER_EXTRACT="$(cat <<'EOF'
 Pandoc = function(tree)
 	index_open()
-	extract_meta(tree)
+	tree = extract_defaults(tree)
+	tree = extract_references(tree)
+	index_export(tree, FILTER_PATH)
 	index_close()
 	os.exit(0)
+end
+EOF
+)"
+
+FILTER_META="$(cat <<'EOF'
+Pandoc = function(tree)
+	index_open()
+	tree = index_import(tree, io.lines())
+	index_close()
+	return tree
 end
 EOF
 )"
@@ -5234,7 +5287,10 @@ start_pandoc() {
 		;;
 		extract)
 			ax__filter="$TEMP_FILTER_EXTRACT"
-			ax__target="$ION__EXT_JSON"
+		;;
+		meta)
+			ax__filter="$TEMP_FILTER_META"
+			ax__template="$TEMP_TEMPLATE_JSON"
 		;;
 		filter)
 			ax__filter="$TEMP_FILTER_DOCUMENT"
@@ -5682,6 +5738,10 @@ index_open() {
 	fc__name="$fc__key,$fc__type"
 	fc__full="$(path_join "$fc__meta" "$fc__name")" || return
 
+	if ! test -d "$fc__meta"; then
+		mkdir -p "$fc__meta"
+	fi
+
 	# note: useless cats?
 
 	if test "$fc__value" = "+"; then
@@ -5691,6 +5751,22 @@ index_open() {
 	else
 		printf '%s' "$fc__value" > "$fc__full"
 	fi
+}
+
+derive_next() {
+	fe__action="$1"; shift
+	fe__path="$1"; shift
+	fe__ifs="$IFS"
+	IFS=":"
+	
+	fe__full="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$ION__NAME_PLAN" $((ION_BUILD_STEP+1)) "$fe__action" "$fe__path")" || return
+
+	fe__parent="$(path_parent "$fe__full")" || return
+	mkdir -p "$fe__parent" || return
+
+	printf '%s\n' "$*" > "$fe__full" || return
+
+	IFS="$fe__ifs"
 }
 
 derive_index() {
@@ -5703,13 +5779,7 @@ derive_index() {
 	fb__iteration="${7:-}"
 	fb__parent="${8:-}"
 
-	fb__root="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT")" || return
-	fb__plan="$(path_join "$fb__root" "$ION__NAME_PLAN")" || return
-	fb__meta="$(path_join "$fb__root" "$fb__path")" || return
-
-	if ! test -d "$fb__meta"; then
-		mkdir -p "$fb__meta"
-	fi
+	fb__meta="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$fb__path")" || return
 
 	index_open "$fb__meta" "$ION__META_SIZE" "$ION__TYPE_NUMBER" "$fb__size" || return
 	index_open "$fb__meta" "$ION__META_MODIFIED" "$ION__TYPE_NUMBER" "$fb__time" || return
@@ -5724,22 +5794,7 @@ derive_index() {
 		start_pandoc extract "$fb__input" "$fb__path" "$ION_BUILD_CURRENT" || return
 	fi
 
-
-
-
-
-
-
-
-
-	note "$ION__MSG_DEV" INDEX "$@"
-
-	# temporary
-
-	#if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
-	#	start_pandoc filter "$fb__input" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" || return
-	#	start_pandoc template "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_HTML")" || return
-	#fi
+	derive_next "$ION__ACTION_META" "$fb__path" "$fb__type" || return
 }
 
 derive_source() {
@@ -5772,6 +5827,50 @@ derive_source() {
 	fi
 }
 
+derive_meta_paths() {
+	fg__path="$1"
+	
+	fg__full="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$fg__path")" || return
+
+	start_find "$fg__full" 1 | while IFS= read -r fg__name; do
+		path_join "$fg__full" "${fg__name#./}"
+	done
+}
+
+derive_meta() {
+	ff__path="$1"
+	ff__input="$2"
+	ff__output="$3"
+	ff__type="$4"
+
+	# should be feature-gated
+	# ION_DERIVE_META and pandoc requirement
+
+	# all full index paths for path; 
+	
+	# derive_meta_paths "$ff__path" | start_pandoc meta "" "$ff__path" > "$ff__output".json.meta
+
+
+		note "$ION__MSG_DEV" META "$@"
+	
+	true
+
+	#scan_entries
+	#	jsons
+	#	scan paths
+
+
+
+
+
+	# temporary
+
+	#if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
+	#	start_pandoc filter "$fb__input" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" || return
+	#	start_pandoc template "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_HTML")" || return
+	#fi
+}
+
 derive() {
 	for fa__line in "$@"; do
 		fa__ifs="$IFS"
@@ -5791,6 +5890,7 @@ derive() {
 		case "$fa__action" in
 			"$ION__ACTION_INDEX") fa__derive=derive_index ;;
 			"$ION__ACTION_SOURCE") fa__derive=derive_source ;;
+			"$ION__ACTION_META") fa__derive=derive_meta ;;
 			*) continue ;;
 		esac
 
@@ -6002,6 +6102,7 @@ stop_temp_shared() {
 	file_remove "$TEMP_FILTER_EMPTY" || true
 	file_remove "$TEMP_FILTER_TEST" || true
 	file_remove "$TEMP_FILTER_EXTRACT" || true
+	file_remove "$TEMP_FILTER_META" || true
 	file_remove "$TEMP_FILTER_DOCUMENT" || true
 	file_remove "$TEMP_FILTER_TEMPLATE" || true
 	file_remove "$TEMP_TEMPLATE_JSON" || true
@@ -6367,6 +6468,7 @@ init_check_env() {
 	init_check_name ION__WORD_BUILD "$ION__WORD_BUILD" || return
 	init_check_name ION__WORD_SOURCE "$ION__WORD_SOURCE" || return
 	init_check_name ION__WORD_MAIN "$ION__WORD_MAIN" || return
+	init_check_name ION__WORD_META "$ION__WORD_META" || return
 
 	init_check_name ION__NAME_LOG "$ION__NAME_LOG" || return
 	init_check_name ION__NAME_PLAN "$ION__NAME_PLAN" || return
@@ -6412,6 +6514,7 @@ init_check_env() {
 
 	init_check_name ION__ACTION_SOURCE "$ION__ACTION_SOURCE" || return
 	init_check_name ION__ACTION_INDEX "$ION__ACTION_INDEX" || return
+	init_check_name ION__ACTION_META "$ION__ACTION_META" || return
 
 	init_check_name ION__VERB_IDENTITY "$ION__VERB_IDENTITY" || return
 
@@ -6685,6 +6788,14 @@ init_temp_filter_extract() {
 	fi
 }
 
+init_temp_filter_meta() {
+	if ! test "$TEMP_FILTER_META"; then
+		TEMP_FILTER_META="$(start_temp_file filter-meta lua)" || return
+		print "$SHARED_LUA" > "$TEMP_FILTER_META" || return
+		print "$FILTER_META" >> "$TEMP_FILTER_META" || return
+	fi
+}
+
 init_temp_filter_document() {
 	if ! test "$TEMP_FILTER_DOCUMENT"; then
 		TEMP_FILTER_DOCUMENT="$(start_temp_file filter-document lua)" || return
@@ -6783,6 +6894,7 @@ init_temp_shared() {
 	init_temp_filter_empty || return
 	init_temp_filter_test || return
 	init_temp_filter_extract || return
+	init_temp_filter_meta || return
 	init_temp_filter_document || return
 	init_temp_filter_template || return
 	init_temp_template_json || return
@@ -6832,6 +6944,7 @@ test_all() {
 			"$TEMP_FILTER_EMPTY" \
 			"$TEMP_FILTER_TEST" \
 			"$TEMP_FILTER_EXTRACT" \
+			"$TEMP_FILTER_META" \
 			"$TEMP_FILTER_DOCUMENT" \
 			"$TEMP_FILTER_TEMPLATE" || return
 	fi
