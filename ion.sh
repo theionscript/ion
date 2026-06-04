@@ -3,10 +3,12 @@
 # ῖon
 # ===
 #
-# - 0.8.0; 2026-6-4 15:40
-#   - better mvp
+# - 0.9.0; 2026-6-4 20:26
+#   - linked the metadata with the query system
+# - 0.8.0; 2026-6-2 14:17
+#   - added metadata extraction
 # - 0.7.0; 2026-6-1 19:15
-#   - added derivation and metadata extraction
+#   - added derivation support
 # - 0.6.0; 2026-4-26 20:20
 #   - added ION_SPIN
 # - 0.5.0; 2026-4-20 20:10
@@ -646,7 +648,7 @@
 # so that functions can call other functions without potentially getting
 # their own variables overwritten. This wouldn't help in the case of
 # recursive functions. This will likely be replaced with the local
-# keyword at some point. The last prefix used was: fk
+# keyword at some point. The last prefix used was: fm
 
 export ION___ERROR_PREFIX_MAIN="${ION___ERROR_PREFIX_MAIN:-"- "}"
 export ION___ERROR_PREFIX_SUB="${ION___ERROR_PREFIX_SUB:-"  - "}"
@@ -2745,7 +2747,7 @@ end
 function Index:scan_entries(f)
 	return self:scan_paths(function(path)
 		local file_path = path_join(self.output, path)
-		local json_path = file_path.._EXT_JSON..".".._EXT_META
+		local json_path = file_path..".".._EXT_META
 		local decoded = json_path and file_decode(json_path)
 
 		if f and decoded then
@@ -4687,6 +4689,36 @@ dir_remove() {
 	return "$df__ret"
 }
 
+index_meta() {
+	fl__path="$1"
+	fl__root="${2:-"$ION_BUILD_CURRENT"}"
+	fl__meta="$(path_join "$fl__root" "$ION__NAME_ROOT" "$fl__path")" || return
+
+	if ! test -d "$fl__meta"; then
+		mkdir -p "$fl__meta" || return
+	fi
+
+	printf '%s' "$fl__meta"
+}
+
+index_open() {
+	fc__meta="$1"
+	fc__key="$2"
+	fc__type="$3"
+	fc__value="$4"
+
+	fc__name="$fc__key,$fc__type"
+	fc__full="$(path_join "$fc__meta" "$fc__name")" || return
+
+	# note: useless cats?
+
+	if test "$fc__value"; then
+		printf '%s' "$fc__value" > "$fc__full"
+	else
+		printf '%s' "$fc__full"
+	fi
+}
+
 stop() {
 	if test "$1"; then
 		kill -TERM "$1" 2>/dev/null || true
@@ -4811,10 +4843,13 @@ start_find() {
 	# and: stackoverflow.com/q/21726862/22451530
 	# and: unix.stackexchange.com/a/298595
 
-	cn__dir="$1"
-	cn__flat="${2:-}"
-	cn__extra="${3:-}"
-	cn__dirs="${4:-}"
+	cn__mode="$1"
+	cn__dir="${2:-"$ION_INPUT"}"
+
+	cn__flat=
+	cn__extra=
+	cn__dirs=
+	cn__ext=
 
 	cn__args=
 	cn__dirs_l=
@@ -4822,6 +4857,39 @@ start_find() {
 	cn__dir_l=
 	cn__dir_r=
 	cn__type_d=
+
+	case "$cn__mode" in
+		names)
+			cn__flat=1
+			cn__extra=
+			cn__dirs=
+			cn__ext=
+		;;
+		paths)
+			cn__flat=
+			cn__extra=
+			cn__dirs=
+			cn__ext=
+		;;
+		dirnames)
+			cn__flat=1
+			cn__extra=
+			cn__dirs=1
+			cn__ext=
+		;;
+		cluster)
+			cn__flat="$ION_CLUSTER"
+			cn__extra=1
+			cn__dirs=1
+			cn__ext=
+		;;
+		meta)
+			cn__flat=
+			cn__extra=
+			cn__dirs=
+			cn__ext="$ION__EXT_META"
+		;;
+	esac
 
 	if test "$cn__flat"; then
 		cn__dirs_l="$cn__dirs_l""!"
@@ -4862,6 +4930,10 @@ start_find() {
 		cn__type_d="-o""$NEWLINE""-type""$NEWLINE""d"
 	fi
 
+	if test "$cn__ext"; then
+		cn__ext="-name""$NEWLINE"'*.'"$cn__ext"
+	fi
+
 	(
 		cd "$cn__dir" || exit
 
@@ -4900,6 +4972,7 @@ start_find() {
 			! -name '*%*' \
 			! -name '*~*' \
 			! -name '.*' \
+			$cn__ext \
 			$cn__args
 	)
 }
@@ -5464,7 +5537,7 @@ start_esbuild() {
 }
 
 start_scan() {
-	start_find "${1:-"$ION_INPUT"}" "$ION_CLUSTER" 1 1 | while IFS= read -r ep__line; do
+	start_find cluster "$1" | while IFS= read -r ep__line; do
 		ep__ifs="$IFS"
 		IFS=":"
 		# shellcheck disable=SC2086
@@ -5491,24 +5564,40 @@ start_scan() {
 	done
 }
 
+start_step_list() {
+	fm__build="$1"
+
+	start_find meta "$fm__build" | while IFS= read -r fm__meta_line; do
+		fm__meta_path="${fm__meta_line#./}"
+		printf '%s\n' "/${fm__meta_path%."$ION__EXT_META"}"
+	done
+}
+
 start_step() {
 	eu__step="$1"
+	eu__build="$2"
 
-	start_find "$eu__step" 1 "" 1 | while IFS= read -r eu__action_line; do
+	start_find dirnames "$eu__step" | while IFS= read -r eu__action_line; do
 		eu__action_name="${eu__action_line#./}"
 		eu__action_path="$eu__step/$eu__action_name"
 
-		start_find "$eu__action_path" | while IFS= read -r eu__path_line; do
+		start_find paths "$eu__action_path" | while IFS= read -r eu__path_line; do
 			eu__path="/${eu__path_line#./}"
 			eu__content_path="$eu__action_path""$eu__path"
 			read -r eu__content < "$eu__content_path" || true
 			printf '%s:%s:%s\n' "$eu__action_name" "$eu__path" "$eu__content"
 		done
 	done
+
+	eu__meta="$(index_meta "/$ION__NAME_BRANCH" "$eu__build")" || return
+	eu__scan_type="$ION__TYPE_ARRAY$ION___TYPE_SEPARATOR$ION__TYPE_PATHS"
+	eu__scan="$(index_open "$eu__meta" "$ION__META_SCAN" "$eu__scan_type")" || return
+	start_step_list "$eu__build" > "$eu__scan"
 }
 
 start_run() {
 	es__plan="$1"
+	es__build="$2"
 	es__count=1
 
 	while :; do
@@ -5516,7 +5605,7 @@ start_run() {
 
 		if test -d "$es__step"; then
 			export ION_BUILD_STEP="$es__count"
-			start_step "$es__step" "$es__count" | start_many sh "$ION_BIN_SELF" || exit
+			start_step "$es__step" "$es__build" | start_many sh "$ION_BIN_SELF" || exit
 		else
 			break
 		fi
@@ -5574,7 +5663,7 @@ start_plan() {
 start_prune() {
 	ey__time="$1"
 
-	start_find "$ION_BUILD" 1 "" 1 | while IFS= read -r ey__line; do
+	start_find dirnames "$ION_BUILD" | while IFS= read -r ey__line; do
 		ey__build="${ey__line#./}"
 		ey__build_time="${ey__build%%-*}"
 
@@ -5606,7 +5695,7 @@ start_build_internal() {
 	fi
 
 	start_plan "$ez__plan" "$ez__rebuild" "$ez__recompile" || return
-	start_run "$ez__plan" || return
+	start_run "$ez__plan" "$ez__build" || return
 
 	dir_remove "$ez__plan" || return
 }
@@ -5762,26 +5851,6 @@ start_builder() {
 	done
 }
 
-index_open() {
-	fc__meta="$1"
-	fc__key="$2"
-	fc__type="$3"
-	fc__value="$4"
-
-	fc__name="$fc__key,$fc__type"
-	fc__full="$(path_join "$fc__meta" "$fc__name")" || return
-
-	# note: useless cats?
-
-	if test "$fc__value" = "+"; then
-		cat "$fc__full"
-	elif test "$fc__value" = "-"; then
-		cat > "$fc__full"
-	else
-		printf '%s' "$fc__value" > "$fc__full"
-	fi
-}
-
 derive_next() {
 	fe__action="$1"; shift
 	fe__path="$1"; shift
@@ -5823,11 +5892,7 @@ derive_index() {
 	fb__time="${6:-"$(start_stat_time "$fb__input")"}" || return
 	fb__parent="${7:-}"
 
-	fb__meta="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$fb__path")" || return
-
-	if ! test -d "$fb__meta"; then
-		mkdir -p "$fb__meta" || return
-	fi
+	fb__meta="$(index_meta "$fb__path")" || return
 
 	index_open "$fb__meta" "$ION__META_SIZE" "$ION__TYPE_NUMBER" "$fb__size" || return
 	index_open "$fb__meta" "$ION__META_MODIFIED" "$ION__TYPE_NUMBER" "$fb__time" || return
@@ -5912,7 +5977,7 @@ derive_meta_paths() {
 	
 	fg__full="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$fg__path")" || return
 
-	start_find "$fg__full" | while IFS= read -r fg__name; do
+	start_find names "$fg__full" | while IFS= read -r fg__name; do
 		path_join "$fg__full" "${fg__name#./}"
 	done
 }
@@ -5923,7 +5988,7 @@ derive_meta() {
 	ff__output="$3"
 	ff__type="$4"
 
-	derive_meta_paths "$ff__path" | start_pandoc meta "" "$ff__path" > "$ff__output.$ION__EXT_JSON.$ION__EXT_META"
+	derive_meta_paths "$ff__path" | start_pandoc meta "" "$ff__path" > "$ff__output.$ION__EXT_META"
 
 	if building_html && test "$ff__type" = "$ION__META_TYPE_DOCUMENT"; then
 		derive_next "$ION__ACTION_HTML" "$ff__path" || return
