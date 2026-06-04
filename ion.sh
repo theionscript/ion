@@ -3,10 +3,10 @@
 # ῖon
 # ===
 #
-# - 0.8.0; 2026-6-2 14:47
-#   - added metadata extraction
+# - 0.8.0; 2026-6-4 15:40
+#   - better mvp
 # - 0.7.0; 2026-6-1 19:15
-#   - added derivation
+#   - added derivation and metadata extraction
 # - 0.6.0; 2026-4-26 20:20
 #   - added ION_SPIN
 # - 0.5.0; 2026-4-20 20:10
@@ -646,7 +646,7 @@
 # so that functions can call other functions without potentially getting
 # their own variables overwritten. This wouldn't help in the case of
 # recursive functions. This will likely be replaced with the local
-# keyword at some point. The last prefix used was: fg
+# keyword at some point. The last prefix used was: fk
 
 export ION___ERROR_PREFIX_MAIN="${ION___ERROR_PREFIX_MAIN:-"- "}"
 export ION___ERROR_PREFIX_SUB="${ION___ERROR_PREFIX_SUB:-"  - "}"
@@ -682,6 +682,7 @@ export ION__EXT_CSS="${ION__EXT_CSS:-"css"}"
 export ION__EXT_MAP="${ION__EXT_MAP:-"map"}"
 export ION__EXT_HTML="${ION__EXT_HTML:-"html"}"
 export ION__EXT_JSON="${ION__EXT_JSON:-"json"}"
+export ION__EXT_META="${ION__EXT_META:-"meta"}"
 export ION__EXT_PANDOC="${ION__EXT_PANDOC:-"pandoc"}"
 
 export ION__WORD_INFO="${ION__WORD_INFO:-"info"}"
@@ -694,6 +695,7 @@ export ION__WORD_BUILD="${ION__WORD_BUILD:-"build"}"
 export ION__WORD_SOURCE="${ION__WORD_SOURCE:-"source"}"
 export ION__WORD_MAIN="${ION__WORD_MAIN:-"main"}"
 export ION__WORD_META="${ION__WORD_META:-"meta"}"
+export ION__WORD_MESA="${ION__WORD_MESA:-"mesa"}"
 
 export ION__NAME_LOG="${ION__NAME_LOG:-".$ION__WORD_LOG"}"
 export ION__NAME_PLAN="${ION__NAME_PLAN:-".$ION__WORD_BUILD"}"
@@ -741,6 +743,8 @@ export ION__MSG_QUERY_FOUND_AN_ENTRY="${ION__MSG_QUERY_FOUND_AN_ENTRY:-"found a 
 export ION__ACTION_SOURCE="${ION__ACTION_SOURCE:-"$ION__WORD_SOURCE"}"
 export ION__ACTION_INDEX="${ION__ACTION_INDEX:-"$ION__WORD_INDEX"}"
 export ION__ACTION_META="${ION__ACTION_META:-"$ION__WORD_META"}"
+export ION__ACTION_MESA="${ION__ACTION_MESA:-"$ION__WORD_MESA"}"
+export ION__ACTION_HTML="${ION__ACTION_HTML:-"$ION__EXT_HTML"}"
 
 export ION__VERB_IDENTITY="${ION__VERB_IDENTITY:-"identity"}"
 
@@ -897,11 +901,16 @@ export ION_BUILD_STEP="${ION_BUILD_STEP:-}"
 export ION_BUILD_CURRENT="${ION_BUILD_CURRENT:-}"
 export ION_BUILD_PREVIOUS="${ION_BUILD_PREVIOUS:-}"
 export ION_BUILD_INITIAL="${ION_BUILD_INITIAL:-1}"
-export ION_BUILD_JS="${ION_BUILD_JS:-1}"
-export ION_BUILD_JS_GLOBAL="${ION_BUILD_JS_GLOBAL:-1}"
-export ION_BUILD_CSS="${ION_BUILD_CSS:-1}"
-export ION_BUILD_CSS_GLOBAL="${ION_BUILD_CSS_GLOBAL:-1}"
-export ION_BUILD_HTML="${ION_BUILD_HTML:-1}"
+
+export ION_DERIVE_SCRIPT="${ION_DERIVE_SCRIPT:-1}"
+export ION_DERIVE_SCRIPT_GLOBAL="${ION_DERIVE_SCRIPT_GLOBAL:-1}"
+export ION_DERIVE_STYLE="${ION_DERIVE_STYLE:-1}"
+export ION_DERIVE_STYLE_GLOBAL="${ION_DERIVE_STYLE_GLOBAL:-1}"
+export ION_DERIVE_KNOWNS="${ION_DERIVE_KNOWNS:-1}"
+export ION_DERIVE_UNKNOWNS="${ION_DERIVE_UNKNOWNS:-1}"
+export ION_DERIVE_META="${ION_DERIVE_META:-1}"
+export ION_DERIVE_MESA="${ION_DERIVE_MESA:-1}"
+export ION_DERIVE_HTML="${ION_DERIVE_HTML:-1}"
 
 export ION_INBOX="${ION_INBOX:-}"
 export ION_INBOX_PORT="${ION_INBOX_PORT:-8000}"
@@ -920,7 +929,6 @@ export ION_SOURCE_STYLES="${ION_SOURCE_STYLES:-}"
 export ION_SOURCE_SCRIPTS="${ION_SOURCE_SCRIPTS:-}"
 
 export ION_FILTER_PATH="${ION_FILTER_PATH:-}"
-export ION_FILTER_OUTPUT="${ION_FILTER_OUTPUT:-}"
 export ION_FILTER_TARGET="${ION_FILTER_TARGET:-}"
 
 export ION_START_ID="${ION_START_ID:-0}"
@@ -971,7 +979,6 @@ TEMP_FILTER_TEST=
 TEMP_FILTER_EXTRACT=
 TEMP_FILTER_META=
 TEMP_FILTER_DOCUMENT=
-TEMP_FILTER_TEMPLATE=
 TEMP_TEMPLATE_JSON=
 TEMP_TEMPLATE_HTML=
 TEMP_SOURCE_STYLES=
@@ -1041,6 +1048,7 @@ _TYPE_FALSE = env("_TYPE_FALSE")
 _TYPE_BOOLEAN = env("_TYPE_BOOLEAN")
 _TYPE_NUMBER = env("_TYPE_NUMBER")
 _TYPE_STRING = env("_TYPE_STRING")
+_TYPE_NAME = env("_TYPE_NAME")
 _TYPE_TEXT = env("_TYPE_TEXT")
 _TYPE_PATH = env("_TYPE_PATH")
 _TYPE_PATHS = env("_TYPE_PATHS")
@@ -1131,8 +1139,8 @@ LINK_DOMAIN = envb("LINK_DOMAIN")
 LINK_PREFIX = env("LINK_PREFIX")
 LINK_TRIM = envb("LINK_TRIM")
 
-BUILD_JS = envb("BUILD_JS")
-BUILD_CSS = envb("BUILD_CSS")
+DERIVE_SCRIPT = envb("DERIVE_SCRIPT")
+DERIVE_STYLE = envb("DERIVE_STYLE")
 
 EXTRACT_SUFFIX = env("EXTRACT_SUFFIX", "")
 EXTRACT_MAXIMUM = envn("EXTRACT_MAXIMUM", 0)
@@ -1143,8 +1151,7 @@ VOLUME = envn("VOLUME", 3)
 WORDS = envb("WORDS", false)
 
 FILTER_PATH = env("FILTER_PATH", false)
-FILTER_TARGET = env("FILTER_TARGET")
-FILTER_OUTPUT = env("FILTER_OUTPUT", false)
+FILTER_TARGET = env("FILTER_TARGET", false)
 
 BUILD_CURRENT = env("BUILD_CURRENT", false)
 
@@ -2652,9 +2659,9 @@ function Index.name_construct(key, kind)
 end
 
 function Index.name_deconstruct(name)
-	local key, kind = string_split_plain(name, ",")
-	key = Index.name_check(key)
-	kind = Index.name_check(kind)
+	local parts = string_split_plain(name, ",")
+	local key = Index.name_check(parts[1])
+	local kind = Index.name_check(parts[2])
 	return kind and key, kind
 end
 
@@ -2738,7 +2745,7 @@ end
 function Index:scan_entries(f)
 	return self:scan_paths(function(path)
 		local file_path = path_join(self.output, path)
-		local json_path = path_ext(file_path, _EXT_JSON)
+		local json_path = file_path.._EXT_JSON..".".._EXT_META
 		local decoded = json_path and file_decode(json_path)
 
 		if f and decoded then
@@ -2780,7 +2787,7 @@ function Index:import(tree, lines)
 		local name = path_file(path)
 		local key, kind = Index.name_deconstruct(name)
 		local content = kind and file_read(path)
-		
+
 		if kind == _TYPE_BOOLEAN then
 			if content == _TYPE_TRUE then
 				tree.meta[key] = true
@@ -2789,7 +2796,7 @@ function Index:import(tree, lines)
 			end
 		elseif kind == _TYPE_NUMBER then
 			tree.meta[key] = tonumber(content)
-		elseif kind == _TYPE_STRING then
+		elseif kind == _TYPE_STRING or kind == _TYPE_NAME or kind == _TYPE_PATH then
 			tree.meta[key] = content
 		end
 	end
@@ -2905,7 +2912,7 @@ function extract_copy(tree, maximum)
 		Div = append_nothing
 	})
 
-	if extract[#extract] == pandoc.Space() then
+	if spaced then
 		extract[#extract] = nil
 	end
 
@@ -3187,15 +3194,15 @@ end
 function template_defaults(tree)
 	local icon, icon_type = extract_icon()
 
-	if not tree.meta["template-link-js"] and BUILD_JS then
+	if not tree.meta["template-link-js"] and DERIVE_SCRIPT then
 		tree.meta["template-link-js"] = link_normal(_NAME_INDEX_JS)
 	end
 
-	if not tree.meta["template-link-css"] and BUILD_CSS then
+	if not tree.meta["template-link-css"] and DERIVE_STYLE then
 		tree.meta["template-link-css"] = link_normal(_NAME_INDEX_CSS)
 	end
 
-	if not tree.meta["template-class-no-js"] and BUILD_JS then
+	if not tree.meta["template-class-no-js"] and DERIVE_SCRIPT then
 		tree.meta["template-class-no-js"] = _CLASS_NO_JS
 	end
 
@@ -3320,16 +3327,6 @@ Pandoc = function(tree)
 	tree = filter_headers(tree)
 	tree = filter_classes(tree)
 
-	index_close()
-	return tree
-end
-EOF
-)"
-
-FILTER_TEMPLATE="$(cat <<'EOF'
-Pandoc = function(tree)
-	index_open()
-	tree = template_defaults(tree)
 	index_close()
 	return tree
 end
@@ -3956,8 +3953,41 @@ have_server() {
 	have_server_front && have_server_back
 }
 
+building_script() {
+	test "$ION_DERIVE_SCRIPT" = 1
+}
+
+building_script_global() {
+	test "$ION_DERIVE_SCRIPT_GLOBAL" = 1
+}
+
+building_style() {
+	test "$ION_DERIVE_STYLE" = 1
+}
+
+building_style_global() {
+	test "$ION_DERIVE_STYLE_GLOBAL" = 1
+}
+
+building_meta() {
+	have_pandoc && test "$ION_DERIVE_META" = 1
+}
+
+building_mesa() {
+	fj__type="$1"
+
+	test "$ION_DERIVE_MESA" = 1 && { {
+		test "$ION_DERIVE_UNKNOWNS" = 1 && \
+			test "$fj__type" = "$ION__META_TYPE_FILE"
+	} || {
+		test "$ION_DERIVE_KNOWNS" = 1 && \
+			test "$fj__type" != "$ION__META_TYPE_FILE" && \
+			test "$fj__type" != "$ION__META_TYPE_DIRECTORY"
+	}; }
+}
+
 building_html() {
-	test "$ION_BUILD_HTML" = 1
+	have_pandoc && test "$ION_DERIVE_HTML" = 1
 }
 
 should_help() {
@@ -4075,7 +4105,7 @@ floor() {
 		di__floored="${1%%.*}"
 	fi
 
-	if test "$di__floored" -lt "$di__minimum"; then
+	if test "${di__floored:-0}" -lt "$di__minimum"; then
 		print "$di__minimum"
 	else
 		print "$di__floored"
@@ -4782,14 +4812,16 @@ start_find() {
 	# and: unix.stackexchange.com/a/298595
 
 	cn__dir="$1"
-	cn__flat="$2"
-	cn__extra="$3"
+	cn__flat="${2:-}"
+	cn__extra="${3:-}"
+	cn__dirs="${4:-}"
 
 	cn__args=
 	cn__dirs_l=
 	cn__dirs_r=
 	cn__dir_l=
 	cn__dir_r=
+	cn__type_d=
 
 	if test "$cn__flat"; then
 		cn__dirs_l="$cn__dirs_l""!"
@@ -4826,6 +4858,10 @@ start_find() {
 		error "$ION__MSG_COMMAND_NOT_FOUND" "find" || return
 	fi
 
+	if test "$cn__dirs"; then
+		cn__type_d="-o""$NEWLINE""-type""$NEWLINE""d"
+	fi
+
 	(
 		cd "$cn__dir" || exit
 
@@ -4837,8 +4873,7 @@ start_find() {
 			$cn__dir_l -name '.hg' $cn__dir_r \
 			$cn__dir_l -path './'"$ION__NAME_ROOT" \
 		\) $cn__dirs_r \( \
-			-type f -o \
-			-type d \
+			-type f $cn__type_d \
 		\) \
 			! -name '*'"$TAB"'*' \
 			! -name '*'"$NEWLINE"'*' \
@@ -5270,7 +5305,6 @@ start_pandoc() {
 	ax__filter="$1"
 	ax__full="${2:-"$TEMP_BLANK"}"
 	ax__path="${3:-}"
-	ax__output="${4:-}"
 
 	ax__ret=0
 	ax__format="plain"
@@ -5299,7 +5333,7 @@ start_pandoc() {
 		;;
 		template)
 			ax__args="--standalone"
-			ax__filter="$TEMP_FILTER_TEMPLATE"
+			ax__filter="$TEMP_FILTER_DOCUMENT"
 			ax__template="$TEMP_TEMPLATE_HTML"
 			ax__target="$ION__EXT_HTML"
 			ax__format="html5"
@@ -5307,8 +5341,8 @@ start_pandoc() {
 		sandbox)
 			ax__args="--sandbox"
 			ax__filter="$TEMP_FILTER_EMPTY"
-			ax__target="md"
 			ax__format="commonmark_x"
+			ax__target="md"
 		;;
 	esac
 
@@ -5338,13 +5372,11 @@ start_pandoc() {
 	fi
 
 	ax__old_path="$ION_FILTER_PATH"
-	ax__old_output="$ION_FILTER_OUTPUT"
 	ax__old_target="$ION_FILTER_TARGET"
 	ax__old_ifs="$IFS"
 	IFS=" "
 
 	export ION_FILTER_PATH="$ax__path"
-	export ION_FILTER_OUTPUT="$ax__output"
 	export ION_FILTER_TARGET="$ax__target"
 
 	# shellcheck disable=SC2086
@@ -5356,7 +5388,6 @@ start_pandoc() {
 	|| ax__ret=$?
 
 	export ION_FILTER_PATH="$ax__old_path"
-	export ION_FILTER_OUTPUT="$ax__old_output"
 	export ION_FILTER_TARGET="$ax__old_target"
 
 	IFS="$ax__old_ifs"
@@ -5432,10 +5463,38 @@ start_esbuild() {
 	return $de__ret
 }
 
+start_scan() {
+	start_find "${1:-"$ION_INPUT"}" "$ION_CLUSTER" 1 1 | while IFS= read -r ep__line; do
+		ep__ifs="$IFS"
+		IFS=":"
+		# shellcheck disable=SC2086
+		set -- $ep__line
+		IFS="$ep__ifs"
+
+		ep__path_raw="${1:-}"
+		ep__path="/${ep__path_raw#./}"
+		ep__size="${2:-}"
+		ep__time="$(floor "${3:-}" 0)" || return
+		ep__ext="$(path_ext_get "$ep__path")" || return
+		ep__type="$(path_type "${4:-}" "$ep__ext")" || return
+
+		if test "$ep__type" = "$ION__META_TYPE_DIRECTORY"; then
+			ep__path="$(path_join "$ep__path" "$ION__NAME_BRANCH")" || return
+		fi
+
+		printf \
+			'%s:%s:%d:%d\n' \
+			"$ep__path" \
+			"$ep__type" \
+			"$ep__size" \
+			"$ep__time"
+	done
+}
+
 start_step() {
 	eu__step="$1"
 
-	start_find "$eu__step" 1 | while IFS= read -r eu__action_line; do
+	start_find "$eu__step" 1 "" 1 | while IFS= read -r eu__action_line; do
 		eu__action_name="${eu__action_line#./}"
 		eu__action_path="$eu__step/$eu__action_name"
 
@@ -5463,32 +5522,6 @@ start_run() {
 		fi
 
 		es__count=$((es__count+1))
-	done
-}
-
-start_scan() {
-	start_find "$ION_INPUT" "$ION_CLUSTER" 1 | while IFS= read -r ep__line; do
-		ep__ifs="$IFS"
-		IFS=":"
-		# shellcheck disable=SC2086
-		set -- $ep__line
-		IFS="$ep__ifs"
-
-		ep__path_raw="${1:-}"
-		ep__path="/${ep__path_raw#./}"
-		ep__size="${2:-}"
-		ep__time="$(floor "${3:-}" 0)" || return
-		ep__ext="$(path_ext_get "$ep__path")" || return
-		ep__type="$(path_type "${4:-}" "$ep__ext")" || return
-		ep__iteration=1
-
-		printf \
-			'%s:%s:%d:%d:%d\n' \
-			"$ep__path" \
-			"$ep__type" \
-			"$ep__size" \
-			"$ep__time" \
-			"$ep__iteration"
 	done
 }
 
@@ -5525,7 +5558,7 @@ start_plan() {
 			set -- $er__line
 
 			er__path="$1"; shift
-			er__parent="$er__index""$(path_parent "$er__path")" || return
+			er__parent="$er__index""$(path_parent "$er__path")" || continue
 			er__indexed="$er__index""$er__path"
 
 			mkdir -p "$er__parent" || continue
@@ -5541,7 +5574,7 @@ start_plan() {
 start_prune() {
 	ey__time="$1"
 
-	start_find "$ION_BUILD" 1 | while IFS= read -r ey__line; do
+	start_find "$ION_BUILD" 1 "" 1 | while IFS= read -r ey__line; do
 		ey__build="${ey__line#./}"
 		ey__build_time="${ey__build%%-*}"
 
@@ -5738,10 +5771,6 @@ index_open() {
 	fc__name="$fc__key,$fc__type"
 	fc__full="$(path_join "$fc__meta" "$fc__name")" || return
 
-	if ! test -d "$fc__meta"; then
-		mkdir -p "$fc__meta"
-	fi
-
 	# note: useless cats?
 
 	if test "$fc__value" = "+"; then
@@ -5756,45 +5785,90 @@ index_open() {
 derive_next() {
 	fe__action="$1"; shift
 	fe__path="$1"; shift
-	fe__ifs="$IFS"
-	IFS=":"
 	
 	fe__full="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$ION__NAME_PLAN" $((ION_BUILD_STEP+1)) "$fe__action" "$fe__path")" || return
 
 	fe__parent="$(path_parent "$fe__full")" || return
 	mkdir -p "$fe__parent" || return
 
-	printf '%s\n' "$*" > "$fe__full" || return
-
+	fe__ifs="$IFS"
+	IFS=":"
+	printf '%s\n' "$*" > "$fe__full"
 	IFS="$fe__ifs"
+}
+
+derive_next_children() {
+	fk__input="$1"
+	fk__path="$2"
+
+	start_scan "$fk__input" | while IFS= read -r fk__line; do
+		fk__ifs="$IFS"
+		IFS=":"
+		# shellcheck disable=SC2086
+		set -- $fk__line
+		IFS="$fk__ifs"
+
+		fk__child=$(path_join "$fk__path" "${1#./}") || continue
+		derive_next "$ION__ACTION_INDEX" "$fk__child" "$@" || continue
+	done
 }
 
 derive_index() {
 	fb__path="$1"
 	fb__input="$2"
 	fb__output="${3:-}"
+
 	fb__type="${4:-"$ION__META_TYPE_FILE"}"
 	fb__size="${5:-"$(start_size "$fb__input")"}" || return
 	fb__time="${6:-"$(start_stat_time "$fb__input")"}" || return
-	fb__iteration="${7:-}"
-	fb__parent="${8:-}"
+	fb__parent="${7:-}"
 
 	fb__meta="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$fb__path")" || return
 
+	if ! test -d "$fb__meta"; then
+		mkdir -p "$fb__meta" || return
+	fi
+
 	index_open "$fb__meta" "$ION__META_SIZE" "$ION__TYPE_NUMBER" "$fb__size" || return
 	index_open "$fb__meta" "$ION__META_MODIFIED" "$ION__TYPE_NUMBER" "$fb__time" || return
-	index_open "$fb__meta" "$ION__META_ITERATION" "$ION__TYPE_NUMBER" "$fb__iteration" || return
 	index_open "$fb__meta" "$ION__META_TYPE" "$ION__TYPE_NAME" "$fb__type" || return
 
 	if test "$fb__parent"; then
 		index_open "$fb__meta" "$ION__META_PARENT" "$ION__TYPE_PATH" "$fb__parent" || return
 	fi
 
+		# ready to build html?
+		# scan_entries, 
+		#	jsons?
+		#	scan file?
+
 	if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
-		start_pandoc extract "$fb__input" "$fb__path" "$ION_BUILD_CURRENT" || return
+		start_pandoc extract "$fb__input" "$fb__path" || return
 	fi
 
-	derive_next "$ION__ACTION_META" "$fb__path" "$fb__type" || return
+	if building_meta; then
+		derive_next "$ION__ACTION_META" "$fb__path" "$fb__type" || return
+	fi
+
+	if building_mesa "$fb__type" && test "$fb__output"; then
+		derive_next "$ION__ACTION_MESA" "$fb__path" || return
+	fi
+
+	if test "$fb__type" = "$ION__META_TYPE_DIRECTORY"; then
+		if test "$ION_CLUSTER" = 1; then
+			fb__indir="$(path_parent "$fb__input")" || return
+			fb__pathdir="$(path_parent "$fb__path")" || return
+			derive_next_children "$fb__indir" "$fb__pathdir" || return
+		fi
+
+		if test "$fb__output"; then
+			fb__outdir="$(path_parent "$fb__output")" || return
+	
+			if ! test -d "$fb__outdir"; then
+				mkdir -p "$fb__outdir" || return
+			fi
+		fi
+	fi
 }
 
 derive_source() {
@@ -5819,12 +5893,18 @@ derive_source() {
 	fi
 
 	if test -f "$fd__path_js_map"; then
-		derive_index "$fd__name_js_map" "$fd__path_js_map" "" "" "" "" "" "$fd__path_js" || return
+		derive_index "$fd__name_js_map" "$fd__path_js_map" "" "" "" "" "$fd__path_js" || return
 	fi
 
 	if test -f "$fd__path_css_map"; then
-		derive_index "$fd__name_css_map" "$fd__path_css_map" "" "" "" "" "" "$fd__path_css" || return
+		derive_index "$fd__name_css_map" "$fd__path_css_map" "" "" "" "" "$fd__path_css" || return
 	fi
+}
+
+derive_mesa() {
+	fh__input="$2"
+	fh__output="$3"
+	cp -f "$fh__input" "$fh__output" || return
 }
 
 derive_meta_paths() {
@@ -5832,43 +5912,31 @@ derive_meta_paths() {
 	
 	fg__full="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$fg__path")" || return
 
-	start_find "$fg__full" 1 | while IFS= read -r fg__name; do
+	start_find "$fg__full" | while IFS= read -r fg__name; do
 		path_join "$fg__full" "${fg__name#./}"
 	done
 }
 
 derive_meta() {
 	ff__path="$1"
-	ff__input="$2"
+	#ff__input="$2"
 	ff__output="$3"
 	ff__type="$4"
 
-	# should be feature-gated
-	# ION_DERIVE_META and pandoc requirement
+	derive_meta_paths "$ff__path" | start_pandoc meta "" "$ff__path" > "$ff__output.$ION__EXT_JSON.$ION__EXT_META"
 
-	# all full index paths for path; 
-	
-	# derive_meta_paths "$ff__path" | start_pandoc meta "" "$ff__path" > "$ff__output".json.meta
+	if building_html && test "$ff__type" = "$ION__META_TYPE_DOCUMENT"; then
+		derive_next "$ION__ACTION_HTML" "$ff__path" || return
+	fi
+}
 
+derive_html() {
+	fi__path="$1"
+	fi__input="$2"
+	fi__output="$3"
 
-		note "$ION__MSG_DEV" META "$@"
-	
-	true
-
-	#scan_entries
-	#	jsons
-	#	scan paths
-
-
-
-
-
-	# temporary
-
-	#if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
-	#	start_pandoc filter "$fb__input" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" || return
-	#	start_pandoc template "$(path_ext_set "$fb__output" "$ION__EXT_PANDOC")" "$fb__path" "$ION_BUILD_CURRENT" > "$(path_ext_set "$fb__output" "$ION__EXT_HTML")" || return
-	#fi
+	fi__html="$(path_ext_set "$fi__output" "$ION__EXT_HTML")" || return
+	start_pandoc template "$fi__input" "$fi__path" > "$fi__html" || return
 }
 
 derive() {
@@ -5891,6 +5959,8 @@ derive() {
 			"$ION__ACTION_INDEX") fa__derive=derive_index ;;
 			"$ION__ACTION_SOURCE") fa__derive=derive_source ;;
 			"$ION__ACTION_META") fa__derive=derive_meta ;;
+			"$ION__ACTION_MESA") fa__derive=derive_mesa ;;
+			"$ION__ACTION_HTML") fa__derive=derive_html ;;
 			*) continue ;;
 		esac
 
@@ -6018,7 +6088,9 @@ derive() {
 				break
 			elif test "$br__line_pos" -eq 1; then
 				br__method="$(http_status_left "$br__line")" || return
+				# shellcheck disable=SC2034
 				br__resource="$(http_status_middle "$br__line")" || return
+				# shellcheck disable=SC2034
 				br__version="$(http_status_right "$br__line")" || return
 			else
 				br__key="$(http_header_left "$br__line")" || return
@@ -6104,7 +6176,6 @@ stop_temp_shared() {
 	file_remove "$TEMP_FILTER_EXTRACT" || true
 	file_remove "$TEMP_FILTER_META" || true
 	file_remove "$TEMP_FILTER_DOCUMENT" || true
-	file_remove "$TEMP_FILTER_TEMPLATE" || true
 	file_remove "$TEMP_TEMPLATE_JSON" || true
 	file_remove "$TEMP_TEMPLATE_HTML" || true
 }
@@ -6457,6 +6528,7 @@ init_check_env() {
 	init_check_name ION__EXT_MAP "$ION__EXT_MAP" || return
 	init_check_name ION__EXT_HTML "$ION__EXT_HTML" || return
 	init_check_name ION__EXT_JSON "$ION__EXT_JSON" || return
+	init_check_name ION__EXT_META "$ION__EXT_META" || return
 	init_check_name ION__EXT_PANDOC "$ION__EXT_PANDOC" || return
 
 	init_check_name ION__WORD_INFO "$ION__WORD_INFO" || return
@@ -6469,6 +6541,7 @@ init_check_env() {
 	init_check_name ION__WORD_SOURCE "$ION__WORD_SOURCE" || return
 	init_check_name ION__WORD_MAIN "$ION__WORD_MAIN" || return
 	init_check_name ION__WORD_META "$ION__WORD_META" || return
+	init_check_name ION__WORD_MESA "$ION__WORD_MESA" || return
 
 	init_check_name ION__NAME_LOG "$ION__NAME_LOG" || return
 	init_check_name ION__NAME_PLAN "$ION__NAME_PLAN" || return
@@ -6515,6 +6588,8 @@ init_check_env() {
 	init_check_name ION__ACTION_SOURCE "$ION__ACTION_SOURCE" || return
 	init_check_name ION__ACTION_INDEX "$ION__ACTION_INDEX" || return
 	init_check_name ION__ACTION_META "$ION__ACTION_META" || return
+	init_check_name ION__ACTION_MESA "$ION__ACTION_MESA" || return
+	init_check_name ION__ACTION_HTML "$ION__ACTION_HTML" || return
 
 	init_check_name ION__VERB_IDENTITY "$ION__VERB_IDENTITY" || return
 
@@ -6635,11 +6710,15 @@ init_check_env() {
 	! test "$ION_BUILD_CURRENT" || init_check_dir ION_BUILD_CURRENT "$ION_BUILD_CURRENT" || return
 	! test "$ION_BUILD_PREVIOUS" || init_check_dir ION_BUILD_PREVIOUS "$ION_BUILD_PREVIOUS" || return
 	init_check_bool ION_BUILD_INITIAL "$ION_BUILD_INITIAL" || return
-	init_check_bool ION_BUILD_JS "$ION_BUILD_JS" || return
-	init_check_bool ION_BUILD_JS_GLOBAL "$ION_BUILD_JS_GLOBAL" || return
-	init_check_bool ION_BUILD_CSS "$ION_BUILD_CSS" || return
-	init_check_bool ION_BUILD_CSS_GLOBAL "$ION_BUILD_CSS_GLOBAL" || return
-	init_check_bool ION_BUILD_HTML "$ION_BUILD_HTML" || return
+	init_check_bool ION_DERIVE_SCRIPT "$ION_DERIVE_SCRIPT" || return
+	init_check_bool ION_DERIVE_SCRIPT_GLOBAL "$ION_DERIVE_SCRIPT_GLOBAL" || return
+	init_check_bool ION_DERIVE_STYLE "$ION_DERIVE_STYLE" || return
+	init_check_bool ION_DERIVE_STYLE_GLOBAL "$ION_DERIVE_STYLE_GLOBAL" || return
+	init_check_bool ION_DERIVE_KNOWNS "$ION_DERIVE_KNOWNS" || return
+	init_check_bool ION_DERIVE_UNKNOWNS "$ION_DERIVE_UNKNOWNS" || return
+	init_check_bool ION_DERIVE_META "$ION_DERIVE_META" || return
+	init_check_bool ION_DERIVE_MESA "$ION_DERIVE_MESA" || return
+	init_check_bool ION_DERIVE_HTML "$ION_DERIVE_HTML" || return
 
 	! test "$ION_INBOX" || init_check_dir ION_INBOX "$ION_INBOX" || return
 	init_check_uint ION_INBOX_PORT "$ION_INBOX_PORT" || return
@@ -6804,14 +6883,6 @@ init_temp_filter_document() {
 	fi
 }
 
-init_temp_filter_template() {
-	if ! test "$TEMP_FILTER_TEMPLATE"; then
-		TEMP_FILTER_TEMPLATE="$(start_temp_file filter-template lua)" || return
-		print "$SHARED_LUA" > "$TEMP_FILTER_TEMPLATE" || return
-		print "$FILTER_TEMPLATE" >> "$TEMP_FILTER_TEMPLATE" || return
-	fi
-}
-
 init_temp_template_json() {
 	if ! test "$TEMP_TEMPLATE_JSON"; then
 		TEMP_TEMPLATE_JSON="$(start_temp_file template-json template)" || return
@@ -6829,7 +6900,7 @@ init_temp_template_html() {
 init_temp_source_style() {
 	TEMP_SOURCE_STYLES="$(start_temp_file src css)" || return
 
-	if test "$ION_BUILD_CSS_GLOBAL"; then
+	if building_style_global; then
 		print "$GLOBAL_CSS" > "$TEMP_SOURCE_STYLES" || return
 	fi
 
@@ -6845,7 +6916,7 @@ init_temp_source_style() {
 init_temp_source_script() {
 	TEMP_SOURCE_SCRIPTS="$(start_temp_file src js)" || return
 
-	if test "$ION_BUILD_JS_GLOBAL"; then
+	if building_script_global; then
 		print "'use strict';" > "$TEMP_SOURCE_SCRIPTS" || return
 	fi
 
@@ -6861,7 +6932,7 @@ init_temp_source_script() {
 		done
 	}
 
-	if test "$ION_BUILD_JS_GLOBAL"; then
+	if building_script_global; then
 		print "$GLOBAL_JS_ENV" >> "$TEMP_SOURCE_SCRIPTS" || return
 		print "$GLOBAL_JS" >> "$TEMP_SOURCE_SCRIPTS" || return
 	fi
@@ -6875,7 +6946,7 @@ init_temp_source_script() {
 		done
 	}
 
-	if test "$ION_BUILD_JS_GLOBAL"; then
+	if building_script_global; then
 		printf 'main();\n' >> "$TEMP_SOURCE_SCRIPTS" || return
 	fi
 }
@@ -6896,7 +6967,6 @@ init_temp_shared() {
 	init_temp_filter_extract || return
 	init_temp_filter_meta || return
 	init_temp_filter_document || return
-	init_temp_filter_template || return
 	init_temp_template_json || return
 	init_temp_template_html || return
 }
@@ -6946,7 +7016,7 @@ test_all() {
 			"$TEMP_FILTER_EXTRACT" \
 			"$TEMP_FILTER_META" \
 			"$TEMP_FILTER_DOCUMENT" \
-			"$TEMP_FILTER_TEMPLATE" || return
+		|| return
 	fi
 
 	if have_pandoc; then
