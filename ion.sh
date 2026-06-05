@@ -3,6 +3,8 @@
 # ῖon
 # ===
 #
+# - 0.9.1; 2026-6-5 13:45
+#   - ION_BUILD* is now ION_OUTPUT*
 # - 0.9.0; 2026-6-4 20:26
 #   - linked the metadata with the query system
 # - 0.8.0; 2026-6-2 14:17
@@ -712,7 +714,7 @@ export ION__MSG_DEV="${ION__MSG_DEV:-"developer"}"
 export ION__MSG_COMMAND_NOT_FOUND="${ION__MSG_COMMAND_NOT_FOUND:-"command not found"}"
 export ION__MSG_COMMAND_NOT_EXEC="${ION__MSG_COMMAND_NOT_EXEC:-"command not executable"}"
 export ION__MSG_COMMAND_NOT_RECOGNISED="${ION__MSG_COMMAND_NOT_RECOGNISED:-"command not recognised"}"
-export ION__MSG_INVALID_ENVIRONMENT="${ION__MSG_INVALID_ENVIRONMENT:-"an invalid option was given"}"
+export ION__MSG_INVALID_ENVIRONMENT="${ION__MSG_INVALID_ENVIRONMENT:-"invalid option"}"
 export ION__MSG_INVALID_REPLACEMENT="${ION__MSG_INVALID_REPLACEMENT:-"a sed replacement contains a newline"}"
 export ION__MSG_LINKING_FILE="${ION__MSG_LINKING_FILE:-"unable to create a hard link; reverting to copying"}"
 export ION__MSG_NOT_SLEEPING="${ION__MSG_NOT_SLEEPING:-"sub-second sleep seemingly not possible"}"
@@ -734,8 +736,6 @@ export ION__MSG_BUILD_IO_READ="${ION__MSG_BUILD_IO_READ:-"could not read the inp
 export ION__MSG_BUILD_IO_WRITE="${ION__MSG_BUILD_IO_WRITE:-"could not write the input"}"
 export ION__MSG_STARTING_SERVERS="${ION__MSG_STARTING_SERVERS:-"starting the servers"}"
 export ION__MSG_STARTING_WATCHER="${ION__MSG_STARTING_WATCHER:-"starting the watcher"}"
-export ION__MSG_STOPPING_WATCHER="${ION__MSG_STOPPING_WATCHER:-"stopping the watcher"}"
-export ION__MSG_STOPPING_SERVERS="${ION__MSG_STOPPING_SERVERS:-"stopping the servers"}"
 export ION__MSG_STOPPING_BUILD="${ION__MSG_STOPPING_BUILD:-"finished"}"
 
 export ION__MSG_OPENING_FILE="${ION__MSG_OPENING_FILE:-"opening a file"}"
@@ -5221,8 +5221,6 @@ start_watcher() {
 }
 
 stop_watcher() {
-	note "$ION__MSG_STOPPING_WATCHER"
-
 	if test "$WATCHER_PID_INPUT"; then
 		stop "$WATCHER_PID_INPUT" || true
 		WATCHER_PID_INPUT=""
@@ -5349,8 +5347,6 @@ start_server() {
 }
 
 stop_server() {
-	note "$ION__MSG_STOPPING_SERVERS"
-
 	if ! should_serve; then
 		return 0
 	fi
@@ -5575,7 +5571,6 @@ start_step_list() {
 
 start_step() {
 	eu__step="$1"
-	eu__build="$2"
 
 	start_find dirnames "$eu__step" | while IFS= read -r eu__action_line; do
 		eu__action_name="${eu__action_line#./}"
@@ -5588,11 +5583,6 @@ start_step() {
 			printf '%s:%s:%s\n' "$eu__action_name" "$eu__path" "$eu__content"
 		done
 	done
-
-	eu__meta="$(index_meta "/$ION__NAME_BRANCH" "$eu__build")" || return
-	eu__scan_type="$ION__TYPE_ARRAY$ION___TYPE_SEPARATOR$ION__TYPE_PATHS"
-	eu__scan="$(index_open "$eu__meta" "$ION__META_SCAN" "$eu__scan_type")" || return
-	start_step_list "$eu__build" > "$eu__scan"
 }
 
 start_run() {
@@ -5605,7 +5595,12 @@ start_run() {
 
 		if test -d "$es__step"; then
 			export ION_OUTPUT_STEP="$es__count"
-			start_step "$es__step" "$es__build" | start_many sh "$ION_BIN_SELF" || exit
+			start_step "$es__step" | start_many sh "$ION_BIN_SELF" || exit
+
+			es__meta="$(index_meta "/$ION__NAME_BRANCH" "$es__build")" || return
+			es__scan_type="$ION__TYPE_ARRAY$ION___TYPE_SEPARATOR$ION__TYPE_PATHS"
+			es__scan="$(index_open "$es__meta" "$ION__META_SCAN" "$es__scan_type")" || return
+			start_step_list "$es__build" > "$es__scan"
 		else
 			break
 		fi
@@ -5707,7 +5702,7 @@ start_build() {
 	note "$ION__MSG_BUILD_START"
 
 	do__time="$(timestamp)" || return
-	do__space="$(start_random 16)" || return
+	do__space="$(start_random 10)" || return
 
 	do__build="$ION_OUTPUT/$do__time-$do__space"
 	do__index="$do__build/$ION__NAME_ROOT"
@@ -6638,8 +6633,6 @@ init_check_env() {
 	init_check_string ION__MSG_BUILD_IO_WRITE "$ION__MSG_BUILD_IO_WRITE" || return
 	init_check_string ION__MSG_STARTING_SERVERS "$ION__MSG_STARTING_SERVERS" || return
 	init_check_string ION__MSG_STARTING_WATCHER "$ION__MSG_STARTING_WATCHER" || return
-	init_check_string ION__MSG_STOPPING_WATCHER "$ION__MSG_STOPPING_WATCHER" || return
-	init_check_string ION__MSG_STOPPING_SERVERS "$ION__MSG_STOPPING_SERVERS" || return
 	init_check_string ION__MSG_STOPPING_BUILD "$ION__MSG_STOPPING_BUILD" || return
 	init_check_string ION__MSG_OPENING_FILE "$ION__MSG_OPENING_FILE" || return
 	init_check_string ION__MSG_QUERYING_THE_INDEX "$ION__MSG_QUERYING_THE_INDEX" || return
