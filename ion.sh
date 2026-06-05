@@ -898,11 +898,11 @@ export ION_SPIN="${ION_SPIN:-}"
 export ION_SPIN_START="${ION_SPIN_START:-}"
 export ION_SPIN_INTERVAL="${ION_SPIN_INTERVAL:-60}"
 
-export ION_BUILD="${ION_BUILD:-}"
-export ION_BUILD_STEP="${ION_BUILD_STEP:-}"
-export ION_BUILD_CURRENT="${ION_BUILD_CURRENT:-}"
-export ION_BUILD_PREVIOUS="${ION_BUILD_PREVIOUS:-}"
-export ION_BUILD_INITIAL="${ION_BUILD_INITIAL:-1}"
+export ION_OUTPUT="${ION_OUTPUT:-}"
+export ION_OUTPUT_STEP="${ION_OUTPUT_STEP:-}"
+export ION_OUTPUT_CURRENT="${ION_OUTPUT_CURRENT:-}"
+export ION_OUTPUT_PREVIOUS="${ION_OUTPUT_PREVIOUS:-}"
+export ION_OUTPUT_INITIAL="${ION_OUTPUT_INITIAL:-1}"
 
 export ION_DERIVE_SCRIPT="${ION_DERIVE_SCRIPT:-1}"
 export ION_DERIVE_SCRIPT_GLOBAL="${ION_DERIVE_SCRIPT_GLOBAL:-1}"
@@ -968,8 +968,8 @@ SERVER_STARTED=
 WATCHER_PID_INPUT=
 WATCHER_PID_SOURCE=
 
-BUILD_TEMP=
-BUILD_COUNT=0
+OUTPUT_TEMP=
+OUTPUT_COUNT=0
 
 TEMP_SED=
 TEMP_BLANK=
@@ -1155,7 +1155,7 @@ WORDS = envb("WORDS", false)
 FILTER_PATH = env("FILTER_PATH", false)
 FILTER_TARGET = env("FILTER_TARGET", false)
 
-BUILD_CURRENT = env("BUILD_CURRENT", false)
+OUTPUT_CURRENT = env("OUTPUT_CURRENT", false)
 
 CACHED_COGNATES = nil
 CACHED_INDEX = nil
@@ -2817,7 +2817,7 @@ function index_open(output)
 		index_close()
 	end
 
-	output = output or BUILD_CURRENT
+	output = output or OUTPUT_CURRENT
 	CACHED_INDEX = output and Index.open(output)
 
 	return CACHED_INDEX
@@ -4001,7 +4001,7 @@ should_test() {
 }
 
 should_derive() {
-	test "$ION_BUILD_CURRENT"
+	test "$ION_OUTPUT_CURRENT"
 }
 
 should_spin() {
@@ -4691,7 +4691,7 @@ dir_remove() {
 
 index_meta() {
 	fl__path="$1"
-	fl__root="${2:-"$ION_BUILD_CURRENT"}"
+	fl__root="${2:-"$ION_OUTPUT_CURRENT"}"
 	fl__meta="$(path_join "$fl__root" "$ION__NAME_ROOT" "$fl__path")" || return
 
 	if ! test -d "$fl__meta"; then
@@ -5604,7 +5604,7 @@ start_run() {
 		es__step="$es__plan/$es__count"
 
 		if test -d "$es__step"; then
-			export ION_BUILD_STEP="$es__count"
+			export ION_OUTPUT_STEP="$es__count"
 			start_step "$es__step" "$es__build" | start_many sh "$ION_BIN_SELF" || exit
 		else
 			break
@@ -5663,7 +5663,7 @@ start_plan() {
 start_prune() {
 	ey__time="$1"
 
-	start_find dirnames "$ION_BUILD" | while IFS= read -r ey__line; do
+	start_find dirnames "$ION_OUTPUT" | while IFS= read -r ey__line; do
 		ey__build="${ey__line#./}"
 		ey__build_time="${ey__build%%-*}"
 
@@ -5672,7 +5672,7 @@ start_prune() {
 		fi
 
 		if test "$ey__build_time" -lt "$ey__time"; then
-			dir_remove "$ION_BUILD/$ey__build" || true
+			dir_remove "$ION_OUTPUT/$ey__build" || true
 		fi
 	done
 }
@@ -5686,8 +5686,8 @@ start_build_internal() {
 	ez__rebuild="${3:-1}"
 	ez__recompile="${4:-1}"
 
-	export ION_BUILD_PREVIOUS=
-	export ION_BUILD_CURRENT="$ez__build"
+	export ION_OUTPUT_PREVIOUS=
+	export ION_OUTPUT_CURRENT="$ez__build"
 
 	if test "$ez__recompile"; then
 		start_esbuild css "$ez__build" < "$TEMP_SOURCE_STYLES" || return
@@ -5709,7 +5709,7 @@ start_build() {
 	do__time="$(timestamp)" || return
 	do__space="$(start_random 16)" || return
 
-	do__build="$ION_BUILD/$do__time-$do__space"
+	do__build="$ION_OUTPUT/$do__time-$do__space"
 	do__index="$do__build/$ION__NAME_ROOT"
 	do__plan="$do__index/$ION__NAME_PLAN"
 	do__log="$do__index/$ION__NAME_LOG"
@@ -5767,7 +5767,7 @@ start_receiving() {
 	dn__size=0
 	dn__pid=
 
-	if test "$BUILD_COUNT" = 1 && test "$ION_BUILD_INITIAL"; then
+	if test "$OUTPUT_COUNT" = 1 && test "$ION_OUTPUT_INITIAL"; then
 		start_signal "$ION___SIGNAL_ALL" || return
 	fi
 
@@ -5805,7 +5805,7 @@ start_receiving() {
 		*) dn__recompile= ;;
 	esac
 
-	if test "$BUILD_COUNT" -gt 1; then
+	if test "$OUTPUT_COUNT" -gt 1; then
 		start_bouncing || return
 	fi
 
@@ -5819,10 +5819,10 @@ start_spinning() {
 		export ION_SPIN_START="$dj__now"
 	fi
 
-	if test "$BUILD_COUNT" -gt 1; then
-		BUILD_COUNT=$((((dj__now-ION_SPIN_START)/ION_SPIN_INTERVAL)+1))
+	if test "$OUTPUT_COUNT" -gt 1; then
+		OUTPUT_COUNT=$((((dj__now-ION_SPIN_START)/ION_SPIN_INTERVAL)+1))
 
-		dj__next=$((ION_SPIN_START+(BUILD_COUNT*ION_SPIN_INTERVAL)))
+		dj__next=$((ION_SPIN_START+(OUTPUT_COUNT*ION_SPIN_INTERVAL)))
 		dj__delta=$((dj__next-dj__now))
 
 		note "$ION__MSG_SLEEPING" "$dj__delta""$ION___SUFFIX_SECONDS"
@@ -5834,9 +5834,9 @@ start_spinning() {
 
 start_builder() {
 	while :; do
-		BUILD_COUNT=$((BUILD_COUNT+1))
+		OUTPUT_COUNT=$((OUTPUT_COUNT+1))
 
-		if test "$BUILD_COUNT" -gt 1; then
+		if test "$OUTPUT_COUNT" -gt 1; then
 			terminal_clear || true
 		fi
 
@@ -5855,7 +5855,7 @@ derive_next() {
 	fe__action="$1"; shift
 	fe__path="$1"; shift
 	
-	fe__full="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$ION__NAME_PLAN" $((ION_BUILD_STEP+1)) "$fe__action" "$fe__path")" || return
+	fe__full="$(path_join "$ION_OUTPUT_CURRENT" "$ION__NAME_ROOT" "$ION__NAME_PLAN" $((ION_OUTPUT_STEP+1)) "$fe__action" "$fe__path")" || return
 
 	fe__parent="$(path_parent "$fe__full")" || return
 	mkdir -p "$fe__parent" || return
@@ -5901,11 +5901,6 @@ derive_index() {
 	if test "$fb__parent"; then
 		index_open "$fb__meta" "$ION__META_PARENT" "$ION__TYPE_PATH" "$fb__parent" || return
 	fi
-
-		# ready to build html?
-		# scan_entries, 
-		#	jsons?
-		#	scan file?
 
 	if test "$fb__type" = "$ION__META_TYPE_DOCUMENT"; then
 		start_pandoc extract "$fb__input" "$fb__path" || return
@@ -5975,7 +5970,7 @@ derive_mesa() {
 derive_meta_paths() {
 	fg__path="$1"
 	
-	fg__full="$(path_join "$ION_BUILD_CURRENT" "$ION__NAME_ROOT" "$fg__path")" || return
+	fg__full="$(path_join "$ION_OUTPUT_CURRENT" "$ION__NAME_ROOT" "$fg__path")" || return
 
 	start_find names "$fg__full" | while IFS= read -r fg__name; do
 		path_join "$fg__full" "${fg__name#./}"
@@ -6012,13 +6007,13 @@ derive() {
 		set -- $fa__line
 		IFS="$fa__ifs"
 
-		info "$ION__MSG_BUILD_ACTION" "$ION_BUILD_STEP" "$@"
+		info "$ION__MSG_BUILD_ACTION" "$ION_OUTPUT_STEP" "$@"
 
 		fa__action="$1"; shift
 		fa__path="$1"; shift
 
 		fa__input="$ION_INPUT""$fa__path"
-		fa__output="$ION_BUILD_CURRENT""$fa__path"
+		fa__output="$ION_OUTPUT_CURRENT""$fa__path"
 
 		case "$fa__action" in
 			"$ION__ACTION_INDEX") fa__derive=derive_index ;;
@@ -6252,9 +6247,9 @@ stop_temp_parent() {
 	file_remove "$TEMP_SOURCE_STYLES" || true
 	file_remove "$TEMP_SOURCE_SCRIPTS" || true
 
-	if test "$BUILD_TEMP"; then
-		dir_remove "$ION_BUILD" || true
-		BUILD_TEMP=
+	if test "$OUTPUT_TEMP"; then
+		dir_remove "$ION_OUTPUT" || true
+		OUTPUT_TEMP=
 	fi
 }
 
@@ -6443,9 +6438,9 @@ init_env_source() {
 }
 
 init_env_build() {
-	if test "$ION_BUILD"; then
-		du__normal="$(path_normal "$ION_BUILD")" || return
-		export ION_BUILD="$du__normal"
+	if test "$ION_OUTPUT"; then
+		du__normal="$(path_normal "$ION_OUTPUT")" || return
+		export ION_OUTPUT="$du__normal"
 	fi
 }
 
@@ -6770,11 +6765,11 @@ init_check_env() {
 	! test "$ION_WATCH_DEBOUNCE" || init_check_unum ION_WATCH_DEBOUNCE "$ION_WATCH_DEBOUNCE" || return
 	init_check_bool ION_WATCH_POLLING "$ION_WATCH_POLLING" || return
 
-	! test "$ION_BUILD" || init_check_dir ION_BUILD "$ION_BUILD" || return
-	! test "$ION_BUILD_STEP" || init_check_uint ION_BUILD_STEP "$ION_BUILD_STEP" || return
-	! test "$ION_BUILD_CURRENT" || init_check_dir ION_BUILD_CURRENT "$ION_BUILD_CURRENT" || return
-	! test "$ION_BUILD_PREVIOUS" || init_check_dir ION_BUILD_PREVIOUS "$ION_BUILD_PREVIOUS" || return
-	init_check_bool ION_BUILD_INITIAL "$ION_BUILD_INITIAL" || return
+	! test "$ION_OUTPUT" || init_check_dir ION_OUTPUT "$ION_OUTPUT" || return
+	! test "$ION_OUTPUT_STEP" || init_check_uint ION_OUTPUT_STEP "$ION_OUTPUT_STEP" || return
+	! test "$ION_OUTPUT_CURRENT" || init_check_dir ION_OUTPUT_CURRENT "$ION_OUTPUT_CURRENT" || return
+	! test "$ION_OUTPUT_PREVIOUS" || init_check_dir ION_OUTPUT_PREVIOUS "$ION_OUTPUT_PREVIOUS" || return
+	init_check_bool ION_OUTPUT_INITIAL "$ION_OUTPUT_INITIAL" || return
 	init_check_bool ION_DERIVE_SCRIPT "$ION_DERIVE_SCRIPT" || return
 	init_check_bool ION_DERIVE_SCRIPT_GLOBAL "$ION_DERIVE_SCRIPT_GLOBAL" || return
 	init_check_bool ION_DERIVE_STYLE "$ION_DERIVE_STYLE" || return
@@ -7016,11 +7011,11 @@ init_temp_source_script() {
 	fi
 }
 
-init_temp_build() {
-	if ! test "$ION_BUILD"; then
-		ds__temp="$(start_temp_dir build)" || return
-		export ION_BUILD="$ds__temp"
-		BUILD_TEMP=1
+init_temp_output() {
+	if ! test "$ION_OUTPUT"; then
+		ds__temp="$(start_temp_dir output)" || return
+		export ION_OUTPUT="$ds__temp"
+		OUTPUT_TEMP=1
 	fi
 }
 
@@ -7042,7 +7037,7 @@ init_temp_parent() {
 	init_temp_server_config || return
 	init_temp_source_style || return
 	init_temp_source_script || return
-	init_temp_build || return
+	init_temp_output || return
 }
 
 init() {
