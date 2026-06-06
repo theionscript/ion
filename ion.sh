@@ -929,7 +929,7 @@ export ION_INBOX_RATES="${ION_INBOX_RATES:-8192}"
 
 export ION_LINK_PREFIX="${ION_LINK_PREFIX:-"."}"
 export ION_LINK_PROTOCOL="${ION_LINK_PROTOCOL:-}"
-export ION_LINK_DOMAIN="${ION_LINK_DOMAIN:-1}"
+export ION_LINK_DOMAIN="${ION_LINK_DOMAIN:-}"
 export ION_LINK_TRIM="${ION_LINK_TRIM:-1}"
 
 export ION_EXTRACT_MAXIMUM="${ION_EXTRACT_MAXIMUM:-160}"
@@ -1146,7 +1146,7 @@ START_ID = envn("START_ID")
 BIN_SELF = env("BIN_SELF")
 
 LINK_PROTOCOL = envb("LINK_PROTOCOL", false)
-LINK_DOMAIN = envb("LINK_DOMAIN")
+LINK_DOMAIN = envb("LINK_DOMAIN", false)
 LINK_PREFIX = env("LINK_PREFIX")
 LINK_TRIM = envb("LINK_TRIM")
 
@@ -6924,10 +6924,6 @@ init_temp_template_html() {
 init_temp_source_style() {
 	TEMP_SOURCE_STYLES="$(start_temp_file src css)" || return
 
-	if building_style_global; then
-		print "$GLOBAL_CSS" > "$TEMP_SOURCE_STYLES" || return
-	fi
-
 	paths_split_raw "$ION_SOURCE_STYLES" | {
 		while IFS= read -r ek__path; do
 			if test "$ek__path"; then
@@ -6935,6 +6931,10 @@ init_temp_source_style() {
 			fi
 		done
 	}
+
+	if building_style_global; then
+		print "$GLOBAL_CSS" >> "$TEMP_SOURCE_STYLES" || return
+	fi
 }
 
 init_temp_source_script() {
