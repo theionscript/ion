@@ -2207,6 +2207,10 @@ function clause_normal(clause)
 		subject = table.remove(objects, __QUERY_SUBJECT-1)
 	end
 
+	if subject and not verb then
+		verb = {_VERB_IDENTITY}
+	end
+
 	if verb then
 		table.insert(objects, 1, subject)
 		table.insert(objects, 1, verb)
