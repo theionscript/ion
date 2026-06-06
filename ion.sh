@@ -1,44 +1,9 @@
 #!/bin/sh
-# 
+#
 # ῖon
 # ===
 #
-# - 0.10.0; 2026-6-6 14:41
-#   - fixed the shared state in the Index
-# - 0.9.1; 2026-6-5 13:45
-#   - ION_BUILD* is now ION_OUTPUT*
-# - 0.9.0; 2026-6-4 20:26
-#   - linked the metadata with the query system
-# - 0.8.0; 2026-6-2 14:17
-#   - added metadata extraction
-# - 0.7.0; 2026-6-1 19:15
-#   - added derivation support
-# - 0.6.0; 2026-4-26 20:20
-#   - added ION_SPIN
-# - 0.5.0; 2026-4-20 20:10
-#   - rough mvp
-# - 0.4.0; 2026-4-19 14:05
-#   - added the frontend component system
-#   - added basic post support
-# - 0.3.0; 2026-4-16 19:27
-#   - the build system now integrates the server
-#   - added rough support for document output
-# - 0.2.0; 2026-4-15 17:18
-#   - finished the build system
-#   - every build now includes its log
-#   - added a polling mode to the watcher
-#   - updated the licence
-# - 0.1.0; 2026-3-30 22:32
-#   - initial release
-#
-# References
-# ==========
-#
-# - shellhaters.org
-# - dylanaraps/pure-sh-bible
-# - lua.org/manual/5.4/manual.html
-# - pandoc.org/MANUAL.html#pandocs-markdown
-# - pandoc.org/lua-filters.html
+# ...
 #
 # Licence
 # =======
@@ -62,7 +27,7 @@
 # or the rightful heirs and assigns thereof.
 #
 # “This Licence” refers to the Libra Public Licence,
-# that is the licence attached to the head of this file.
+# or the licence that is attached to this file.
 #
 # “Copyright” also means copyright-like laws that apply
 # to other kinds of works, such as semiconductor masks.
@@ -653,6 +618,48 @@
 # their own variables overwritten. This wouldn't help in the case of
 # recursive functions. This will likely be replaced with the local
 # keyword at some point. The last prefix used was: fm
+#
+# Changes
+# =======
+#
+# - 0.10.0; 2026-6-6 14:41
+#   - fixed the shared state in the Index
+# - 0.9.1; 2026-6-5 13:45
+#   - ION_BUILD* is now ION_OUTPUT*
+# - 0.9.0; 2026-6-4 20:26
+#   - linked the metadata with the query system
+# - 0.8.0; 2026-6-2 14:17
+#   - added metadata extraction
+# - 0.7.0; 2026-6-1 19:15
+#   - added derivation support
+# - 0.6.0; 2026-4-26 20:20
+#   - added ION_SPIN
+# - 0.5.0; 2026-4-20 20:10
+#   - rough mvp
+# - 0.4.0; 2026-4-19 14:05
+#   - added the frontend component system
+#   - added basic post support
+# - 0.3.0; 2026-4-16 19:27
+#   - the build system now integrates the server
+#   - added rough support for document output
+# - 0.2.0; 2026-4-15 17:18
+#   - finished the build system
+#   - every build now includes its log
+#   - added a polling mode to the watcher
+#   - updated the licence
+# - 0.1.0; 2026-3-30 22:32
+#   - initial release
+#
+# References
+# ==========
+#
+# - shellhaters.org
+# - dylanaraps/pure-sh-bible
+# - lua.org/manual/5.4/manual.html
+# - pandoc.org/MANUAL.html#pandocs-markdown
+# - pandoc.org/lua-filters.html
+#
+# ---
 
 export ION___ERROR_PREFIX_MAIN="${ION___ERROR_PREFIX_MAIN:-"- "}"
 export ION___ERROR_PREFIX_SUB="${ION___ERROR_PREFIX_SUB:-"  - "}"
@@ -2682,7 +2689,7 @@ end
 
 function Index:write(path, key, kind, ...)
 	local file = self:file_openw(path, key, kind)
-	
+
 	if file then
 		local r = file_write(file, ...)
 		file_flush(file)
@@ -3976,7 +3983,7 @@ should_watch() {
 should_serve() {
 	! should_help && ! have_parent && {
 		test "$ION_SERVE" = 1 || {
-			test "$ION_SERVE" = 2 && have_server
+			test "$ION_SERVE" = 2 && have_server && should_watch
 		}
 	}
 }
@@ -5461,8 +5468,9 @@ start_esbuild() {
 		return 0
 	fi
 
-	de__in="$1"
-	de__out="$2"
+	de__target="$1"
+	de__in="$2"
+	de__out="$3"
 	de__ret=0
 	de__args=
 	de__ifs="$IFS"
@@ -5474,8 +5482,7 @@ start_esbuild() {
 
 	# shellcheck disable=SC2086
 	start "$ION_BIN_ESBUILD" \
-		--outfile="$de__out/$ION__NAME_BRANCH.$de__in" \
-		--loader="$de__in" \
+		--outfile="$de__out/$ION__NAME_BRANCH.$de__target" \
 		--bundle \
 		--target=es6 \
 		--platform=browser \
@@ -5488,7 +5495,9 @@ start_esbuild() {
 		--log-level=error \
 		--log-limit=0 \
 		--color=false \
-		$de__args || de__ret=$?
+		$de__args \
+		"$de__in" \
+	|| de__ret=$?
 
 	IFS="$de__ifs"
 	return $de__ret
@@ -5647,8 +5656,8 @@ start_build_internal() {
 	export ION_OUTPUT_CURRENT="$ez__build"
 
 	if test "$ez__recompile"; then
-		start_esbuild css "$ez__build" < "$TEMP_SOURCE_STYLES" || return
-		start_esbuild js "$ez__build" < "$TEMP_SOURCE_SCRIPTS" || return
+		start_esbuild css "$TEMP_SOURCE_STYLES" "$ez__build" || return
+		start_esbuild js "$TEMP_SOURCE_SCRIPTS" "$ez__build" || return
 	fi
 
 	start_plan "$ez__plan" "$ez__rebuild" "$ez__recompile" || return
@@ -5811,7 +5820,7 @@ start_builder() {
 derive_next() {
 	fe__action="$1"; shift
 	fe__path="$1"; shift
-	
+
 	fe__full="$(path_join "$ION_OUTPUT_CURRENT" "$ION__NAME_ROOT" "$ION__NAME_PLAN" $((ION_OUTPUT_STEP+1)) "$fe__action" "$fe__path")" || return
 
 	fe__parent="$(path_parent "$fe__full")" || return
@@ -5880,7 +5889,7 @@ derive_index() {
 
 		if test "$fb__output"; then
 			fb__outdir="$(path_parent "$fb__output")" || return
-	
+
 			if ! test -d "$fb__outdir"; then
 				mkdir -p "$fb__outdir" || return
 			fi
@@ -5926,7 +5935,7 @@ derive_mesa() {
 
 derive_meta_paths() {
 	fg__path="$1"
-	
+
 	fg__full="$(path_join "$ION_OUTPUT_CURRENT" "$ION__NAME_ROOT" "$fg__path")" || return
 
 	start_find names "$fg__full" | while IFS= read -r fg__name; do
