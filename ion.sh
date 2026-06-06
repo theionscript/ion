@@ -2325,19 +2325,20 @@ function convert_to_nest(results)
 	local nested = {}
 
 	for path in pairs(results) do
+		local name = path_file(path)
 		local parent = path_parent(path)
 		local ancestry = parent and path_split(parent) or {}
 		local current = nested
 
-		for i, name in ipairs(ancestry) do
-			if not current[name] then
-				current[name] = {}
+		for i, ancestor in ipairs(ancestry) do
+			if not current[ancestor] then
+				current[ancestor] = {}
 			end
 
-			current = current[name]
+			current = current[ancestor]
 		end
 
-		table.insert(current, path)
+		current[name] = path
 	end
 
 	return nested
