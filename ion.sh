@@ -1,8 +1,10 @@
 #!/bin/sh
-#
+# 
 # ῖon
 # ===
 #
+# - 0.10.0; 2026-6-6 14:41
+#   - fixed the shared state in the Index
 # - 0.9.1; 2026-6-5 13:45
 #   - ION_BUILD* is now ION_OUTPUT*
 # - 0.9.0; 2026-6-4 20:26
@@ -1029,7 +1031,7 @@ _WORD_ERROR = env("_WORD_ERROR")
 _WORD_INFO = env("_WORD_INFO")
 _WORD_NOTE = env("_WORD_NOTE")
 
-_EXT_JSON = env("_EXT_JSON")
+_EXT_META = env("_EXT_META")
 _EXT_HTML = env("_EXT_HTML")
 
 _NAME_ROOT = env("_NAME_ROOT")
@@ -1147,6 +1149,7 @@ DERIVE_STYLE = envb("DERIVE_STYLE")
 EXTRACT_SUFFIX = env("EXTRACT_SUFFIX", "")
 EXTRACT_MAXIMUM = envn("EXTRACT_MAXIMUM", 0)
 
+DOMAIN = env("DOMAIN")
 COGNATES = env("COGNATES")
 TESTING = envb("TEST", false)
 VOLUME = envn("VOLUME", 3)
@@ -1158,7 +1161,6 @@ FILTER_TARGET = env("FILTER_TARGET", false)
 OUTPUT_CURRENT = env("OUTPUT_CURRENT", false)
 
 CACHED_COGNATES = nil
-CACHED_INDEX = nil
 
 REFERENCES = {}
 
@@ -1513,7 +1515,7 @@ function string_split(str, pattern, f, strip, plain)
 			value = f(value, #split+1)
 		end
 
-		if #value > 0 then
+		if value and #value > 0 then
 			table.insert(split, value)
 		end
 
@@ -1963,14 +1965,12 @@ function link_join(a, b, double)
 end
 
 function link_fix(link)
-	local domain = meta(_META_DOMAIN)
-
 	if is_stringy(LINK_PREFIX) then
 		link = link_join(LINK_PREFIX, link)
 	end
 
-	if is_stringy(domain) and LINK_DOMAIN then
-		link = link_join(domain, link)
+	if is_stringy(DOMAIN) and LINK_DOMAIN then
+		link = link_join(DOMAIN, link)
 	end
 
 	if LINK_PROTOCOL and FILTER_TARGET == _EXT_HTML then
@@ -2207,10 +2207,11 @@ function clause_normal(clause)
 		subject = table.remove(objects, __QUERY_SUBJECT-1)
 	end
 
-	table.insert(objects, 1, subject)
-	table.insert(objects, 1, verb)
-
-	return objects
+	if verb then
+		table.insert(objects, 1, subject)
+		table.insert(objects, 1, verb)
+		return objects
+	end
 end
 
 function clause_evaluate(clause, entry)
@@ -2498,11 +2499,7 @@ function Query:input(input)
 	if is_function(input) then
 		return input
 	elseif is_table(input) then
-		if input.scan_file then
-			return input:all()
-		else
-			return self:input_table(input)
-		end
+		return self:input_table(input)
 	elseif input then
 		return self:input_stream(file_lines(input))
 	end
@@ -2635,16 +2632,9 @@ function query__test()
 
 end
 
-function Index:close()
-	if self.scan_file then
-		file_close(self.scan_file)
-		self.scan_file = nil
-	end
-end
-
 function Index.open(output)
 	local self = setmetatable({}, { __index = Index })
-	self.output = output
+	self.output = output or OUTPUT_CURRENT
 	return self
 end
 
@@ -2696,32 +2686,24 @@ function Index:write(path, key, kind, ...)
 	end
 end
 
-function Index:scan_start()
-	if not self.scan_file then
-		self.scan_file = self:file_open(_NAME_BRANCH, _META_SCAN, subtype_array(_TYPE_PATHS))
-	end
-
-	return self.scan_file and file_lines(self.scan_file)
+function Index:reader()
+	return self:file_open(_NAME_BRANCH, _META_SCAN, subtype_array(_TYPE_PATHS))
 end
 
-function Index:scan_lines(f)
-	self.scan_iterator = self:scan_start()
-
+function Index:scan_lines(lines, f)
 	return function()
-		if self.scan_iterator then
-			local line = self.scan_iterator()
+		local line = lines()
 
-			if f and line then
-				return f(line)
-			else
-				return line
-			end
+		if f and line then
+			return f(line)
+		else
+			return line
 		end
 	end
 end
 
-function Index:scan_columns(f)
-	return self:scan_lines(function(line)
+function Index:scan_columns(lines, f)
+	return self:scan_lines(lines, function(line)
 		local columns = string_split_plainer(line, ":")
 
 		if f and columns then
@@ -2732,8 +2714,8 @@ function Index:scan_columns(f)
 	end)
 end
 
-function Index:scan_paths(f)
-	return self:scan_columns(function(columns)
+function Index:scan_paths(lines, f)
+	return self:scan_columns(lines, function(columns)
 		local path = columns[1]
 
 		if f and path then
@@ -2744,8 +2726,8 @@ function Index:scan_paths(f)
 	end)
 end
 
-function Index:scan_entries(f)
-	return self:scan_paths(function(path)
+function Index:scan_entries(lines, f)
+	return self:scan_paths(lines, function(path)
 		local file_path = path_join(self.output, path)
 		local json_path = file_path..".".._EXT_META
 		local decoded = json_path and file_decode(json_path)
@@ -2758,8 +2740,8 @@ function Index:scan_entries(f)
 	end)
 end
 
-function Index:all()
-	return self:scan_entries()
+function Index:all(lines)
+	return self:scan_entries(lines)
 end
 
 -- todo: support deep trees
@@ -2806,37 +2788,10 @@ function Index:import(tree, lines)
 	return tree
 end
 
-function index_close()
-	if CACHED_INDEX then
-		CACHED_INDEX:close()
-	end
-end
-
-function index_open(output)
-	if CACHED_INDEX then
-		index_close()
-	end
-
-	output = output or OUTPUT_CURRENT
-	CACHED_INDEX = output and Index.open(output)
-
-	return CACHED_INDEX
-end
-
-function index_write(...)
-	return CACHED_INDEX and CACHED_INDEX:write(...)
-end
-
-function index_export(tree, path)
-	return CACHED_INDEX and CACHED_INDEX:export(tree, path)
-end
-
-function index_import(tree, lines)
-	return CACHED_INDEX and CACHED_INDEX:import(tree, lines)
-end
-
-function meta(q, options)
-	local input = CACHED_INDEX and CACHED_INDEX:all()
+function Index:query(q, options)
+	local reader = self:reader()
+	local lines = file_lines(reader)
+	local input = self:all(lines)
 	local output = nil
 
 	if is_stringy(options) then
@@ -2845,7 +2800,10 @@ function meta(q, options)
 		options = options or { path = FILTER_PATH }
 	end
 
-	return query(q, input, output, options)
+	output = query(q, input, output, options)
+
+	file_close(reader)
+	return output
 end
 
 function extract_suffix()
@@ -2986,11 +2944,11 @@ function extract_wordcount(tree)
 	return count
 end
 
-function extract_title()
+function extract_title(index)
 	local prefix, suffix = "", ""
-	local name = meta(_META_WORDMARK)
-	local title = meta(_META_TITLE) or meta(_META_NAME)
-	local direction = meta(_META_DIRECTION)
+	local name = index:query(_META_WORDMARK)
+	local title = index:query(_META_TITLE) or index:query(_META_NAME)
+	local direction = index:query(_META_DIRECTION)
 
 	if title and name and __TITLE_SEPARATOR then
 		if direction == "rtl" then
@@ -3003,21 +2961,21 @@ function extract_title()
 	return prefix..extract_string(title)..suffix
 end
 
-function extract_authors()
-	local authors = meta(_META_AUTHORS)
+function extract_authors(index)
+	local authors = index:query(_META_AUTHORS)
 	local names = {}
 
 	if is_table(authors) then
 		for i, path in ipairs(authors) do
-			table.insert(names, meta(_META_TITLE, path))
+			table.insert(names, index:query(_META_TITLE, path))
 		end
 	end
 
 	return #names > 0 and names or nil
 end
 
-function extract_icon()
-	local icon = meta(_META_ICON)
+function extract_icon(index)
+	local icon = index:query(_META_ICON)
 	local icon_extension = icon and path_ext(icon)
 	local icon_type = extension_mime(icon_extension)
 	return icon, icon_type
@@ -3081,11 +3039,11 @@ function filter_divs(tree)
 	})
 end
 
-function filter_spans(tree)
+function filter_spans(tree, index)
 	return tree:walk({
 		Span = function(element)
 			if array_contains(element.classes, "mark") then
-				return meta(pandoc.utils.stringify(element.content), {
+				return index:query(pandoc.utils.stringify(element.content), {
 					kind = _META_TYPE_DOCUMENT,
 					convert = true
 				})
@@ -3184,17 +3142,17 @@ function filter_words(tree)
 	end
 end
 
-function filter_page(tree)
+function filter_page(tree, index)
 	local blocks = {
-		meta(__QUERY_ALL, {convert=true, nested=true}),
+		index:query(__QUERY_ALL, {convert=true, nested=true}),
 		pandoc.Div(tree.blocks, {class=_CLASS_PAGE})
 	}
 
 	return pandoc.Pandoc(blocks, tree.meta)
 end
 
-function template_defaults(tree)
-	local icon, icon_type = extract_icon()
+function template_defaults(tree, index)
+	local icon, icon_type = extract_icon(index)
 
 	if not tree.meta["template-link-js"] and DERIVE_SCRIPT then
 		tree.meta["template-link-js"] = link_normal(_NAME_INDEX_JS)
@@ -3225,31 +3183,31 @@ function template_defaults(tree)
 	end
 
 	if not tree.meta["template-encoding"] then
-		tree.meta["template-encoding"] = meta(_META_ENCODING) or "UTF-8"
+		tree.meta["template-encoding"] = index:query(_META_ENCODING) or "UTF-8"
 	end
 
 	if not tree.meta["template-language"] then
-		tree.meta["template-language"] = meta(_META_LANGUAGE)
+		tree.meta["template-language"] = index:query(_META_LANGUAGE)
 	end
 
 	if not tree.meta["template-direction"] then
-		tree.meta["template-direction"] = meta(_META_DIRECTION)
+		tree.meta["template-direction"] = index:query(_META_DIRECTION)
 	end
 
 	if not tree.meta["template-title"] then
-		tree.meta["template-title"] = extract_title()
+		tree.meta["template-title"] = extract_title(index)
 	end
 
 	if not tree.meta["template-description"] then
-		tree.meta["template-description"] = meta(_META_DESCRIPTION)
+		tree.meta["template-description"] = index:query(_META_DESCRIPTION)
 	end
 
 	if not tree.meta["template-authors"] then
-		tree.meta["template-authors"] = extract_authors()
+		tree.meta["template-authors"] = extract_authors(index)
 	end
 
 	if not tree.meta["template-keywords"] then
-		tree.meta["template-keywords"] = meta(_META_LABELS)
+		tree.meta["template-keywords"] = index:query(_META_LABELS)
 	end
 
 	if not tree.meta["template-no-js"] then
@@ -3296,11 +3254,10 @@ EOF
 
 FILTER_EXTRACT="$(cat <<'EOF'
 Pandoc = function(tree)
-	index_open()
+	local index = Index.open()
 	tree = extract_defaults(tree)
 	tree = extract_references(tree)
-	index_export(tree, FILTER_PATH)
-	index_close()
+	index:export(tree, FILTER_PATH)
 	os.exit(0)
 end
 EOF
@@ -3308,9 +3265,8 @@ EOF
 
 FILTER_META="$(cat <<'EOF'
 Pandoc = function(tree)
-	index_open()
-	tree = index_import(tree, io.lines())
-	index_close()
+	local index = Index.open()
+	tree = index:import(tree, io.lines())
 	return tree
 end
 EOF
@@ -3318,18 +3274,18 @@ EOF
 
 FILTER_DOCUMENT="$(cat <<'EOF'
 Pandoc = function(tree)
-	index_open()
+	local index = Index.open()
 
 	tree = filter_divs(tree)
-	tree = filter_spans(tree)
+	tree = filter_spans(tree, index)
 	tree = filter_links(tree)
 	tree = filter_images(tree)
-	tree = filter_page(tree)
+	tree = filter_page(tree, index)
 	tree = filter_words(tree)
 	tree = filter_headers(tree)
 	tree = filter_classes(tree)
+	tree = template_defaults(tree, index)
 
-	index_close()
 	return tree
 end
 EOF
@@ -4971,7 +4927,8 @@ start_find() {
 			! -name '*:*' \
 			! -name '*%*' \
 			! -name '*~*' \
-			! -name '.*' \
+			! -name '.[!.]*' \
+			! -name '..?*' \
 			$cn__ext \
 			$cn__args
 	)
@@ -5676,7 +5633,7 @@ start_build_internal() {
 	ez__build="$1"
 	ez__plan="$2"
 
-	# defaulting to 1 is a hack - fix later and check callers
+	# todo: defaulting to 1 is a hack - fix later and check callers
 	# without this, subsequent 'i' builds wont have any source files
 	ez__rebuild="${3:-1}"
 	ez__recompile="${4:-1}"
