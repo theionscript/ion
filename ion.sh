@@ -6,7 +6,7 @@
 # ion is a unique creature. It can act like a static site generator,
 # or a content management system, but ultimately, its goal is broader:
 # a universal media processing pipeline; one that can generate websites,
-# apps*, ebooks*, audiobooks*, and perhaps, one day, even real books; an
+# apps*, ebooks*, audiobooks*, and perhaps, one day, even realbooks*; an
 # invisible content management system that watches a folder for changes,
 # and responds by publishing an optimised version.
 #
@@ -94,10 +94,10 @@
 #   fully self-contained, enabling it to work with or without a connection,
 #   with full support for third-party development, including JS/CSS document
 #   components, Lua document filters*, and build scripts*. Soon, ion should
-#   get the ability to monitor its host: the lone hypervisor, able to drop down
+#   get the ability to monitor its host: a lone hypervisor, able to drop down
 #   on nearly any machine, adapting to the environment, making use of what's
 #   available – from an old mac to a modern data-centre – responding to
-#   changes from the user and keeping them updated with status reports,
+#   changes from the user, and keeping them updated with status reports,
 #   all through the file system.
 #
 # - **International and multilingual**; built from the ground-up with
