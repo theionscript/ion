@@ -1,21 +1,19 @@
 ῖon, the ion script, or the lone hypervisor
 ===========================================
 
-*universal content optimising server; invisible content management system*
-
 ion is a unique creature. It can act like a static site generator, or a
 content management system, but ultimately, its goal is broader; a universal
-media processing pipeline, that can generate websites, apps, ebooks,
+media processing pipeline, one that can generate websites, apps, ebooks,
 audiobooks, and perhaps, one day, even real books.
 
 Reviews
 -------
 
-> "Nothing else in the field is attempting to stand on the same ground,
+> “Nothing else in the field is attempting to stand on the same ground,
 > and very few are even aware that the ground exists. ῖon is the only SSG
 > that is designed in a way that does not have a hard single-machine ceiling.
 > The others are fast trains on a short track. ῖon is a slow train on a track
-> that could, in principle, go anywhere." – Claude
+> that could, in principle, go anywhere.” – Claude
 
 Features
 --------
@@ -25,7 +23,9 @@ Features
   graph query language. ion can watch or synchronise with virtually all
   types of storage; local, remote, and cloud. This means a user can manage
   their production-grade website solely from their Dropbox app, or iCloud,
-  or Amazon S3, or just their local drive.
+  or Amazon S3, or just their local drive; ion is an invisible content
+  management system.
+
 - **Parallel build system**; across cores and machines*, indexing,
   filtering, optimising, and publishing potentially massive and disparate
   collections of information, supporting inputs the size of Wikipedia, and
@@ -35,6 +35,7 @@ Features
   offline app, even one for low-power devices such as watches and audio
   players. For that, the build system would need to be able to act
   across clusters.
+
 - **Generated ahead-of-time**; optimising a single video properly
   requires deriving more than a hundred variations of that file, for
   the different formats, resolutions, and bitrates. For big inputs this
@@ -42,18 +43,21 @@ Features
   spend this cost only once, up-front, then only rebuilding what has
   changed, and recycling* everything else. ion does this for every
   input type, from documents, to images*, videos*, maps*, data*,
-  and even AI filters*.
-- **Dynamic content server**; ion focuses on generating everything
+  and even AI filters*; universal input, universal output.
+
+- **Optimising content server**; ion focuses on generating everything
   ahead-of-time, but it is not solely static; ion also runs a server
   for displaying the optimised output as a website, while running a
   receiver for a rate-limited* and spam-filtered* inbox. It can also
   watch the input for changes, automatically rebuilding only what
   has changed.
+
 - **International and multilingual**; built from the ground-up with
   translations in mind: document translations can be linked*, directions
   are considered, every word and symbol can be translated, and even the
   query language's word order can be altered, from subject-verb-object
   to verb-subject-object, for example.
+
 - **Standing on the shoulders of giants**; ion made the odd choice
   of being a shell script. The advantage is that it sits on the ancient
   foundation of Unix, necessarily inheriting its philosophy: everything
@@ -63,8 +67,8 @@ Features
   pandoc, rclone, ffmpeg, vips, caddy, esbuild, parallel, and more.
   This gives it an unsurpassable feature-set, quality, and format
   support, with no vendor lock-in or separate data entry step;
-  just a standard folder of files, optimised; universal input,
-  universal output.
+  just a standard folder of files, optimised.
+
 - **Scale, performance, and security**; currently, generally, the
   generation phase is slow, and the production phase is fast – that
   is, slow to build, fast to run. It has been designed so that, in time,
@@ -77,16 +81,16 @@ Features
   is only superficially a shell script though - the shell layer
   negotiates with the host, while acting as a self-extracting
   archive for various Lua filters and C scripts*.
-- **Portable, extensible, and offline-first**; can drop down on
+
+- **Portable, offline-first, and extensible**; can drop down on
   nearly any machine, adapt to its environment, and make use of
-  what's available – from an old mac to a modern data-centre, with
-  full support for third-party development, including Lua document
-  filters, JS/CSS document components, and build scripts*. Its output
-  is fully self-contained, enabling it to work with or without
-  a connection.
+  what's available – from an old mac to a modern data-centre. Its
+  output is fully self-contained, enabling it to work with or without
+  a connection, with full support for third-party development, including
+  Lua document filters, JS/CSS document components, and build scripts*.
+
 - **Open-source**, mostly. Currently, commercial use will usually
-  require a licence. With proper incentive, the Author could potentially
-  be swayed into making this project fully open-source.
+  require a licence.
 
 **\*** planned. It's still early days.
 
@@ -114,4 +118,4 @@ to sit, as the scaffolding that supports the inventory component; a node
 that indexes, balances, and connects inventory components together, so
 that they may form, in the real world, a decentralised safety net.
 
-Until then, it also makes nice websites.
+Until then, [it also makes nice websites](https://iondigital.uk/).
