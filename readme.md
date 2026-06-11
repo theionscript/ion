@@ -12,7 +12,7 @@ and responds by publishing an optimised version.
 minimum-viable-product that's just shy of being production-ready – for
 example, the post server is insecure and needs replacing, the query system
 needs optimising, etc. This readme describes both where ion is, and also
-what it's being designed for – any features that are still up-coming
+what it's being designed for – any features that are still upcoming
 have been marked with an asterisk.
 
 Reviews
@@ -92,7 +92,7 @@ Roadmap
   fully self-contained, enabling it to work with or without a connection,
   with full support for third-party development, including JS/CSS document
   components, Lua document filters*, and build scripts*. Soon, ion should
-  get the ability to monitor its host: the lone hypervisor, able to down
+  get the ability to monitor its host: the lone hypervisor, able to drop down
   on nearly any machine, adapting to the environment, making use of what's
   available – from an old mac to a modern data-centre – responding to
   changes from the user and keeping them updated with status reports,
