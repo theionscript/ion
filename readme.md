@@ -4,7 +4,7 @@
 ion is a unique creature. It can act like a static site generator,
 or a content management system, but ultimately, its goal is broader:
 a universal media processing pipeline; one that can generate websites,
-apps*, ebooks*, audiobooks*, and perhaps, one day, even real books; an
+apps*, ebooks*, audiobooks*, and perhaps, one day, even realbooks*; an
 invisible content management system that watches a folder for changes,
 and responds by publishing an optimised version.
 
@@ -128,10 +128,10 @@ collections of amino acids; blogs are collections of
 articles; invoices are collections of products and
 services; everything is an inventory.
 
-A network of nutritionally-balanced kitchens is essentially
-then an accountancy problem, and this is where ion aims to sit,
-as the scaffolding that supports the inventory component; a node
-that indexes, balances, and connects inventory components together,
-so that they may form, in the real world, a decentralised safety net.
+A network of nutritionally-balanced kitchens seems then to be
+an accountancy problem, and so this is where ion aims to sit, as
+the scaffolding that supports the inventory component; a node that
+indexes, balances, and connects inventory components together, so
+that they may form, in the real world, a decentralised safety net.
 
 Until then, [it also makes nice websites](https://iondigital.uk/).

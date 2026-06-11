@@ -130,11 +130,11 @@
 # articles; invoices are collections of products and
 # services; everything is an inventory.
 #
-# A network of nutritionally-balanced kitchens is essentially
-# then an accountancy problem, and this is where ion aims to sit,
-# as the scaffolding that supports the inventory component; a node
-# that indexes, balances, and connects inventory components together,
-# so that they may form, in the real world, a decentralised safety net.
+# A network of nutritionally-balanced kitchens seems then to be
+# an accountancy problem, and so this is where ion aims to sit, as
+# the scaffolding that supports the inventory component; a node that
+# indexes, balances, and connects inventory components together, so
+# that they may form, in the real world, a decentralised safety net.
 #
 # Until then, [it also makes nice websites](https://iondigital.uk/).
 #
