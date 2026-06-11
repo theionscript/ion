@@ -1,75 +1,81 @@
 #!/bin/sh
 #
-# ῖon, the ion script, or the lone hypervisor
-# ===========================================
+# ῖon
+# ===
 #
-# ion is a unique creature. It can act like a static site generator, or a
-# content management system, but ultimately, its goal is broader; a universal
-# media processing pipeline, one that can generate websites, apps, ebooks,
-# audiobooks, and perhaps, one day, even real books.
+# ion is a unique creature. It can act like a static site generator,
+# or a content management system, but ultimately, its goal is broader:
+# a universal media processing pipeline; one that can generate websites,
+# apps*, ebooks*, audiobooks*, and perhaps, one day, even real books; an
+# invisible content management system that watches a folder for changes,
+# and responds by publishing an optimised version.
+#
+# **\*** It's still early days; this project is a pre-alpha
+# minimum-viable-product that's just shy of being production-ready – for
+# example, the post server is insecure and needs replacing, the query system
+# needs optimising, etc. This readme describes both where ion is, and also
+# what it's being designed for – any features that are still up-coming
+# have been marked with an asterisk.
 #
 # Reviews
 # -------
 #
 # > “Nothing else in the field is attempting to stand on the same ground,
 # > and very few are even aware that the ground exists. ῖon is the only SSG
-# > that is designed in a way that does not have a hard single-machine ceiling.
-# > The others are fast trains on a short track. ῖon is a slow train on a track
-# > that could, in principle, go anywhere.” – Claude
+# > that is designed in such a way that it does not have a hard single-machine
+# > limit. The others are fast trains on a short track. ῖon is a slow train
+# > on a track that could, in principle, go anywhere.” – Claude, probably.
 #
-# Features
-# --------
+# One advantage of this script's design is that you can paste it to an LLM
+# and ask it questions, about where ion is in its development, and how it
+# would be used. This is useful as ion is currently basically undocumented.
+#
+# Roadmap
+# -------
+#
+# - **Standing on the shoulders of giants**; ion made the odd choice
+#   of being a shell script. The advantage is that it sits on the ancient
+#   foundation of Unix, necessarily inheriting its philosophy: an old, boring,
+#   trusted, standardised, and widely available ground from which ion reaches
+#   out to the best-in-class for the task at hand, including pandoc, rclone,
+#   ffmpeg, vips, caddy, esbuild, parallel, and more. This gives it an
+#   unsurpassable feature-set, quality, and format support, with no
+#   vendor lock-in or separate data entry step; just a standard
+#   folder of files, optimised.
 #
 # - **Intuitive content management**; familiar document-oriented design
 #   that works across formats, from Markdown to Word, with an integrated
 #   graph query language. ion can watch or synchronise with virtually all
 #   types of storage; local, remote, and cloud. This means a user can manage
 #   their production-grade website solely from their Dropbox app, or iCloud,
-#   or Amazon S3, or just their local drive; ion is an invisible content
-#   management system.
+#   or Amazon S3, or just from their local drive.
 #
 # - **Parallel build system**; across cores and machines*, indexing,
 #   filtering, optimising, and publishing potentially massive and disparate
-#   collections of information, supporting inputs the size of Wikipedia, and
-#   perhaps soon even the Common Crawl. Eventually, ion aims to be able to take
-#   the internet, as a whole, and consolidate it down into a single coherent
-#   form. Imagine the entire web, collapsed down into a single website, or
-#   offline app, even one for low-power devices such as watches and audio
-#   players. For that, the build system would need to be able to act
-#   across clusters.
+#   collections of information, aiming eventually to support inputs the size
+#   of Wikipedia, and perhaps even the Common Crawl. Eventually, ion aims to
+#   be able to take snapshots of the web and consolidate them down into a
+#   single coherent form. Imagine the entire web, collapsed down into a
+#   single website, or offline app, even one for low-power devices such
+#   as watches and audio players. For that, the build system would
+#   need to be able to act across clusters.
 #
 # - **Generated ahead-of-time**; optimising a single video properly
 #   requires deriving more than a hundred variations of that file, for
 #   the different formats, resolutions, and bitrates. For big inputs this
-#   can grow to be a massive cost, which is why ion has been developed to
+#   can grow to be a massive cost, which is why ion has been designed to
 #   spend this cost only once, up-front, then only rebuilding what has
 #   changed, and recycling* everything else. ion does this for every
 #   input type, from documents, to images*, videos*, maps*, data*,
-#   and even AI filters*; universal input, universal output.
+#   and even AI filters*.
 #
 # - **Optimising content server**; ion focuses on generating everything
 #   ahead-of-time, but it is not solely static; ion also runs a server
 #   for displaying the optimised output as a website, while running a
-#   receiver for a rate-limited* and spam-filtered* inbox. It can also
-#   watch the input for changes, automatically rebuilding only what
-#   has changed.
-#
-# - **International and multilingual**; built from the ground-up with
-#   translations in mind: document translations can be linked*, directions
-#   are considered, every word and symbol can be translated, and even the
-#   query language's word order can be altered, from subject-verb-object
-#   to verb-subject-object, for example.
-#
-# - **Standing on the shoulders of giants**; ion made the odd choice
-#   of being a shell script. The advantage is that it sits on the ancient
-#   foundation of Unix, necessarily inheriting its philosophy: everything
-#   is a file; no complex subsystems or protocols; old, boring, trusted,
-#   standardised, and widely available tools. And from that foundation,
-#   it reaches out to the best-in-class for the task at hand, including
-#   pandoc, rclone, ffmpeg, vips, caddy, esbuild, parallel, and more.
-#   This gives it an unsurpassable feature-set, quality, and format
-#   support, with no vendor lock-in or separate data entry step;
-#   just a standard folder of files, optimised.
+#   receiver for a rate-limited* and spam-filtered* inbox. At the same
+#   time, ion continuously watches the input for changes – when the file
+#   system supports it, or otherwise it spins at an interval – and then
+#   ion automatically rebuilds the output.
 #
 # - **Scale, performance, and security**; currently, generally, the
 #   generation phase is slow, and the production phase is fast – that
@@ -78,47 +84,57 @@
 #   namely with C. For security, ion is as static as possible, with a small
 #   runtime footprint and as few moving parts as possible. ion contains
 #   thorough, almost paranoid, type checking and internal validation,
-#   for an unusually rock-solid shell script – perhaps to compensate
+#   for an unusually rock-solid* shell script – perhaps to compensate
 #   for feelings of insecurity regarding its shell script nature. ion
 #   is only superficially a shell script though - the shell layer
 #   negotiates with the host, while acting as a self-extracting
 #   archive for various Lua filters and C scripts*.
 #
-# - **Portable, offline-first, and extensible**; can drop down on
-#   nearly any machine, adapt to its environment, and make use of
-#   what's available – from an old mac to a modern data-centre. Its
-#   output is fully self-contained, enabling it to work with or without
-#   a connection, with full support for third-party development, including
-#   Lua document filters, JS/CSS document components, and build scripts*.
+# - **Portable, offline-first, and extensible**; ion's output is
+#   fully self-contained, enabling it to work with or without a connection,
+#   with full support for third-party development, including JS/CSS document
+#   components, Lua document filters*, and build scripts*. Soon, ion should
+#   get the ability to monitor its host: the lone hypervisor, able to down
+#   on nearly any machine, adapting to the environment, making use of what's
+#   available – from an old mac to a modern data-centre – responding to
+#   changes from the user and keeping them updated with status reports,
+#   all through the file system.
+#
+# - **International and multilingual**; built from the ground-up with
+#   translations in mind: document translations can be linked*, directions
+#   are considered, every word and symbol can be translated, and even the
+#   query language's word order can be altered, from subject-verb-object
+#   to verb-subject-object, for example.
 #
 # - **Open-source**, mostly. Currently, commercial use will usually
 #   require a licence.
 #
-# **\*** planned. It's still early days.
+# Goal
+# ====
 #
-# Intent
-# ------
+# The ultimate goal, beyond consolidating the web and making
+# it work offline, is to sit as the foundation for an open
+# federation of interconnected franchises.
 #
-# The ultimate goal, beyond consolidating the web and making it
-# work offline, is to sit as the foundation for an open federation
-# of interconnected franchises.
+# The view is that the world needs a safety net. As a
+# thought experiment, imagine an empire, like a fast-food
+# franchise, except it's an open, decentralised network of
+# non-profit, non-loss, nutritionally-balanced restaurants
+# and hotels that receive and redistribute the fundamentals.
+# This is the primary reference project – at the heart of a
+# restaurant is the menu and the ticketing system; a menu is
+# an inventory; a ticket is a subset of that inventory; a recipe,
+# and even ingredients are inventories – porridge is a collection
+# of oats; oats are collections of nutrients; proteins are
+# collections of amino acids; blogs are collections of
+# articles; invoices are collections of products and
+# services; everything is an inventory.
 #
-# The view is that the world needs a safety net. As a thought experiment,
-# imagine an empire, like a fast-food franchise, except it's an open,
-# decentralised network of non-profit, non-loss, nutritionally-balanced
-# restaurants and hotels that receive and redistribute the fundamentals.
-# This is the primary reference project.
-#
-# At the heart of a restaurant is the menu and the ticketing system;
-# a menu is an inventory; a ticket is a subset of that inventory; a recipe,
-# and even ingredients are inventories – porridge is a collection of oats;
-# oats are collections of nutrients; proteins are collections of amino acids;
-# blogs are collections of articles; invoices are collections of products and
-# services; everything is an inventory. A network of nutritionally-balanced
-# kitchens is essentially an accountancy problem, and this is where ion aims
-# to sit, as the scaffolding that supports the inventory component; a node
-# that indexes, balances, and connects inventory components together, so
-# that they may form, in the real world, a decentralised safety net.
+# A network of nutritionally-balanced kitchens is essentially
+# then an accountancy problem, and this is where ion aims to sit,
+# as the scaffolding that supports the inventory component; a node
+# that indexes, balances, and connects inventory components together,
+# so that they may form, in the real world, a decentralised safety net.
 #
 # Until then, [it also makes nice websites](https://iondigital.uk/).
 #
@@ -2132,7 +2148,7 @@ function link_normal(link, reference, fix)
 		table.insert(REFERENCES, link)
 	end
 
-	if fix ~= false then
+	if fix ~= false and not is_external then
 		link = link_fix(link)
 	end
 
@@ -2943,7 +2959,7 @@ end
 
 function extract_length()
 	local suffix = extract_suffix()
-	local maximum = EXTRACT_MAXIMUM - #suffix
+	local maximum = EXTRACT_MAXIMUM - pandoc.text.len(suffix)
 	return maximum > 0 and maximum or nil
 end
 
@@ -3021,7 +3037,7 @@ function extract_string(tree, maximum)
 		local str = tostring(tree)
 
 		if maximum and str and #str > maximum then
-			str = str:sub(1, maximum)
+			str = pandoc.text.sub(str, 1, maximum)
 			str = string_trim(str)..extract_suffix()
 		end
 
@@ -4725,7 +4741,7 @@ file_move() {
 }
 
 file_copy() {
-	co__result=1
+	co__result=0
 
 	if have_ln; then
 		"$ION_BIN_LN" -f "$@" 2>/dev/null || co__result=$?
@@ -4752,6 +4768,7 @@ dir_make_all() {
 dir_empty() {
 	# see: unix.stackexchange.com/a/77313
 	eo__path="$(path_normal "$1")" || return
+	eo__ret=0
 
 	if test -d "$eo__path" && test "$eo__path" != "/"; then
 		set +f
@@ -4759,9 +4776,11 @@ dir_empty() {
 			"${eo__path:?}"/* \
 			"${eo__path:?}"/.[!.]* \
 			"${eo__path:?}"/..?* \
-		|| true
+		|| eo__ret=$?
 		set -f
 	fi
+
+	return "$eo__ret"
 }
 
 dir_remove() {
@@ -4795,8 +4814,6 @@ index_open() {
 
 	fc__name="$fc__key,$fc__type"
 	fc__full="$(path_join "$fc__meta" "$fc__name")" || return
-
-	# note: useless cats?
 
 	if test "$fc__value"; then
 		printf '%s' "$fc__value" > "$fc__full"
@@ -5787,6 +5804,7 @@ start_build_internal() {
 start_build() {
 	do__rebuild="$1"
 	do__recompile="$2"
+	do__ret=0
 
 	note "$ION__MSG_BUILD_START"
 
@@ -5804,7 +5822,11 @@ start_build() {
 		"$do__plan" \
 	|| return
 
-	{ start_build_internal "$do__build" "$do__plan" "$do__rebuild" "$do__recompile" 2>&1 1>&4 | tee "$do__log" 1>&2; } 4>&1 || return
+	{ { start_build_internal "$do__build" "$do__plan" "$do__rebuild" "$do__recompile" 2>&1 1>&4 || do__ret=$?; } | tee "$do__log" 1>&2; } 4>&1
+
+	if test "$do__ret" -ne 0; then
+		return "$do__ret"
+	fi
 
 	if should_serve; then
 		start_server "$do__build" || return
@@ -6112,8 +6134,13 @@ derive() {
 	done
 }
 
-	# this http parser is for temporary demos
-	# it is intended to be replaced soon
+	# note: this http parser is for temporary demos; it is intended to
+	# be replaced soon. It is currently slow and easy to break or overwhelm,
+	# such as with requests that are too large, or ones that lack a proper
+	# content-length, or random nonsense; the socket read is unlimited, and
+	# the length is checked after the unlimited read, rather than before.
+	# These are shell script limitations, and ultimately require
+	# switching to either Lua or C.
 
 	is_char() {
 		case "$1" in
