@@ -119,19 +119,20 @@ thought experiment, imagine an empire, like a fast-food
 franchise, except it's an open, decentralised network of
 non-profit, non-loss, nutritionally-balanced restaurants
 and hotels that receive and redistribute the fundamentals.
-This is the primary reference project – at the heart of a
-restaurant is the menu and the ticketing system; a menu is
-an inventory; a ticket is a subset of that inventory; a recipe,
-and even ingredients are inventories – porridge is a collection
-of oats; oats are collections of nutrients; proteins are
-collections of amino acids; blogs are collections of
-articles; invoices are collections of products and
-services; everything is an inventory.
+This is the primary reference project.
 
-A network of nutritionally-balanced kitchens seems then to be
-an accountancy problem, and so this is where ion aims to sit, as
-the scaffolding that supports the inventory component; a node that
-indexes, balances, and connects inventory components together, so
-that they may form, in the real world, a decentralised safety net.
+At the heart of a restaurant is the menu, and the ticketing
+system; a menu is an inventory; a ticket is a subset of that
+inventory; a recipe, and even ingredients are inventories;
+porridge is a collection of oats; oats are collections of
+nutrients; proteins are collections of amino acids; blogs
+are collections of articles; invoices are collections of
+products and services; everything is an inventory.
+
+A network of nutritionally-balanced kitchens seems then to
+be an accountancy problem, and this is where ion aims to sit,
+as the scaffolding that supports the inventory component; a node
+that indexes, balances, and connects inventory components together,
+so that they may form, in the real world, a decentralised safety net.
 
 Until then, [it also makes nice websites](https://iondigital.uk/).
