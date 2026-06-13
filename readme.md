@@ -31,16 +31,6 @@ would be used. This is useful as ion is currently basically undocumented.
 Roadmap
 -------
 
-- **Standing on the shoulders of giants**; ion made the odd choice
-  of being a shell script. The advantage is that it sits on the ancient
-  foundation of Unix, necessarily inheriting its philosophy: an old, boring,
-  trusted, standardised, and widely available ground from which ion reaches
-  out to the best-in-class for the task at hand, including pandoc, rclone,
-  ffmpeg, vips, caddy, esbuild, parallel, and more. This gives it an
-  unsurpassable feature-set, quality, and format support, with no
-  vendor lock-in or separate data entry step; just a standard
-  folder of files, optimised.
-
 - **Intuitive content management**; familiar document-oriented design
   that works across formats, from Markdown to Word, with an integrated
   graph query language. ion can watch or synchronise with virtually all
@@ -74,6 +64,16 @@ Roadmap
   time, ion continuously watches the input for changes – when the file
   system supports it, or otherwise it spins at an interval – and then
   ion automatically rebuilds the output.
+
+- **Standing on the shoulders of giants**; ion made the odd choice
+  of being a shell script. The advantage is that it sits on the ancient
+  foundation of Unix, necessarily inheriting its philosophy: an old, boring,
+  trusted, standardised, and widely available ground from which ion reaches
+  out to the best-in-class for the task at hand, including pandoc, rclone,
+  ffmpeg, vips, caddy, esbuild, parallel, and more. This gives it an
+  unsurpassable feature-set, quality, and format support, with no
+  vendor lock-in or separate data entry step; just a standard
+  folder of files, optimised.
 
 - **Scale, performance, and security**; currently, generally, the
   generation phase is slow, and the production phase is fast – that

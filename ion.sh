@@ -33,16 +33,6 @@
 # Roadmap
 # -------
 #
-# - **Standing on the shoulders of giants**; ion made the odd choice
-#   of being a shell script. The advantage is that it sits on the ancient
-#   foundation of Unix, necessarily inheriting its philosophy: an old, boring,
-#   trusted, standardised, and widely available ground from which ion reaches
-#   out to the best-in-class for the task at hand, including pandoc, rclone,
-#   ffmpeg, vips, caddy, esbuild, parallel, and more. This gives it an
-#   unsurpassable feature-set, quality, and format support, with no
-#   vendor lock-in or separate data entry step; just a standard
-#   folder of files, optimised.
-#
 # - **Intuitive content management**; familiar document-oriented design
 #   that works across formats, from Markdown to Word, with an integrated
 #   graph query language. ion can watch or synchronise with virtually all
@@ -76,6 +66,16 @@
 #   time, ion continuously watches the input for changes – when the file
 #   system supports it, or otherwise it spins at an interval – and then
 #   ion automatically rebuilds the output.
+#
+# - **Standing on the shoulders of giants**; ion made the odd choice
+#   of being a shell script. The advantage is that it sits on the ancient
+#   foundation of Unix, necessarily inheriting its philosophy: an old, boring,
+#   trusted, standardised, and widely available ground from which ion reaches
+#   out to the best-in-class for the task at hand, including pandoc, rclone,
+#   ffmpeg, vips, caddy, esbuild, parallel, and more. This gives it an
+#   unsurpassable feature-set, quality, and format support, with no
+#   vendor lock-in or separate data entry step; just a standard
+#   folder of files, optimised.
 #
 # - **Scale, performance, and security**; currently, generally, the
 #   generation phase is slow, and the production phase is fast – that
@@ -762,36 +762,44 @@
 # recursive functions. This will likely be replaced with the local
 # keyword at some point. The last prefix used was: fm
 #
+# Bet
+# ---
+#
+# In case you were wondering, this script was written by hand. Here's an
+# interesting question: can you find a prompt, that is shorter than ion,
+# that can be given to an LLM made prior to mid-2026, that will cause
+# the LLM to generate ion.
+#
 # Changes
 # -------
 #
-# - 0.11.0; 2026-6-9 18:17
+# - 0.11.0; 2026-6-9
 #   - added the readme
-# - 0.10.0; 2026-6-6 14:41
+# - 0.10.0; 2026-6-6
 #   - fixed the shared state in the Index
 #   - ION_BUILD* is now ION_OUTPUT*
-# - 0.9.0; 2026-6-4 20:26
+# - 0.9.0; 2026-6-4
 #   - linked the metadata with the query system
-# - 0.8.0; 2026-6-2 14:17
+# - 0.8.0; 2026-6-2
 #   - added metadata extraction
-# - 0.7.0; 2026-6-1 19:15
+# - 0.7.0; 2026-6-1
 #   - added derivation support
-# - 0.6.0; 2026-4-26 20:20
+# - 0.6.0; 2026-4-26
 #   - added ION_SPIN
-# - 0.5.0; 2026-4-20 20:10
+# - 0.5.0; 2026-4-20
 #   - rough mvp
-# - 0.4.0; 2026-4-19 14:05
+# - 0.4.0; 2026-4-19
 #   - added the frontend component system
 #   - added basic post support
-# - 0.3.0; 2026-4-16 19:27
+# - 0.3.0; 2026-4-16
 #   - the build system now integrates the server
 #   - added rough support for document output
-# - 0.2.0; 2026-4-15 17:18
+# - 0.2.0; 2026-4-15
 #   - finished the build system
 #   - every build now includes its log
 #   - added a polling mode to the watcher
 #   - updated the licence
-# - 0.1.0; 2026-3-30 22:32
+# - 0.1.0; 2026-3-30
 #   - initial release
 #
 # ---
