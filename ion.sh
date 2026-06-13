@@ -86,7 +86,7 @@
 #   thorough, almost paranoid, type checking and internal validation,
 #   for an unusually rock-solid* shell script – perhaps to compensate
 #   for feelings of insecurity regarding its shell script nature. ion
-#   is only superficially a shell script though - the shell layer
+#   is only superficially a shell script though – the shell layer
 #   negotiates with the host, while acting as a self-extracting
 #   archive for various Lua filters and C scripts*.
 #
