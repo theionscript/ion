@@ -3,19 +3,19 @@
 # ῖon
 # ===
 #
-# ion is a unique creature. It can act like a static site generator,
-# or a content management system, but ultimately, its goal is broader:
-# a universal media processing pipeline; one that can generate websites,
-# apps*, ebooks*, audiobooks*, and perhaps, one day, even realbooks*; an
-# invisible content management system that watches a folder for changes,
-# and responds by publishing an optimised version.
-#
 # **\*** It's still early days; this project is a pre-alpha
 # minimum-viable-product that's just shy of being production-ready – for
 # example, the post server is insecure and needs replacing, the query system
 # needs optimising, etc. This readme describes both where ion is, and also
-# what it's being designed for – any features that are still upcoming
+# what it's been designed for – any features that are still upcoming
 # have been marked with an asterisk.
+#
+# ion is a universal media processing pipeline. ion's core goal in life
+# is to take an input folder and produce an indexed and optimised version
+# of that folder, optionally publishing it, while responding to changes in
+# the input by rebuilding only what has changed. ion can act as an invisible
+# content management system, or a generator for websites, apps*, ebooks*,
+# audiobooks*, and perhaps, one day, even realbooks*.
 #
 # Reviews
 # -------
