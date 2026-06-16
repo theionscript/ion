@@ -44,9 +44,9 @@ Roadmap
   of Wikipedia, and perhaps even the Common Crawl. Eventually, ion aims to
   be able to take snapshots of the web and consolidate them down into a
   single coherent form. Imagine the entire web, collapsed down into a
-  single website, or offline app, even one for low-power devices such
-  as watches and audio players. For that, the build system would
-  need to be able to act across clusters.
+  single website, or offline app, even for low-power devices such as
+  watches and audio players. For that, the build system would need
+  to be able to act across clusters.
 
 - **Generated ahead-of-time**; optimising a single video properly
   requires deriving more than a hundred variations of that file, for
