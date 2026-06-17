@@ -1125,6 +1125,7 @@ export ION_TEMP_TEMPLATE_HTML="${ION_TEMP_TEMPLATE_HTML:-}"
 export ION_TEMP_SOURCE_STYLES="${ION_TEMP_SOURCE_STYLES:-}"
 export ION_TEMP_SOURCE_SCRIPTS="${ION_TEMP_SOURCE_SCRIPTS:-}"
 export ION_TEMP_GLOBAL_C="${ION_TEMP_GLOBAL_C:-}"
+export ION_TEMP_GLOBAL_C_BIN="${ION_TEMP_GLOBAL_C_BIN:-}"
 
 TEMP_SED=
 TEMP_WATCH_LOCK=
@@ -5532,7 +5533,7 @@ start_c() {
 	#      -combine? -fwhole-program? -flto?
 	#      -l? -I? -include? pkg-config?
 
-	"$ION_BIN_CC" \
+	start "$ION_BIN_CC" \
 		-static -g -O2 \
 		-pedantic -Wall -Wextra -Wconversion \
 		-fstack-clash-protection \
@@ -6998,6 +6999,7 @@ stop_temp_parent() {
 	file_remove "$ION_TEMP_SOURCE_SCRIPTS" || true
 
 	file_remove "$ION_TEMP_GLOBAL_C" || true
+	file_remove "$ION_TEMP_GLOBAL_C_BIN" || true
 
 	if test "$OUTPUT_TEMP"; then
 		dir_remove "$ION_OUTPUT" || true
@@ -7585,6 +7587,7 @@ init_check_env() {
 	init_check_path ION_TEMP_SOURCE_STYLES "$ION_TEMP_SOURCE_STYLES" || return
 	init_check_path ION_TEMP_SOURCE_SCRIPTS "$ION_TEMP_SOURCE_SCRIPTS" || return
 	init_check_path ION_TEMP_GLOBAL_C "$ION_TEMP_GLOBAL_C" || return
+	init_check_path ION_TEMP_GLOBAL_C_BIN "$ION_TEMP_GLOBAL_C_BIN" || return
 }
 
 init_check_bsd() {
@@ -7784,6 +7787,12 @@ init_temp_global_c() {
 	export ION_TEMP_GLOBAL_C="$temp"
 }
 
+init_temp_global_c_bin() {
+	local temp="$(start_temp_file bin out)" || return
+	start_c "$ION_TEMP_GLOBAL_C" "$temp" || return
+	export ION_TEMP_GLOBAL_C_BIN="$temp"
+}
+
 init_temp_output() {
 	if ! test "$ION_OUTPUT"; then
 		ds__temp="$(start_temp_dir output)" || return
@@ -7802,6 +7811,7 @@ init_temp_shared() {
 	init_temp_template_json || return
 	init_temp_template_html || return
 	init_temp_global_c || return
+	init_temp_global_c_bin || return
 }
 
 init_temp_parent() {
