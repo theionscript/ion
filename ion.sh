@@ -1013,7 +1013,7 @@ export ION__CLASS_NO_JS="${ION__CLASS_NO_JS:-"no-js"}"
 
 export ION_BIN_SELF="${ION_BIN_SELF:-"$0"}"
 export ION_BIN_CADDY="${ION_BIN_CADDY:-"caddy"}"
-export ION_BIN_CC="${ION_BIN_CC:-"cc:c99:c89"}"
+export ION_BIN_CC="${ION_BIN_CC:-"c99:cc:c89"}"
 export ION_BIN_CLANG="${ION_BIN_CLANG:-"clang"}"
 export ION_BIN_ESBUILD="${ION_BIN_ESBUILD:-"esbuild"}"
 export ION_BIN_FLOCK="${ION_BIN_FLOCK:-"flock"}"
@@ -1046,16 +1046,16 @@ export ION_DEV_URANDOM="${ION_DEV_URANDOM:-"/dev/urandom"}"
 
 export ION_SERVE="${ION_SERVE:-2}"
 export ION_SERVE_PORT="${ION_SERVE_PORT:-}"
-export ION_SERVE_PRODUCTION="${ION_SERVE_PRODUCTION:-}"
-export ION_SERVE_WWW="${ION_SERVE_WWW:-}"
+export ION_SERVE_PRODUCTION="${ION_SERVE_PRODUCTION:-0}"
+export ION_SERVE_WWW="${ION_SERVE_WWW:-0}"
 
-export ION_WATCH="${ION_WATCH:-}"
-export ION_WATCH_CLEAR="${ION_WATCH_CLEAR:-}"
+export ION_WATCH="${ION_WATCH:-0}"
+export ION_WATCH_CLEAR="${ION_WATCH_CLEAR:-0}"
 export ION_WATCH_THROTTLE="${ION_WATCH_THROTTLE:-0.1}"
 export ION_WATCH_DEBOUNCE="${ION_WATCH_DEBOUNCE:-0.1}"
-export ION_WATCH_POLLING="${ION_WATCH_POLLING:-}"
+export ION_WATCH_POLLING="${ION_WATCH_POLLING:-0}"
 
-export ION_SPIN="${ION_SPIN:-}"
+export ION_SPIN="${ION_SPIN:-0}"
 export ION_SPIN_START="${ION_SPIN_START:-}"
 export ION_SPIN_INTERVAL="${ION_SPIN_INTERVAL:-60}"
 
@@ -1080,8 +1080,8 @@ export ION_INBOX_PORT="${ION_INBOX_PORT:-8000}"
 export ION_INBOX_RATES="${ION_INBOX_RATES:-8192}"
 
 export ION_LINK_PREFIX="${ION_LINK_PREFIX:-"."}"
-export ION_LINK_PROTOCOL="${ION_LINK_PROTOCOL:-}"
-export ION_LINK_DOMAIN="${ION_LINK_DOMAIN:-}"
+export ION_LINK_PROTOCOL="${ION_LINK_PROTOCOL:-0}"
+export ION_LINK_DOMAIN="${ION_LINK_DOMAIN:-0}"
 export ION_LINK_TRIM="${ION_LINK_TRIM:-1}"
 
 export ION_EXTRACT_MAXIMUM="${ION_EXTRACT_MAXIMUM:-160}"
@@ -1104,13 +1104,13 @@ export ION_SYNTAX="${ION_SYNTAX:-"monochrome"}"
 export ION_COGNATES="${ION_COGNATES:-"inventori:inventory"}"
 
 export ION_TEMP="${ION_TEMP:-"${TMPDIR:-/tmp}"}"
-export ION_TEST="${ION_TEST:-}"
-export ION_WORDS="${ION_WORDS:-}"
+export ION_TEST="${ION_TEST:-0}"
+export ION_WORDS="${ION_WORDS:-0}"
 
 export ION_VOLUME="${ION_VOLUME:-3}"
 export ION_MINIFY="${ION_MINIFY:-0}"
 export ION_PARALLEL="${ION_PARALLEL:-0}"
-export ION_CLUSTER="${ION_CLUSTER:-}"
+export ION_CLUSTER="${ION_CLUSTER:-0}"
 
 export ION_INPUT="${ION_INPUT:-}"
 export ION_MIRRORS="${ION_MIRRORS:-}"
@@ -1160,7 +1160,7 @@ function envn(name, default)
 end
 
 function envb(name, default)
-	return envn(name, default) == 1
+	return envn(name, default) == 1 and true or false
 end
 
 __ERROR_PREFIX_SUB = env("__ERROR_PREFIX_SUB")
@@ -1297,8 +1297,8 @@ START_ID = envn("START_ID")
 
 BIN_SELF = env("BIN_SELF")
 
-LINK_PROTOCOL = envb("LINK_PROTOCOL", false)
-LINK_DOMAIN = envb("LINK_DOMAIN", false)
+LINK_PROTOCOL = envb("LINK_PROTOCOL")
+LINK_DOMAIN = envb("LINK_DOMAIN")
 LINK_PREFIX = env("LINK_PREFIX")
 LINK_TRIM = envb("LINK_TRIM")
 
@@ -1310,9 +1310,9 @@ EXTRACT_MAXIMUM = envn("EXTRACT_MAXIMUM", 0)
 
 DOMAIN = env("DOMAIN")
 COGNATES = env("COGNATES")
-TESTING = envb("TEST", false)
+TESTING = envb("TEST")
 VOLUME = envn("VOLUME", 3)
-WORDS = envb("WORDS", false)
+WORDS = envb("WORDS")
 
 FILTER_PATH = env("FILTER_PATH", false)
 FILTER_TARGET = env("FILTER_TARGET", false)
@@ -4589,35 +4589,39 @@ EOF
 set -f #set -euf
 
 is_bool() {
-	! test "$1" || test "$1" = 1
+	case $1 in
+		0) return 0 ;;
+		1) return 0 ;;
+		*) return 1 ;;
+	esac
 }
 
 is_uint() {
 	# see: stackoverflow.com/a/61835747
 
 	case $1 in
-		'' | *[!0-9]*) return 1;;
+		'' | *[!0-9]*) return 1 ;;
 		*) return 0 ;;
 	esac
 }
 
 is_int() {
 	case ${1#[-+]} in
-		'' | *[!0-9]*) return 1;;
+		'' | *[!0-9]*) return 1 ;;
 		*) return 0 ;;
 	esac
 }
 
 is_unum() {
 	case $1 in
-		'' | . | *[!0-9.]* | *.*.*) return 1;;
+		'' | . | *[!0-9.]* | *.*.*) return 1 ;;
 		*) return 0 ;;
 	esac
 }
 
 is_num() {
 	case ${1#[-+]} in
-		'' | . | *[!0-9.]* | *.*.*) return 1;;
+		'' | . | *[!0-9.]* | *.*.*) return 1 ;;
 		*) return 0 ;;
 	esac
 }
@@ -4625,7 +4629,7 @@ is_num() {
 terminal_clear() {
 	# see: stackoverflow.com/a/37778152/22451530
 	# and: student.cs.uwaterloo.ca/~cs452/terminal.html
-	test "$ION_WATCH_CLEAR" && test -t 1 && printf '\033[2J\033[H'
+	test "$ION_WATCH_CLEAR" = 1 && test -t 1 && printf '\033[2J\033[H'
 }
 
 have_parent() {
@@ -4870,9 +4874,7 @@ can_build() {
 }
 
 can_watch() {
-	! test "$ION_WATCH" || test "$ION_WATCH" = 0 || {
-		test "$ION_WATCH" = 1 && have_watcher
-	}
+	test "$ION_WATCH" = 0 || { test "$ION_WATCH" = 1 && have_watcher; }
 }
 
 can_serve() {
@@ -5733,7 +5735,7 @@ start_find() {
 		;;
 	esac
 
-	if test "$cn__flat"; then
+	if test "$cn__flat" = 1; then
 		cn__dirs_l="$cn__dirs_l""!"
 		cn__dirs_l="$cn__dirs_l""$NEWLINE""-name"
 		cn__dirs_l="$cn__dirs_l""$NEWLINE""."
@@ -6009,7 +6011,7 @@ start_fswatch() {
 		ch__args="$ch__args"" -l $ION_WATCH_THROTTLE"
 	fi
 
-	if test "$ION_WATCH_POLLING"; then
+	if test "$ION_WATCH_POLLING" = 1; then
 		ch__args="$ch__args"" -m poll_monitor"
 	fi
 
@@ -6106,7 +6108,7 @@ stop_tcpserver() {
 }
 
 start_caddy_protocol() {
-	if test "$ION_SERVE_PRODUCTION"; then
+	if test "$ION_SERVE_PRODUCTION" = 1; then
 		print https
 	else
 		print http
@@ -6116,13 +6118,13 @@ start_caddy_protocol() {
 start_caddy_port() {
 	if test "$ION_SERVE_PORT"; then
 		print "$ION_SERVE_PORT"
-	elif ! test "$ION_SERVE_PRODUCTION"; then
+	elif test "$ION_SERVE_PRODUCTION" = 0; then
 		print 8080
 	fi
 }
 
 start_caddy_config_raw() {
-	if ! test "$ION_SERVE_PORT" && test "$ION_SERVE_PRODUCTION"; then
+	if ! test "$ION_SERVE_PORT" && test "$ION_SERVE_PRODUCTION" = 1; then
 		print "$TEMPLATE_CADDY_PRODUCTION"
 	else
 		print "$TEMPLATE_CADDY_DEVELOPMENT"
@@ -6130,8 +6132,8 @@ start_caddy_config_raw() {
 
 	print "$TEMPLATE_CADDY_SHARED"
 
-	if test "$ION_SERVE_PRODUCTION"; then
-		if test "$ION_SERVE_WWW"; then
+	if test "$ION_SERVE_PRODUCTION" = 1; then
+		if test "$ION_SERVE_WWW" = 1; then
 			print "$TEMPLATE_CADDY_WWW"
 		else
 			print "$TEMPLATE_CADDY_UNWWW"
@@ -6612,7 +6614,7 @@ start_receiving() {
 	dn__size=0
 	dn__pid=
 
-	if test "$OUTPUT_COUNT" = 1 && test "$ION_OUTPUT_INITIAL"; then
+	if test "$OUTPUT_COUNT" = 1 && test "$ION_OUTPUT_INITIAL" = 1; then
 		start_signal "$ION___SIGNAL_ALL" || return
 	fi
 
