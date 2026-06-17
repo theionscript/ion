@@ -70,10 +70,9 @@ Roadmap
   foundation of Unix, necessarily inheriting its philosophy: an old, boring,
   trusted, standardised, and widely available ground from which ion reaches
   out to the best-in-class for the task at hand, including pandoc, rclone,
-  ffmpeg, vips, caddy, esbuild, parallel, and more. This gives it an
-  unsurpassable feature-set, quality, and format support, with no
-  vendor lock-in or separate data entry step; just a standard
-  folder of files, optimised.
+  ffmpeg, vips, esbuild, parallel, and more. This gives it an unsurpassable
+  feature-set, quality, and format support, with no vendor lock-in or
+  separate data entry step; just a standard folder of files, optimised.
 
 - **Scale, performance, and security**; currently, generally, the
   generation phase is slow, and the production phase is fast – that

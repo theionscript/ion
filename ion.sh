@@ -72,10 +72,9 @@
 #   foundation of Unix, necessarily inheriting its philosophy: an old, boring,
 #   trusted, standardised, and widely available ground from which ion reaches
 #   out to the best-in-class for the task at hand, including pandoc, rclone,
-#   ffmpeg, vips, caddy, esbuild, parallel, and more. This gives it an
-#   unsurpassable feature-set, quality, and format support, with no
-#   vendor lock-in or separate data entry step; just a standard
-#   folder of files, optimised.
+#   ffmpeg, vips, esbuild, parallel, and more. This gives it an unsurpassable
+#   feature-set, quality, and format support, with no vendor lock-in or
+#   separate data entry step; just a standard folder of files, optimised.
 #
 # - **Scale, performance, and security**; currently, generally, the
 #   generation phase is slow, and the production phase is fast – that
@@ -739,11 +738,11 @@
 #
 # By submitting a contribution to this project, you grant the Author
 # perpetual, worldwide, non-exclusive, no-charge, royalty-free, transferable,
-# and irrevocable licence to import, use, run, reproduce, modify, prepare, display,
-# perform, transfer, distribute, offer to sell, sell, and sublicence through
-# multiple tiers of sublicensees, your contributions and such derivative works,
-# including patent licences for any patent claims you own or control that are
-# necessarily infringed by your contribution.
+# and irrevocable licence to import, use, run, reproduce, modify, prepare,
+# display, perform, transfer, distribute, offer to sell, sell, and sublicence
+# through multiple tiers of sublicensees, your contributions and such derivative
+# works, including patent licences for any patent claims you own or control
+# that are necessarily infringed by your contribution.
 #
 # The Author provides no warranty regarding the acceptance or use of
 # your contribution, for which you represent that you have the legal authority
@@ -761,15 +760,15 @@
 # so that functions can call other functions without potentially getting
 # their own variables overwritten. This wouldn't help in the case of
 # recursive functions. This will likely be replaced with the local
-# keyword at some point. The last prefix used was: fm
+# keyword soon. The last prefix used was: fm
 #
-# Bet
-# ---
-#
-# In case you were wondering, this script was written by hand. Here's an
-# interesting question: can you find a prompt, that is shorter than ion,
-# that can be given to an LLM made prior to mid-2026, that will cause
+# In case you were wondering, this script was written by hand. It's an
+# interesting question: could you find a prompt, that is shorter than ion,
+# that could be given to an LLM made prior to mid-2026, that will cause
 # the LLM to generate ion.
+#
+# By the way, if this script keeps growing, it may morph into an
+# amalgamation, like sqlite.
 #
 # Changes
 # -------
@@ -777,6 +776,8 @@
 # - 0.12.0; 2026-6-16
 #   - started adding c support
 #   - started switching to using ˋlocalˋ internally
+#   - started sharing immutable temporary files across processes
+#   - fixed boolean usage
 # - 0.11.0; 2026-6-9
 #   - added the readme
 # - 0.10.0; 2026-6-6
@@ -1115,6 +1116,22 @@ export ION_CLUSTER="${ION_CLUSTER:-0}"
 export ION_INPUT="${ION_INPUT:-}"
 export ION_MIRRORS="${ION_MIRRORS:-}"
 
+export ION_TEMP_DOCUMENT_BLANK="${ION_TEMP_DOCUMENT_BLANK:-}"
+export ION_TEMP_FILTER_EMPTY="${ION_TEMP_FILTER_EMPTY:-}"
+export ION_TEMP_FILTER_TEST="${ION_TEMP_FILTER_TEST:-}"
+export ION_TEMP_FILTER_EXTRACT="${ION_TEMP_FILTER_EXTRACT:-}"
+export ION_TEMP_FILTER_META="${ION_TEMP_FILTER_META:-}"
+export ION_TEMP_FILTER_DOCUMENT="${ION_TEMP_FILTER_DOCUMENT:-}"
+export ION_TEMP_TEMPLATE_JSON="${ION_TEMP_TEMPLATE_JSON:-}"
+export ION_TEMP_TEMPLATE_HTML="${ION_TEMP_TEMPLATE_HTML:-}"
+
+TEMP_SED=
+TEMP_WATCH_LOCK=
+TEMP_WATCH_STREAM=
+TEMP_SERVER_CONFIG=
+TEMP_SOURCE_STYLES=
+TEMP_SOURCE_SCRIPTS=
+
 TAB=
 NEWLINE=
 CARRIAGE=
@@ -1131,21 +1148,6 @@ WATCHER_PID_SOURCE=
 
 OUTPUT_TEMP=
 OUTPUT_COUNT=0
-
-TEMP_SED=
-TEMP_BLANK=
-TEMP_WATCH_LOCK=
-TEMP_WATCH_STREAM=
-TEMP_SERVER_CONFIG=
-TEMP_FILTER_EMPTY=
-TEMP_FILTER_TEST=
-TEMP_FILTER_EXTRACT=
-TEMP_FILTER_META=
-TEMP_FILTER_DOCUMENT=
-TEMP_TEMPLATE_JSON=
-TEMP_TEMPLATE_HTML=
-TEMP_SOURCE_STYLES=
-TEMP_SOURCE_SCRIPTS=
 
 SHARED_LUA="$(cat <<'EOF'
 function env(name, default)
@@ -6217,7 +6219,7 @@ start_pandoc_internal() {
 
 start_pandoc() {
 	ax__filter="$1"
-	ax__full="${2:-"$TEMP_BLANK"}"
+	ax__full="${2:-"$ION_TEMP_DOCUMENT_BLANK"}"
 	ax__path="${3:-}"
 
 	ax__ret=0
@@ -6230,31 +6232,31 @@ start_pandoc() {
 
 	case "$ax__filter" in
 		tests)
-			ax__filter="$TEMP_FILTER_TEST"
+			ax__filter="$ION_TEMP_FILTER_TEST"
 			ax__target="$ION__EXT_HTML"
 		;;
 		extract)
-			ax__filter="$TEMP_FILTER_EXTRACT"
+			ax__filter="$ION_TEMP_FILTER_EXTRACT"
 		;;
 		meta)
-			ax__filter="$TEMP_FILTER_META"
-			ax__template="$TEMP_TEMPLATE_JSON"
+			ax__filter="$ION_TEMP_FILTER_META"
+			ax__template="$ION_TEMP_TEMPLATE_JSON"
 		;;
 		filter)
-			ax__filter="$TEMP_FILTER_DOCUMENT"
+			ax__filter="$ION_TEMP_FILTER_DOCUMENT"
 			ax__target="$ION__EXT_PANDOC"
 			ax__format="json"
 		;;
 		template)
 			ax__args="--standalone"
-			ax__filter="$TEMP_FILTER_DOCUMENT"
-			ax__template="$TEMP_TEMPLATE_HTML"
+			ax__filter="$ION_TEMP_FILTER_DOCUMENT"
+			ax__template="$ION_TEMP_TEMPLATE_HTML"
 			ax__target="$ION__EXT_HTML"
 			ax__format="html5"
 		;;
 		sandbox)
 			ax__args="--sandbox"
-			ax__filter="$TEMP_FILTER_EMPTY"
+			ax__filter="$ION_TEMP_FILTER_EMPTY"
 			ax__format="commonmark_x"
 			ax__target="md"
 		;;
@@ -7081,18 +7083,18 @@ derive() {
 	}
 
 stop_temp_shared() {
-	file_remove "$TEMP_SED" || true
-	file_remove "$TEMP_BLANK" || true
-	file_remove "$TEMP_FILTER_EMPTY" || true
-	file_remove "$TEMP_FILTER_TEST" || true
-	file_remove "$TEMP_FILTER_EXTRACT" || true
-	file_remove "$TEMP_FILTER_META" || true
-	file_remove "$TEMP_FILTER_DOCUMENT" || true
-	file_remove "$TEMP_TEMPLATE_JSON" || true
-	file_remove "$TEMP_TEMPLATE_HTML" || true
+	file_remove "$ION_TEMP_DOCUMENT_BLANK" || true
+	file_remove "$ION_TEMP_FILTER_EMPTY" || true
+	file_remove "$ION_TEMP_FILTER_TEST" || true
+	file_remove "$ION_TEMP_FILTER_EXTRACT" || true
+	file_remove "$ION_TEMP_FILTER_META" || true
+	file_remove "$ION_TEMP_FILTER_DOCUMENT" || true
+	file_remove "$ION_TEMP_TEMPLATE_JSON" || true
+	file_remove "$ION_TEMP_TEMPLATE_HTML" || true
 }
 
 stop_temp_parent() {
+	file_remove "$TEMP_SED" || true
 	file_remove "$TEMP_WATCH_LOCK" || true
 	file_remove "$TEMP_WATCH_STREAM" || true
 	file_remove "$TEMP_SERVER_CONFIG" || true
@@ -7679,6 +7681,15 @@ init_check_env() {
 
 	! test "$ION_INPUT" || init_check_dir ION_INPUT "$ION_INPUT" || return
 	init_check_paths ION_MIRRORS "$ION_MIRRORS" || return
+
+	init_check_path ION_TEMP_DOCUMENT_BLANK "ION_TEMP_DOCUMENT_BLANK" || return
+	init_check_path ION_TEMP_FILTER_EMPTY "ION_TEMP_FILTER_EMPTY" || return
+	init_check_path ION_TEMP_FILTER_TEST "ION_TEMP_FILTER_TEST" || return
+	init_check_path ION_TEMP_FILTER_EXTRACT "ION_TEMP_FILTER_EXTRACT" || return
+	init_check_path ION_TEMP_FILTER_META "ION_TEMP_FILTER_META" || return
+	init_check_path ION_TEMP_FILTER_DOCUMENT "ION_TEMP_FILTER_DOCUMENT" || return
+	init_check_path ION_TEMP_TEMPLATE_JSON "ION_TEMP_TEMPLATE_JSON" || return
+	init_check_path ION_TEMP_TEMPLATE_HTML "ION_TEMP_TEMPLATE_HTML" || return
 }
 
 init_check_bsd() {
@@ -7736,15 +7747,61 @@ init_check() {
 	init_check_commands || return
 }
 
+init_temp_document_blank() {
+	local temp="$(start_temp_file document-blank md)" || return
+	export ION_TEMP_DOCUMENT_BLANK="$temp"
+}
+
+init_temp_filter_empty() {
+	local temp="$(start_temp_file filter-empty lua)" || return
+	print "$SHARED_LUA" > "$temp" || return
+	print "$FILTER_EMPTY" >> "$temp" || return
+	export ION_TEMP_FILTER_EMPTY="$temp"
+}
+
+init_temp_filter_test() {
+	local temp="$(start_temp_file filter-test lua)" || return
+	print "$SHARED_LUA" > "$temp" || return
+	print "$FILTER_TEST" >> "$temp" || return
+	export ION_TEMP_FILTER_TEST="$temp"
+}
+
+init_temp_filter_extract() {
+	local temp="$(start_temp_file filter-extract lua)" || return
+	print "$SHARED_LUA" > "$temp" || return
+	print "$FILTER_EXTRACT" >> "$temp" || return
+	export ION_TEMP_FILTER_EXTRACT="$temp"
+}
+
+init_temp_filter_meta() {
+	local temp="$(start_temp_file filter-meta lua)" || return
+	print "$SHARED_LUA" > "$temp" || return
+	print "$FILTER_META" >> "$temp" || return
+	export ION_TEMP_FILTER_META="$temp"
+}
+
+init_temp_filter_document() {
+	local temp="$(start_temp_file filter-document lua)" || return
+	print "$SHARED_LUA" > "$temp" || return
+	print "$FILTER_DOCUMENT" >> "$temp" || return
+	export ION_TEMP_FILTER_DOCUMENT="$temp"
+}
+
+init_temp_template_json() {
+	local temp="$(start_temp_file template-json template)" || return
+	print "\$meta-json\$" > "$temp" || return
+	export ION_TEMP_TEMPLATE_JSON="$temp"
+}
+
+init_temp_template_html() {
+	local temp="$(start_temp_file template-html template)" || return
+	print "$GLOBAL_HTML" > "$temp" || return
+	export ION_TEMP_TEMPLATE_HTML="$temp"
+}
+
 init_temp_sed() {
 	if ! test "$TEMP_SED"; then
 		TEMP_SED="$(start_temp_file sed)" || return
-	fi
-}
-
-init_temp_blank() {
-	if ! test "$TEMP_BLANK"; then
-		TEMP_BLANK="$(start_temp_file blank md)" || return
 	fi
 }
 
@@ -7763,60 +7820,6 @@ init_temp_watch_stream() {
 init_temp_server_config() {
 	if ! test "$TEMP_SERVER_CONFIG"; then
 		TEMP_SERVER_CONFIG="$(start_temp_file server-config)" || return
-	fi
-}
-
-init_temp_filter_empty() {
-	if ! test "$TEMP_FILTER_EMPTY"; then
-		TEMP_FILTER_EMPTY="$(start_temp_file filter-empty lua)" || return
-		print "$SHARED_LUA" > "$TEMP_FILTER_EMPTY" || return
-		print "$FILTER_EMPTY" >> "$TEMP_FILTER_EMPTY" || return
-	fi
-}
-
-init_temp_filter_test() {
-	if ! test "$TEMP_FILTER_TEST"; then
-		TEMP_FILTER_TEST="$(start_temp_file filter-test lua)" || return
-		print "$SHARED_LUA" > "$TEMP_FILTER_TEST" || return
-		print "$FILTER_TEST" >> "$TEMP_FILTER_TEST" || return
-	fi
-}
-
-init_temp_filter_extract() {
-	if ! test "$TEMP_FILTER_EXTRACT"; then
-		TEMP_FILTER_EXTRACT="$(start_temp_file filter-extract lua)" || return
-		print "$SHARED_LUA" > "$TEMP_FILTER_EXTRACT" || return
-		print "$FILTER_EXTRACT" >> "$TEMP_FILTER_EXTRACT" || return
-	fi
-}
-
-init_temp_filter_meta() {
-	if ! test "$TEMP_FILTER_META"; then
-		TEMP_FILTER_META="$(start_temp_file filter-meta lua)" || return
-		print "$SHARED_LUA" > "$TEMP_FILTER_META" || return
-		print "$FILTER_META" >> "$TEMP_FILTER_META" || return
-	fi
-}
-
-init_temp_filter_document() {
-	if ! test "$TEMP_FILTER_DOCUMENT"; then
-		TEMP_FILTER_DOCUMENT="$(start_temp_file filter-document lua)" || return
-		print "$SHARED_LUA" > "$TEMP_FILTER_DOCUMENT" || return
-		print "$FILTER_DOCUMENT" >> "$TEMP_FILTER_DOCUMENT" || return
-	fi
-}
-
-init_temp_template_json() {
-	if ! test "$TEMP_TEMPLATE_JSON"; then
-		TEMP_TEMPLATE_JSON="$(start_temp_file template-json template)" || return
-		print "\$meta-json\$" > "$TEMP_TEMPLATE_JSON" || return
-	fi
-}
-
-init_temp_template_html() {
-	if ! test "$TEMP_TEMPLATE_HTML"; then
-		TEMP_TEMPLATE_HTML="$(start_temp_file template-html template)" || return
-		print "$GLOBAL_HTML" > "$TEMP_TEMPLATE_HTML" || return
 	fi
 }
 
@@ -7883,8 +7886,7 @@ init_temp_output() {
 }
 
 init_temp_shared() {
-	init_temp_sed || return
-	init_temp_blank || return
+	init_temp_document_blank || return
 	init_temp_filter_empty || return
 	init_temp_filter_test || return
 	init_temp_filter_extract || return
@@ -7895,6 +7897,7 @@ init_temp_shared() {
 }
 
 init_temp_parent() {
+	init_temp_sed || return
 	init_temp_watch_lock || return
 	init_temp_watch_stream || return
 	init_temp_server_config || return
@@ -7912,7 +7915,10 @@ init() {
 
 	init_basics || return
 	init_signals || return
-	init_temp_shared || return
+
+	if ! have_parent || test "$ION_CLUSTER" = 1; then
+		init_temp_shared || return
+	fi
 
 	if ! have_parent; then
 		init_env || return
@@ -7934,11 +7940,11 @@ test_all() {
 
 	if have_luac; then
 		start "$ION_BIN_LUAC" -p \
-			"$TEMP_FILTER_EMPTY" \
-			"$TEMP_FILTER_TEST" \
-			"$TEMP_FILTER_EXTRACT" \
-			"$TEMP_FILTER_META" \
-			"$TEMP_FILTER_DOCUMENT" \
+			"$ION_TEMP_FILTER_EMPTY" \
+			"$ION_TEMP_FILTER_TEST" \
+			"$ION_TEMP_FILTER_EXTRACT" \
+			"$ION_TEMP_FILTER_META" \
+			"$ION_TEMP_FILTER_DOCUMENT" \
 		|| return
 	fi
 
