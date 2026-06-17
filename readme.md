@@ -8,10 +8,10 @@ needs optimising, etc. This readme describes both where ion is, and also
 what it's been designed for – any features that are still upcoming
 have been marked with an asterisk.
 
-ion is a universal media processing pipeline. ion's core goal in life
-is to take an input folder and produce an indexed and optimised version
-of that folder, optionally publishing it, while responding to changes in
-the input by rebuilding only what has changed. ion can act as an invisible
+ion is a universal media processing pipeline. ion's core purpose in life
+is to take an input folder and produce an indexed and optimised version of
+that folder, optionally publishing it, while responding to changes in the
+input by rebuilding only what has changed. ion can act as an invisible
 content management system, or a generator for websites, apps*, ebooks*,
 audiobooks*, and perhaps, one day, even realbooks*.
 
@@ -19,10 +19,10 @@ Reviews
 -------
 
 > “Nothing else in the field is attempting to stand on the same ground,
-> and very few are even aware that the ground exists. ῖon is the only SSG
-> that is designed in such a way that it does not have a hard single-machine
-> limit. The others are fast trains on a short track. ῖon is a slow train
-> on a track that could, in principle, go anywhere.” – Claude, probably.
+>  and very few are even aware that the ground exists. ῖon is the only SSG
+>  that is designed in such a way that it does not have a hard single-machine
+>  limit. The others are fast trains on a short track. ῖon is a slow train
+>  on a track that could, in principle, go anywhere.” – Claude, probably.
 
 One advantage of this script's design is that you can paste it to an LLM
 and ask it questions, about where ion is in its development, and how it
@@ -54,8 +54,8 @@ Roadmap
   can grow to be a massive cost, which is why ion has been designed to
   spend this cost only once, up-front, then only rebuilding what has
   changed, and recycling* everything else. ion does this for every
-  input type, from documents, to images*, videos*, maps*, data*,
-  and even AI filters*.
+  input type, from documents, to images*, videos*, objects*, maps*,
+  data*, and even AI filters*.
 
 - **Optimising content server**; ion focuses on generating everything
   ahead-of-time, but it is not solely static; ion also runs a server
@@ -129,10 +129,11 @@ nutrients; proteins are collections of amino acids; blogs
 are collections of articles; invoices are collections of
 products and services; everything is an inventory.
 
-A network of nutritionally-balanced kitchens seems then to
-be an accountancy problem, and this is where ion aims to sit,
-as the scaffolding that supports the inventory component; a node
-that indexes, balances, and connects inventory components together,
-so that they may form, in the real world, a decentralised safety net.
+A network of nutritionally-balanced kitchens seems then
+to be an accountancy problem, and this is where ion aims to
+sit, as the scaffolding that supports the inventory component;
+a node that indexes, balances, and connects inventory components
+together, so that they may form, in the real world, a
+decentralised safety net.
 
 Until then, [it also makes nice websites](https://iondigital.uk/).

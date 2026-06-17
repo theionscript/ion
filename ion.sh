@@ -10,10 +10,10 @@
 # what it's been designed for – any features that are still upcoming
 # have been marked with an asterisk.
 #
-# ion is a universal media processing pipeline. ion's core goal in life
-# is to take an input folder and produce an indexed and optimised version
-# of that folder, optionally publishing it, while responding to changes in
-# the input by rebuilding only what has changed. ion can act as an invisible
+# ion is a universal media processing pipeline. ion's core purpose in life
+# is to take an input folder and produce an indexed and optimised version of
+# that folder, optionally publishing it, while responding to changes in the
+# input by rebuilding only what has changed. ion can act as an invisible
 # content management system, or a generator for websites, apps*, ebooks*,
 # audiobooks*, and perhaps, one day, even realbooks*.
 #
@@ -21,10 +21,10 @@
 # -------
 #
 # > “Nothing else in the field is attempting to stand on the same ground,
-# > and very few are even aware that the ground exists. ῖon is the only SSG
-# > that is designed in such a way that it does not have a hard single-machine
-# > limit. The others are fast trains on a short track. ῖon is a slow train
-# > on a track that could, in principle, go anywhere.” – Claude, probably.
+# >  and very few are even aware that the ground exists. ῖon is the only SSG
+# >  that is designed in such a way that it does not have a hard single-machine
+# >  limit. The others are fast trains on a short track. ῖon is a slow train
+# >  on a track that could, in principle, go anywhere.” – Claude, probably.
 #
 # One advantage of this script's design is that you can paste it to an LLM
 # and ask it questions, about where ion is in its development, and how it
@@ -56,8 +56,8 @@
 #   can grow to be a massive cost, which is why ion has been designed to
 #   spend this cost only once, up-front, then only rebuilding what has
 #   changed, and recycling* everything else. ion does this for every
-#   input type, from documents, to images*, videos*, maps*, data*,
-#   and even AI filters*.
+#   input type, from documents, to images*, videos*, objects*, maps*,
+#   data*, and even AI filters*.
 #
 # - **Optimising content server**; ion focuses on generating everything
 #   ahead-of-time, but it is not solely static; ion also runs a server
@@ -131,11 +131,12 @@
 # are collections of articles; invoices are collections of
 # products and services; everything is an inventory.
 #
-# A network of nutritionally-balanced kitchens seems then to
-# be an accountancy problem, and this is where ion aims to sit,
-# as the scaffolding that supports the inventory component; a node
-# that indexes, balances, and connects inventory components together,
-# so that they may form, in the real world, a decentralised safety net.
+# A network of nutritionally-balanced kitchens seems then
+# to be an accountancy problem, and this is where ion aims to
+# sit, as the scaffolding that supports the inventory component;
+# a node that indexes, balances, and connects inventory components
+# together, so that they may form, in the real world, a
+# decentralised safety net.
 #
 # Until then, [it also makes nice websites](https://iondigital.uk/).
 #
@@ -773,6 +774,9 @@
 # Changes
 # -------
 #
+# - 0.12.0; 2026-6-16
+#   - started adding c support
+#   - started switching to using ˋlocalˋ internally
 # - 0.11.0; 2026-6-9
 #   - added the readme
 # - 0.10.0; 2026-6-6
@@ -874,7 +878,8 @@ export ION__MSG_SLEEPING="${ION__MSG_SLEEPING:-"sleeping"}"
 export ION__MSG_MAKING_DIR="${ION__MSG_MAKING_DIR:-"making a directory"}"
 export ION__MSG_MAKING_FILE="${ION__MSG_MAKING_FILE:-"making a file"}"
 export ION__MSG_MOVING_FILE="${ION__MSG_MOVING_FILE:-"moving a file"}"
-export ION__MSG_NOT_POSIX="${ION__MSG_NOT_POSIX:-"the environment must be POSIX-compliant"}"
+export ION__MSG_NOT_POSIX="${ION__MSG_NOT_POSIX:-"the shell must be POSIX-compliant"}"
+export ION__MSG_NOT_LOCAL="${ION__MSG_NOT_LOCAL:-"the shell must support the ˋlocalˋ builtin, like bash or zsh"}"
 export ION__MSG_REMOVING_FILE="${ION__MSG_REMOVING_FILE:-"removing a file"}"
 export ION__MSG_RUNNING_COMMAND="${ION__MSG_RUNNING_COMMAND:-"running command"}"
 export ION__MSG_RUNNING_COMMAND_BG="${ION__MSG_RUNNING_COMMAND_BG:-"running background command"}"
@@ -1007,10 +1012,13 @@ export ION__CLASS_STARTED="${ION__CLASS_STARTED:-"-started"}"
 export ION__CLASS_NO_JS="${ION__CLASS_NO_JS:-"no-js"}"
 
 export ION_BIN_SELF="${ION_BIN_SELF:-"$0"}"
+export ION_BIN_CADDY="${ION_BIN_CADDY:-"caddy"}"
+export ION_BIN_CC="${ION_BIN_CC:-"cc:c99:c89"}"
+export ION_BIN_CLANG="${ION_BIN_CLANG:-"clang"}"
+export ION_BIN_ESBUILD="${ION_BIN_ESBUILD:-"esbuild"}"
 export ION_BIN_FLOCK="${ION_BIN_FLOCK:-"flock"}"
 export ION_BIN_FSWATCH="${ION_BIN_FSWATCH:-"fswatch"}"
-export ION_BIN_CADDY="${ION_BIN_CADDY:-"caddy"}"
-export ION_BIN_ESBUILD="${ION_BIN_ESBUILD:-"esbuild"}"
+export ION_BIN_GCC="${ION_BIN_GCC:-"gcc"}"
 export ION_BIN_LN="${ION_BIN_LN:-"ln"}"
 export ION_BIN_LUAC="${ION_BIN_LUAC:-"luac"}"
 export ION_BIN_OPENSSL="${ION_BIN_OPENSSL:-"openssl"}"
@@ -1021,6 +1029,7 @@ export ION_BIN_SHA256="${ION_BIN_SHA256:-"sha256"}"
 export ION_BIN_SHASUM="${ION_BIN_SHASUM:-"shasum"}"
 export ION_BIN_SHELLCHECK="${ION_BIN_SHELLCHECK:-"shellcheck"}"
 export ION_BIN_SSH="${ION_BIN_SSH:-"ssh"}"
+export ION_BIN_TCC="${ION_BIN_TCC:-"tcc"}"
 export ION_BIN_TCPSERVER="${ION_BIN_TCPSERVER:-"tcpserver"}"
 export ION_BIN_TIDY="${ION_BIN_TIDY:-}"
 export ION_BIN_PARALLEL="${ION_BIN_PARALLEL:-parallel}"
@@ -3446,9 +3455,710 @@ end
 EOF
 )"
 
+GLOBAL_H_STDINT="$(cat <<'EOF'
+/*
+ * This here-document section of ion is external, and its
+ * copyright is held by a third-party. It is a portable stdint.h
+ * implementation. This version has had the comments removed to
+ * reduce its length. The original can be found at:
+ * azillionmonkeys.com/qed/pstdint.h
+ *
+ * ---
+ *
+ *  Version 0.1.16.0
+ *
+ *  BSD License
+ *
+ *  Copyright (c) 2005-2016 Paul Hsieh
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *  3. The name of the author may not be used to endorse or promote products
+ *     derived from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ *  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+#include <stddef.h>
+#include <limits.h>
+#include <signal.h>
+
+#if ((defined(__SUNPRO_C) && __SUNPRO_C >= 0x570) || (defined(_MSC_VER) && _MSC_VER >= 1600) || (defined(__STDC__) && __STDC__ && defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || (defined (__WATCOMC__) && (defined (_STDINT_H_INCLUDED) || __WATCOMC__ >= 1250)) || (defined(__GNUC__) && (__GNUC__ > 3 || defined(_STDINT_H) || defined(_STDINT_H_) || defined (__UINT_FAST64_TYPE__)) )) && !defined (_PSTDINT_H_INCLUDED)
+#include <stdint.h>
+#define _PSTDINT_H_INCLUDED
+# if defined(__GNUC__) && (defined(__x86_64__) || defined(__ppc64__)) && !(defined(__APPLE__) && defined(__MACH__))
+#  ifndef PRINTF_INT64_MODIFIER
+#   define PRINTF_INT64_MODIFIER "l"
+#  endif
+#  ifndef PRINTF_INT32_MODIFIER
+#   define PRINTF_INT32_MODIFIER ""
+#  endif
+# else
+#  ifndef PRINTF_INT64_MODIFIER
+#   define PRINTF_INT64_MODIFIER "ll"
+#  endif
+#  ifndef PRINTF_INT32_MODIFIER
+#   if (UINT_MAX == UINT32_MAX)
+#    define PRINTF_INT32_MODIFIER ""
+#   else
+#    define PRINTF_INT32_MODIFIER "l"
+#   endif
+#  endif
+# endif
+# ifndef PRINTF_INT16_MODIFIER
+#  define PRINTF_INT16_MODIFIER "h"
+# endif
+# ifndef PRINTF_INTMAX_MODIFIER
+#  define PRINTF_INTMAX_MODIFIER PRINTF_INT64_MODIFIER
+# endif
+# ifndef PRINTF_INT64_HEX_WIDTH
+#  define PRINTF_INT64_HEX_WIDTH "16"
+# endif
+# ifndef PRINTF_UINT64_HEX_WIDTH
+#  define PRINTF_UINT64_HEX_WIDTH "16"
+# endif
+# ifndef PRINTF_INT32_HEX_WIDTH
+#  define PRINTF_INT32_HEX_WIDTH "8"
+# endif
+# ifndef PRINTF_UINT32_HEX_WIDTH
+#  define PRINTF_UINT32_HEX_WIDTH "8"
+# endif
+# ifndef PRINTF_INT16_HEX_WIDTH
+#  define PRINTF_INT16_HEX_WIDTH "4"
+# endif
+# ifndef PRINTF_UINT16_HEX_WIDTH
+#  define PRINTF_UINT16_HEX_WIDTH "4"
+# endif
+# ifndef PRINTF_INT8_HEX_WIDTH
+#  define PRINTF_INT8_HEX_WIDTH "2"
+# endif
+# ifndef PRINTF_UINT8_HEX_WIDTH
+#  define PRINTF_UINT8_HEX_WIDTH "2"
+# endif
+# ifndef PRINTF_INT64_DEC_WIDTH
+#  define PRINTF_INT64_DEC_WIDTH "19"
+# endif
+# ifndef PRINTF_UINT64_DEC_WIDTH
+#  define PRINTF_UINT64_DEC_WIDTH "20"
+# endif
+# ifndef PRINTF_INT32_DEC_WIDTH
+#  define PRINTF_INT32_DEC_WIDTH "10"
+# endif
+# ifndef PRINTF_UINT32_DEC_WIDTH
+#  define PRINTF_UINT32_DEC_WIDTH "10"
+# endif
+# ifndef PRINTF_INT16_DEC_WIDTH
+#  define PRINTF_INT16_DEC_WIDTH "5"
+# endif
+# ifndef PRINTF_UINT16_DEC_WIDTH
+#  define PRINTF_UINT16_DEC_WIDTH "5"
+# endif
+# ifndef PRINTF_INT8_DEC_WIDTH
+#  define PRINTF_INT8_DEC_WIDTH "3"
+# endif
+# ifndef PRINTF_UINT8_DEC_WIDTH
+#  define PRINTF_UINT8_DEC_WIDTH "3"
+# endif
+# ifndef PRINTF_INTMAX_HEX_WIDTH
+#  define PRINTF_INTMAX_HEX_WIDTH PRINTF_UINT64_HEX_WIDTH
+# endif
+# ifndef PRINTF_UINTMAX_HEX_WIDTH
+#  define PRINTF_UINTMAX_HEX_WIDTH PRINTF_UINT64_HEX_WIDTH
+# endif
+# ifndef PRINTF_INTMAX_DEC_WIDTH
+#  define PRINTF_INTMAX_DEC_WIDTH PRINTF_UINT64_DEC_WIDTH
+# endif
+# ifndef PRINTF_UINTMAX_DEC_WIDTH
+#  define PRINTF_UINTMAX_DEC_WIDTH PRINTF_UINT64_DEC_WIDTH
+# endif
+
+# if defined (__WATCOMC__) && __WATCOMC__ >= 1250
+#  if !defined (INT64_C)
+#   define INT64_C(x)   (x + (INT64_MAX - INT64_MAX))
+#  endif
+#  if !defined (UINT64_C)
+#   define UINT64_C(x)  (x + (UINT64_MAX - UINT64_MAX))
+#  endif
+#  if !defined (INT32_C)
+#   define INT32_C(x)   (x + (INT32_MAX - INT32_MAX))
+#  endif
+#  if !defined (UINT32_C)
+#   define UINT32_C(x)  (x + (UINT32_MAX - UINT32_MAX))
+#  endif
+#  if !defined (INT16_C)
+#   define INT16_C(x)   (x)
+#  endif
+#  if !defined (UINT16_C)
+#   define UINT16_C(x)  (x)
+#  endif
+#  if !defined (INT8_C)
+#   define INT8_C(x)   (x)
+#  endif
+#  if !defined (UINT8_C)
+#   define UINT8_C(x)  (x)
+#  endif
+#  if !defined (UINT64_MAX)
+#   define UINT64_MAX  18446744073709551615ULL
+#  endif
+#  if !defined (INT64_MAX)
+#   define INT64_MAX  9223372036854775807LL
+#  endif
+#  if !defined (UINT32_MAX)
+#   define UINT32_MAX  4294967295UL
+#  endif
+#  if !defined (INT32_MAX)
+#   define INT32_MAX  2147483647L
+#  endif
+#  if !defined (INTMAX_MAX)
+#   define INTMAX_MAX INT64_MAX
+#  endif
+#  if !defined (INTMAX_MIN)
+#   define INTMAX_MIN INT64_MIN
+#  endif
+# endif
+#endif
+
+#if (defined(__SUNPRO_C) && __SUNPRO_C >= 0x420) && !defined(_PSTDINT_H_INCLUDED)
+#include <sys/inttypes.h>
+#define _PSTDINT_H_INCLUDED
+#endif
+
+#ifndef _PSTDINT_H_INCLUDED
+#define _PSTDINT_H_INCLUDED
+
+#ifndef SIZE_MAX
+# define SIZE_MAX ((size_t)-1)
+#endif
+
+#ifndef UINT8_MAX
+# define UINT8_MAX 0xff
+#endif
+#if !defined(uint8_t) && !defined(_UINT8_T) && !defined(vxWorks)
+# if (UCHAR_MAX == UINT8_MAX) || defined (S_SPLINT_S)
+    typedef unsigned char uint8_t;
+#   define UINT8_C(v) ((uint8_t) v)
+# else
+#   error "Platform not supported"
+# endif
+#endif
+
+#ifndef INT8_MAX
+# define INT8_MAX 0x7f
+#endif
+#ifndef INT8_MIN
+# define INT8_MIN INT8_C(0x80)
+#endif
+#if !defined(int8_t) && !defined(_INT8_T) && !defined(vxWorks)
+# if (SCHAR_MAX == INT8_MAX) || defined (S_SPLINT_S)
+    typedef signed char int8_t;
+#   define INT8_C(v) ((int8_t) v)
+# else
+#   error "Platform not supported"
+# endif
+#endif
+
+#ifndef UINT16_MAX
+# define UINT16_MAX 0xffff
+#endif
+#if !defined(uint16_t) && !defined(_UINT16_T) && !defined(vxWorks)
+#if (UINT_MAX == UINT16_MAX) || defined (S_SPLINT_S)
+  typedef unsigned int uint16_t;
+# ifndef PRINTF_INT16_MODIFIER
+#  define PRINTF_INT16_MODIFIER ""
+# endif
+# define UINT16_C(v) ((uint16_t) (v))
+#elif (USHRT_MAX == UINT16_MAX)
+  typedef unsigned short uint16_t;
+# define UINT16_C(v) ((uint16_t) (v))
+# ifndef PRINTF_INT16_MODIFIER
+#  define PRINTF_INT16_MODIFIER "h"
+# endif
+#else
+#error "Platform not supported"
+#endif
+#endif
+
+#ifndef INT16_MAX
+# define INT16_MAX 0x7fff
+#endif
+#ifndef INT16_MIN
+# define INT16_MIN INT16_C(0x8000)
+#endif
+#if !defined(int16_t) && !defined(_INT16_T) && !defined(vxWorks)
+#if (INT_MAX == INT16_MAX) || defined (S_SPLINT_S)
+  typedef signed int int16_t;
+# define INT16_C(v) ((int16_t) (v))
+# ifndef PRINTF_INT16_MODIFIER
+#  define PRINTF_INT16_MODIFIER ""
+# endif
+#elif (SHRT_MAX == INT16_MAX)
+  typedef signed short int16_t;
+# define INT16_C(v) ((int16_t) (v))
+# ifndef PRINTF_INT16_MODIFIER
+#  define PRINTF_INT16_MODIFIER "h"
+# endif
+#else
+#error "Platform not supported"
+#endif
+#endif
+
+#ifndef UINT32_MAX
+# define UINT32_MAX (0xffffffffUL)
+#endif
+#if !defined(uint32_t) && !defined(_UINT32_T) && !defined(vxWorks)
+#if (ULONG_MAX == UINT32_MAX) || defined (S_SPLINT_S)
+  typedef unsigned long uint32_t;
+# define UINT32_C(v) v ## UL
+# ifndef PRINTF_INT32_MODIFIER
+#  define PRINTF_INT32_MODIFIER "l"
+# endif
+#elif (UINT_MAX == UINT32_MAX)
+  typedef unsigned int uint32_t;
+# ifndef PRINTF_INT32_MODIFIER
+#  define PRINTF_INT32_MODIFIER ""
+# endif
+# define UINT32_C(v) v ## U
+#elif (USHRT_MAX == UINT32_MAX)
+  typedef unsigned short uint32_t;
+# define UINT32_C(v) ((unsigned short) (v))
+# ifndef PRINTF_INT32_MODIFIER
+#  define PRINTF_INT32_MODIFIER ""
+# endif
+#else
+#error "Platform not supported"
+#endif
+#endif
+
+#ifndef INT32_MAX
+# define INT32_MAX (0x7fffffffL)
+#endif
+#ifndef INT32_MIN
+# define INT32_MIN INT32_C(0x80000000)
+#endif
+#if !defined(int32_t) && !defined(_INT32_T) && !defined(vxWorks)
+#if (LONG_MAX == INT32_MAX) || defined (S_SPLINT_S)
+  typedef signed long int32_t;
+# define INT32_C(v) v ## L
+# ifndef PRINTF_INT32_MODIFIER
+#  define PRINTF_INT32_MODIFIER "l"
+# endif
+#elif (INT_MAX == INT32_MAX)
+  typedef signed int int32_t;
+# define INT32_C(v) v
+# ifndef PRINTF_INT32_MODIFIER
+#  define PRINTF_INT32_MODIFIER ""
+# endif
+#elif (SHRT_MAX == INT32_MAX)
+  typedef signed short int32_t;
+# define INT32_C(v) ((short) (v))
+# ifndef PRINTF_INT32_MODIFIER
+#  define PRINTF_INT32_MODIFIER ""
+# endif
+#else
+#error "Platform not supported"
+#endif
+#endif
+
+#undef stdint_int64_defined
+#if (defined(__STDC__) && defined(__STDC_VERSION__)) || defined (S_SPLINT_S)
+# if (__STDC__ && __STDC_VERSION__ >= 199901L) || defined (S_SPLINT_S)
+#  define stdint_int64_defined
+   typedef long long int64_t;
+   typedef unsigned long long uint64_t;
+#  define UINT64_C(v) v ## ULL
+#  define  INT64_C(v) v ## LL
+#  ifndef PRINTF_INT64_MODIFIER
+#   define PRINTF_INT64_MODIFIER "ll"
+#  endif
+# endif
+#endif
+
+#if !defined (stdint_int64_defined)
+# if defined(__GNUC__) && !defined(vxWorks)
+#  define stdint_int64_defined
+   __extension__ typedef long long int64_t;
+   __extension__ typedef unsigned long long uint64_t;
+#  define UINT64_C(v) v ## ULL
+#  define  INT64_C(v) v ## LL
+#  ifndef PRINTF_INT64_MODIFIER
+#   define PRINTF_INT64_MODIFIER "ll"
+#  endif
+# elif defined(__MWERKS__) || defined (__SUNPRO_C) || defined (__SUNPRO_CC) || defined (__APPLE_CC__) || defined (_LONG_LONG) || defined (_CRAYC) || defined (S_SPLINT_S)
+#  define stdint_int64_defined
+   typedef long long int64_t;
+   typedef unsigned long long uint64_t;
+#  define UINT64_C(v) v ## ULL
+#  define  INT64_C(v) v ## LL
+#  ifndef PRINTF_INT64_MODIFIER
+#   define PRINTF_INT64_MODIFIER "ll"
+#  endif
+# elif (defined(__WATCOMC__) && defined(__WATCOM_INT64__)) || (defined(_MSC_VER) && _INTEGRAL_MAX_BITS >= 64) || (defined (__BORLANDC__) && __BORLANDC__ > 0x460) || defined (__alpha) || defined (__DECC)
+#  define stdint_int64_defined
+   typedef __int64 int64_t;
+   typedef unsigned __int64 uint64_t;
+#  define UINT64_C(v) v ## UI64
+#  define  INT64_C(v) v ## I64
+#  ifndef PRINTF_INT64_MODIFIER
+#   define PRINTF_INT64_MODIFIER "I64"
+#  endif
+# endif
+#endif
+
+#if !defined (LONG_LONG_MAX) && defined (INT64_C)
+# define LONG_LONG_MAX INT64_C (9223372036854775807)
+#endif
+#ifndef ULONG_LONG_MAX
+# define ULONG_LONG_MAX UINT64_C (18446744073709551615)
+#endif
+
+#if !defined (INT64_MAX) && defined (INT64_C)
+# define INT64_MAX INT64_C (9223372036854775807)
+#endif
+#if !defined (INT64_MIN) && defined (INT64_C)
+# define INT64_MIN INT64_C (-9223372036854775808)
+#endif
+#if !defined (UINT64_MAX) && defined (INT64_C)
+# define UINT64_MAX UINT64_C (18446744073709551615)
+#endif
+
+#ifndef PRINTF_INT64_HEX_WIDTH
+# define PRINTF_INT64_HEX_WIDTH "16"
+#endif
+#ifndef PRINTF_INT32_HEX_WIDTH
+# define PRINTF_INT32_HEX_WIDTH "8"
+#endif
+#ifndef PRINTF_INT16_HEX_WIDTH
+# define PRINTF_INT16_HEX_WIDTH "4"
+#endif
+#ifndef PRINTF_INT8_HEX_WIDTH
+# define PRINTF_INT8_HEX_WIDTH "2"
+#endif
+#ifndef PRINTF_INT64_DEC_WIDTH
+# define PRINTF_INT64_DEC_WIDTH "19"
+#endif
+#ifndef PRINTF_INT32_DEC_WIDTH
+# define PRINTF_INT32_DEC_WIDTH "10"
+#endif
+#ifndef PRINTF_INT16_DEC_WIDTH
+# define PRINTF_INT16_DEC_WIDTH "5"
+#endif
+#ifndef PRINTF_INT8_DEC_WIDTH
+# define PRINTF_INT8_DEC_WIDTH "3"
+#endif
+#ifndef PRINTF_UINT64_DEC_WIDTH
+# define PRINTF_UINT64_DEC_WIDTH "20"
+#endif
+#ifndef PRINTF_UINT32_DEC_WIDTH
+# define PRINTF_UINT32_DEC_WIDTH "10"
+#endif
+#ifndef PRINTF_UINT16_DEC_WIDTH
+# define PRINTF_UINT16_DEC_WIDTH "5"
+#endif
+#ifndef PRINTF_UINT8_DEC_WIDTH
+# define PRINTF_UINT8_DEC_WIDTH "3"
+#endif
+
+#ifdef stdint_int64_defined
+  typedef int64_t intmax_t;
+  typedef uint64_t uintmax_t;
+# define  INTMAX_MAX   INT64_MAX
+# define  INTMAX_MIN   INT64_MIN
+# define UINTMAX_MAX  UINT64_MAX
+# define UINTMAX_C(v) UINT64_C(v)
+# define  INTMAX_C(v)  INT64_C(v)
+# ifndef PRINTF_INTMAX_MODIFIER
+#   define PRINTF_INTMAX_MODIFIER PRINTF_INT64_MODIFIER
+# endif
+# ifndef PRINTF_INTMAX_HEX_WIDTH
+#  define PRINTF_INTMAX_HEX_WIDTH PRINTF_INT64_HEX_WIDTH
+# endif
+# ifndef PRINTF_INTMAX_DEC_WIDTH
+#  define PRINTF_INTMAX_DEC_WIDTH PRINTF_INT64_DEC_WIDTH
+# endif
+#else
+  typedef int32_t intmax_t;
+  typedef uint32_t uintmax_t;
+# define  INTMAX_MAX   INT32_MAX
+# define UINTMAX_MAX  UINT32_MAX
+# define UINTMAX_C(v) UINT32_C(v)
+# define  INTMAX_C(v)  INT32_C(v)
+# ifndef PRINTF_INTMAX_MODIFIER
+#   define PRINTF_INTMAX_MODIFIER PRINTF_INT32_MODIFIER
+# endif
+# ifndef PRINTF_INTMAX_HEX_WIDTH
+#  define PRINTF_INTMAX_HEX_WIDTH PRINTF_INT32_HEX_WIDTH
+# endif
+# ifndef PRINTF_INTMAX_DEC_WIDTH
+#  define PRINTF_INTMAX_DEC_WIDTH PRINTF_INT32_DEC_WIDTH
+# endif
+#endif
+
+#ifndef stdint_least_defined
+  typedef   int8_t   int_least8_t;
+  typedef  uint8_t  uint_least8_t;
+  typedef  int16_t  int_least16_t;
+  typedef uint16_t uint_least16_t;
+  typedef  int32_t  int_least32_t;
+  typedef uint32_t uint_least32_t;
+# define PRINTF_LEAST32_MODIFIER PRINTF_INT32_MODIFIER
+# define PRINTF_LEAST16_MODIFIER PRINTF_INT16_MODIFIER
+# define  UINT_LEAST8_MAX  UINT8_MAX
+# define   INT_LEAST8_MAX   INT8_MAX
+# define UINT_LEAST16_MAX UINT16_MAX
+# define  INT_LEAST16_MAX  INT16_MAX
+# define UINT_LEAST32_MAX UINT32_MAX
+# define  INT_LEAST32_MAX  INT32_MAX
+# define   INT_LEAST8_MIN   INT8_MIN
+# define  INT_LEAST16_MIN  INT16_MIN
+# define  INT_LEAST32_MIN  INT32_MIN
+# ifdef stdint_int64_defined
+    typedef  int64_t  int_least64_t;
+    typedef uint64_t uint_least64_t;
+#   define PRINTF_LEAST64_MODIFIER PRINTF_INT64_MODIFIER
+#   define UINT_LEAST64_MAX UINT64_MAX
+#   define  INT_LEAST64_MAX  INT64_MAX
+#   define  INT_LEAST64_MIN  INT64_MIN
+# endif
+#endif
+#undef stdint_least_defined
+
+typedef   int_least8_t   int_fast8_t;
+typedef  uint_least8_t  uint_fast8_t;
+typedef  int_least16_t  int_fast16_t;
+typedef uint_least16_t uint_fast16_t;
+typedef  int_least32_t  int_fast32_t;
+typedef uint_least32_t uint_fast32_t;
+#define  UINT_FAST8_MAX  UINT_LEAST8_MAX
+#define   INT_FAST8_MAX   INT_LEAST8_MAX
+#define UINT_FAST16_MAX UINT_LEAST16_MAX
+#define  INT_FAST16_MAX  INT_LEAST16_MAX
+#define UINT_FAST32_MAX UINT_LEAST32_MAX
+#define  INT_FAST32_MAX  INT_LEAST32_MAX
+#define   INT_FAST8_MIN   INT_LEAST8_MIN
+#define  INT_FAST16_MIN  INT_LEAST16_MIN
+#define  INT_FAST32_MIN  INT_LEAST32_MIN
+#ifdef stdint_int64_defined
+  typedef  int_least64_t  int_fast64_t;
+  typedef uint_least64_t uint_fast64_t;
+# define UINT_FAST64_MAX UINT_LEAST64_MAX
+# define  INT_FAST64_MAX  INT_LEAST64_MAX
+# define  INT_FAST64_MIN  INT_LEAST64_MIN
+#endif
+
+#undef stdint_int64_defined
+
+#if defined(__WATCOMC__) || defined(_MSC_VER) || defined (__GNUC__) && !defined(vxWorks)
+# include <wchar.h>
+# ifndef WCHAR_MIN
+#  define WCHAR_MIN 0
+# endif
+# ifndef WCHAR_MAX
+#  define WCHAR_MAX ((wchar_t)-1)
+# endif
+#endif
+
+#if (defined (_MSC_VER) && defined (_UINTPTR_T_DEFINED)) || defined (_UINTPTR_T)
+# define STDINT_H_UINTPTR_T_DEFINED
+#endif
+
+#ifndef STDINT_H_UINTPTR_T_DEFINED
+# if defined (__alpha__) || defined (__ia64__) || defined (__x86_64__) || defined (_WIN64) || defined (__ppc64__)
+#  define stdint_intptr_bits 64
+# elif defined (__WATCOMC__) || defined (__TURBOC__)
+#  if defined(__TINY__) || defined(__SMALL__) || defined(__MEDIUM__)
+#    define stdint_intptr_bits 16
+#  else
+#    define stdint_intptr_bits 32
+#  endif
+# elif defined (__i386__) || defined (_WIN32) || defined (WIN32) || defined (__ppc64__)
+#  define stdint_intptr_bits 32
+# endif
+
+# ifdef stdint_intptr_bits
+#  define stdint_intptr_glue3_i(a,b,c)  a##b##c
+#  define stdint_intptr_glue3(a,b,c)    stdint_intptr_glue3_i(a,b,c)
+#  ifndef PRINTF_INTPTR_MODIFIER
+#    define PRINTF_INTPTR_MODIFIER      stdint_intptr_glue3(PRINTF_INT,stdint_intptr_bits,_MODIFIER)
+#  endif
+#  ifndef PTRDIFF_MAX
+#    define PTRDIFF_MAX                 stdint_intptr_glue3(INT,stdint_intptr_bits,_MAX)
+#  endif
+#  ifndef PTRDIFF_MIN
+#    define PTRDIFF_MIN                 stdint_intptr_glue3(INT,stdint_intptr_bits,_MIN)
+#  endif
+#  ifndef UINTPTR_MAX
+#    define UINTPTR_MAX                 stdint_intptr_glue3(UINT,stdint_intptr_bits,_MAX)
+#  endif
+#  ifndef INTPTR_MAX
+#    define INTPTR_MAX                  stdint_intptr_glue3(INT,stdint_intptr_bits,_MAX)
+#  endif
+#  ifndef INTPTR_MIN
+#    define INTPTR_MIN                  stdint_intptr_glue3(INT,stdint_intptr_bits,_MIN)
+#  endif
+#  ifndef INTPTR_C
+#    define INTPTR_C(x)                 stdint_intptr_glue3(INT,stdint_intptr_bits,_C)(x)
+#  endif
+#  ifndef UINTPTR_C
+#    define UINTPTR_C(x)                stdint_intptr_glue3(UINT,stdint_intptr_bits,_C)(x)
+#  endif
+  typedef stdint_intptr_glue3(uint,stdint_intptr_bits,_t) uintptr_t;
+  typedef stdint_intptr_glue3( int,stdint_intptr_bits,_t)  intptr_t;
+# else
+  typedef ptrdiff_t intptr_t;
+# endif
+# define STDINT_H_UINTPTR_T_DEFINED
+#endif
+
+#ifndef SIG_ATOMIC_MAX
+# define SIG_ATOMIC_MAX ((((sig_atomic_t) 1) << (sizeof (sig_atomic_t)*CHAR_BIT-1)) - 1)
+#endif
+
+#endif
+
+#if defined (__TEST_PSTDINT_FOR_CORRECTNESS)
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#define glue3_aux(x,y,z) x ## y ## z
+#define glue3(x,y,z) glue3_aux(x,y,z)
+
+#define DECLU(bits) glue3(uint,bits,_t) glue3(u,bits,) = glue3(UINT,bits,_C) (0);
+#define DECLI(bits) glue3(int,bits,_t) glue3(i,bits,) = glue3(INT,bits,_C) (0);
+
+#define DECL(us,bits) glue3(DECL,us,) (bits)
+
+#define TESTUMAX(bits) glue3(u,bits,) = ~glue3(u,bits,); if (glue3(UINT,bits,_MAX) != glue3(u,bits,)) printf ("Something wrong with UINT%d_MAX\n", bits)
+
+#define REPORTERROR(msg) { err_n++; if (err_first <= 0) err_first = __LINE__; printf msg; }
+
+#define X_SIZE_MAX ((size_t)-1)
+
+int pstdint__test () {
+	int err_n = 0;
+	int err_first = 0;
+	DECL(I,8)
+	DECL(U,8)
+	DECL(I,16)
+	DECL(U,16)
+	DECL(I,32)
+	DECL(U,32)
+#ifdef INT64_MAX
+	DECL(I,64)
+	DECL(U,64)
+#endif
+	intmax_t imax = INTMAX_C(0);
+	uintmax_t umax = UINTMAX_C(0);
+	char str0[256], str1[256];
+
+	sprintf (str0, "%" PRINTF_INT32_MODIFIER "d", INT32_C(2147483647));
+	if (0 != strcmp (str0, "2147483647")) REPORTERROR (("Something wrong with PRINTF_INT32_MODIFIER : %s\n", str0));
+	if (atoi(PRINTF_INT32_DEC_WIDTH) != (int) strlen(str0)) REPORTERROR (("Something wrong with PRINTF_INT32_DEC_WIDTH : %s\n", PRINTF_INT32_DEC_WIDTH));
+	sprintf (str0, "%" PRINTF_INT32_MODIFIER "u", UINT32_C(4294967295));
+	if (0 != strcmp (str0, "4294967295")) REPORTERROR (("Something wrong with PRINTF_INT32_MODIFIER : %s\n", str0));
+	if (atoi(PRINTF_UINT32_DEC_WIDTH) != (int) strlen(str0)) REPORTERROR (("Something wrong with PRINTF_UINT32_DEC_WIDTH : %s\n", PRINTF_UINT32_DEC_WIDTH));
+#ifdef INT64_MAX
+	sprintf (str1, "%" PRINTF_INT64_MODIFIER "d", INT64_C(9223372036854775807));
+	if (0 != strcmp (str1, "9223372036854775807")) REPORTERROR (("Something wrong with PRINTF_INT32_MODIFIER : %s\n", str1));
+	if (atoi(PRINTF_INT64_DEC_WIDTH) != (int) strlen(str1)) REPORTERROR (("Something wrong with PRINTF_INT64_DEC_WIDTH : %s, %d\n", PRINTF_INT64_DEC_WIDTH, (int) strlen(str1)));
+	sprintf (str1, "%" PRINTF_INT64_MODIFIER "u", UINT64_C(18446744073709550591));
+	if (0 != strcmp (str1, "18446744073709550591")) REPORTERROR (("Something wrong with PRINTF_INT32_MODIFIER : %s\n", str1));
+	if (atoi(PRINTF_UINT64_DEC_WIDTH) != (int) strlen(str1)) REPORTERROR (("Something wrong with PRINTF_UINT64_DEC_WIDTH : %s, %d\n", PRINTF_UINT64_DEC_WIDTH, (int) strlen(str1)));
+#endif
+
+	sprintf (str0, "%d %x\n", 0, ~0);
+
+	sprintf (str1, "%d %x\n",  i8, ~0);
+	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with i8 : %s\n", str1));
+	sprintf (str1, "%u %x\n",  u8, ~0);
+	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with u8 : %s\n", str1));
+	sprintf (str1, "%d %x\n",  i16, ~0);
+	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with i16 : %s\n", str1));
+	sprintf (str1, "%u %x\n",  u16, ~0);
+	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with u16 : %s\n", str1));
+	sprintf (str1, "%" PRINTF_INT32_MODIFIER "d %x\n",  i32, ~0);
+	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with i32 : %s\n", str1));
+	sprintf (str1, "%" PRINTF_INT32_MODIFIER "u %x\n",  u32, ~0);
+	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with u32 : %s\n", str1));
+#ifdef INT64_MAX
+	sprintf (str1, "%" PRINTF_INT64_MODIFIER "d %x\n",  i64, ~0);
+	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with i64 : %s\n", str1));
+#endif
+	sprintf (str1, "%" PRINTF_INTMAX_MODIFIER "d %x\n",  imax, ~0);
+	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with imax : %s\n", str1));
+	sprintf (str1, "%" PRINTF_INTMAX_MODIFIER "u %x\n",  umax, ~0);
+	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with umax : %s\n", str1));
+
+	TESTUMAX(8);
+	TESTUMAX(16);
+	TESTUMAX(32);
+#ifdef INT64_MAX
+	TESTUMAX(64);
+#endif
+
+#define STR(v) #v
+#define Q(v) printf ("sizeof " STR(v) " = %u\n", (unsigned) sizeof (v));
+	if (err_n) {
+		printf ("pstdint.h is not correct.  Please use sizes below to correct it:\n");
+	}
+
+	Q(int)
+	Q(unsigned)
+	Q(long int)
+	Q(short int)
+	Q(int8_t)
+	Q(int16_t)
+	Q(int32_t)
+#ifdef INT64_MAX
+	Q(int64_t)
+#endif
+
+#if UINT_MAX < X_SIZE_MAX
+	printf ("UINT_MAX < X_SIZE_MAX\n");
+#else
+	printf ("UINT_MAX >= X_SIZE_MAX\n");
+#endif
+	printf ("%" PRINTF_INT64_MODIFIER "u vs %" PRINTF_INT64_MODIFIER "u\n", UINT_MAX, X_SIZE_MAX);
+
+	return EXIT_SUCCESS;
+}
+#endif
+EOF
+)"
+
+GLOBAL_H="$(cat <<'EOF'
+
+EOF
+)"
+
+GLOBAL_C="$(cat <<'EOF'
+
+EOF
+)"
+
 GLOBAL_CSS="$(cat <<EOF
 :root {
-	/* inherit the strings and form class names */
+	/* todo: inherit the strings and form class names */
+	/*       pandoc should give the env to js as a json object */
+	/*       and this CSS should be inline in the HTML */
 }
 
 [$ION__ATTR_QUERY]:empty::before,
@@ -3779,7 +4489,7 @@ function main() {
 EOF
 )"
 
-TEMPLATE_HTML="$(cat <<'EOF'
+GLOBAL_HTML="$(cat <<'EOF'
 <!DOCTYPE html>
 <html class="$template-no-js$" xmlns="http://www.w3.org/1999/xhtml"$if(template-language)$ lang="$template-language$" xml:lang="$template-language$"$endif$$if(template-direction)$ dir="$template-direction$"$endif$>
 <head>
@@ -3918,40 +4628,36 @@ terminal_clear() {
 	test "$ION_WATCH_CLEAR" && test -t 1 && printf '\033[2J\033[H'
 }
 
-find_command() {
-	command -v "$@" 2>/dev/null || true
-}
-
-found_command() {
-	test "$(find_command "$@")"
-}
-
-found_os() {
-	test "$(uname -s)" = "$1"
-}
-
-found_posix() {
-	test -w /dev/null && test -w "$ION_TEMP" && found_command find
-}
-
 have_parent() {
 	test "$ION_START_ID" != 0
-}
-
-have_flock() {
-	test "$ION_BIN_FLOCK"
 }
 
 have_caddy() {
 	test "$ION_BIN_CADDY"
 }
 
-have_fswatch() {
-	test "$ION_BIN_FSWATCH"
+have_cc() {
+	test "$ION_BIN_CC"
+}
+
+have_clang() {
+	test "$ION_BIN_CLANG"
 }
 
 have_esbuild() {
 	test "$ION_BIN_ESBUILD"
+}
+
+have_flock() {
+	test "$ION_BIN_FLOCK"
+}
+
+have_fswatch() {
+	test "$ION_BIN_FSWATCH"
+}
+
+have_gcc() {
+	test "$ION_BIN_GCC"
 }
 
 have_ln() {
@@ -3992,6 +4698,10 @@ have_shellcheck() {
 
 have_ssh() {
 	test "$ION_BIN_SSH"
+}
+
+have_tcc() {
+	test "$ION_BIN_TCC"
 }
 
 have_tcpserver() {
@@ -4064,6 +4774,26 @@ have_server_front() {
 
 have_server() {
 	have_server_front && have_server_back
+}
+
+find_command() {
+	command -v "$@" 2>/dev/null || true
+}
+
+found_command() {
+	test "$(find_command "$@")"
+}
+
+found_os() {
+	test "$(uname -s)" = "$1"
+}
+
+found_posix() {
+	test -w /dev/null && test -w "$ION_TEMP" && found_command find && have_cc
+}
+
+found_local() {
+	local _ 2>/dev/null
 }
 
 building_script() {
@@ -6448,38 +7178,46 @@ init_env_bins() {
 }
 
 init_env_find() {
-	ea__bin_self="$(init_env_bins "$ION_BIN_SELF" 1)" || return
-	ea__bin_flock="$(init_env_bins "$ION_BIN_FLOCK")" || return
-	ea__bin_caddy="$(init_env_bins "$ION_BIN_CADDY")" || return
+	ea__bin_self="$(init_env_bin "$ION_BIN_SELF" 1)" || return
+	ea__bin_caddy="$(init_env_bin "$ION_BIN_CADDY")" || return
+	ea__bin_cc="$(init_env_bins "$ION_BIN_CC")" || return
+	ea__bin_clang="$(init_env_bin "$ION_BIN_CLANG")" || return
+	ea__bin_esbuild="$(init_env_bin "$ION_BIN_ESBUILD")" || return
 	ea__bin_find="$(init_env_bins "$ION_BIN_FIND")" || return
-	ea__bin_fswatch="$(init_env_bins "$ION_BIN_FSWATCH")" || return
-	ea__bin_esbuild="$(init_env_bins "$ION_BIN_ESBUILD")" || return
-	ea__bin_ln="$(init_env_bins "$ION_BIN_LN")" || return
-	ea__bin_luac="$(init_env_bins "$ION_BIN_LUAC")" || return
-	ea__bin_openssl="$(init_env_bins "$ION_BIN_OPENSSL")" || return
-	ea__bin_pandoc="$(init_env_bins "$ION_BIN_PANDOC")" || return
-	ea__bin_rclone="$(init_env_bins "$ION_BIN_RCLONE")" || return
-	ea__bin_sha256sum="$(init_env_bins "$ION_BIN_SHA256SUM")" || return
-	ea__bin_sha256="$(init_env_bins "$ION_BIN_SHA256")" || return
-	ea__bin_shasum="$(init_env_bins "$ION_BIN_SHASUM")" || return
-	ea__bin_shellcheck="$(init_env_bins "$ION_BIN_SHELLCHECK")" || return
-	ea__bin_ssh="$(init_env_bins "$ION_BIN_SSH")" || return
-	ea__bin_stat="$(init_env_bins "$ION_BIN_STAT")" || return
-	ea__bin_tcpserver="$(init_env_bins "$ION_BIN_TCPSERVER")" || return
-	ea__bin_tidy="$(init_env_bins "$ION_BIN_TIDY")" || return
-	ea__bin_xargs="$(init_env_bins "$ION_BIN_XARGS")" || return
-	ea__bin_parallel="$(init_env_bins "$ION_BIN_PARALLEL")" || return
+	ea__bin_flock="$(init_env_bin "$ION_BIN_FLOCK")" || return
+	ea__bin_fswatch="$(init_env_bin "$ION_BIN_FSWATCH")" || return
+	ea__bin_gcc="$(init_env_bin "$ION_BIN_GCC")" || return
+	ea__bin_ln="$(init_env_bin "$ION_BIN_LN")" || return
+	ea__bin_luac="$(init_env_bin "$ION_BIN_LUAC")" || return
+	ea__bin_openssl="$(init_env_bin "$ION_BIN_OPENSSL")" || return
+	ea__bin_pandoc="$(init_env_bin "$ION_BIN_PANDOC")" || return
+	ea__bin_parallel="$(init_env_bin "$ION_BIN_PARALLEL")" || return
+	ea__bin_rclone="$(init_env_bin "$ION_BIN_RCLONE")" || return
+	ea__bin_sha256sum="$(init_env_bin "$ION_BIN_SHA256SUM")" || return
+	ea__bin_sha256="$(init_env_bin "$ION_BIN_SHA256")" || return
+	ea__bin_shasum="$(init_env_bin "$ION_BIN_SHASUM")" || return
+	ea__bin_shellcheck="$(init_env_bin "$ION_BIN_SHELLCHECK")" || return
+	ea__bin_ssh="$(init_env_bin "$ION_BIN_SSH")" || return
+	ea__bin_stat="$(init_env_bin "$ION_BIN_STAT")" || return
+	ea__bin_tcc="$(init_env_bin "$ION_BIN_TCC")" || return
+	ea__bin_tcpserver="$(init_env_bin "$ION_BIN_TCPSERVER")" || return
+	ea__bin_tidy="$(init_env_bin "$ION_BIN_TIDY")" || return
+	ea__bin_xargs="$(init_env_bin "$ION_BIN_XARGS")" || return
 
 	export ION_BIN_SELF="$ea__bin_self"
-	export ION_BIN_FLOCK="$ea__bin_flock"
 	export ION_BIN_CADDY="$ea__bin_caddy"
-	export ION_BIN_FIND="$ea__bin_find"
-	export ION_BIN_FSWATCH="$ea__bin_fswatch"
+	export ION_BIN_CC="$ea__bin_cc"
+	export ION_BIN_CLANG="$ea__bin_clang"
 	export ION_BIN_ESBUILD="$ea__bin_esbuild"
+	export ION_BIN_FIND="$ea__bin_find"
+	export ION_BIN_FLOCK="$ea__bin_flock"
+	export ION_BIN_FSWATCH="$ea__bin_fswatch"
+	export ION_BIN_GCC="$ea__bin_gcc"
 	export ION_BIN_LN="$ea__bin_ln"
 	export ION_BIN_LUAC="$ea__bin_luac"
 	export ION_BIN_OPENSSL="$ea__bin_openssl"
 	export ION_BIN_PANDOC="$ea__bin_pandoc"
+	export ION_BIN_PARALLEL="$ea__bin_parallel"
 	export ION_BIN_RCLONE="$ea__bin_rclone"
 	export ION_BIN_SHA256SUM="$ea__bin_sha256sum"
 	export ION_BIN_SHA256="$ea__bin_sha256"
@@ -6487,10 +7225,10 @@ init_env_find() {
 	export ION_BIN_SHELLCHECK="$ea__bin_shellcheck"
 	export ION_BIN_SSH="$ea__bin_ssh"
 	export ION_BIN_STAT="$ea__bin_stat"
+	export ION_BIN_TCC="$ea__bin_tcc"
 	export ION_BIN_TCPSERVER="$ea__bin_tcpserver"
 	export ION_BIN_TIDY="$ea__bin_tidy"
 	export ION_BIN_XARGS="$ea__bin_xargs"
-	export ION_BIN_PARALLEL="$ea__bin_parallel"
 }
 
 init_env_input() {
@@ -6587,9 +7325,13 @@ init_env() {
 	init_env_inbox || return
 }
 
-init_check_posix() {
+init_check_shell() {
 	if ! found_posix; then
 		error "$ION__MSG_NOT_POSIX" || return
+	fi
+
+	if ! found_local; then
+		error "$ION__MSG_NOT_LOCAL" || return
 	fi
 }
 
@@ -6746,6 +7488,7 @@ init_check_env() {
 	init_check_string ION__MSG_MAKING_FILE "$ION__MSG_MAKING_FILE" || return
 	init_check_string ION__MSG_MOVING_FILE "$ION__MSG_MOVING_FILE" || return
 	init_check_string ION__MSG_NOT_POSIX "$ION__MSG_NOT_POSIX" || return
+	init_check_string ION__MSG_NOT_LOCAL "$ION__MSG_NOT_LOCAL" || return
 	init_check_string ION__MSG_REMOVING_FILE "$ION__MSG_REMOVING_FILE" || return
 	init_check_string ION__MSG_RUNNING_COMMAND "$ION__MSG_RUNNING_COMMAND" || return
 	init_check_string ION__MSG_RUNNING_COMMAND_BG "$ION__MSG_RUNNING_COMMAND_BG" || return
@@ -6973,7 +7716,7 @@ init_check_gnu() {
 }
 
 init_check_commands() {
-	init_check_posix || return
+	init_check_shell || return
 	init_check_bsd || return
 	init_check_gnu || return
 
@@ -7071,7 +7814,7 @@ init_temp_template_json() {
 init_temp_template_html() {
 	if ! test "$TEMP_TEMPLATE_HTML"; then
 		TEMP_TEMPLATE_HTML="$(start_temp_file template-html template)" || return
-		print "$TEMPLATE_HTML" > "$TEMP_TEMPLATE_HTML" || return
+		print "$GLOBAL_HTML" > "$TEMP_TEMPLATE_HTML" || return
 	fi
 }
 
