@@ -1015,7 +1015,7 @@ export ION__CLASS_NO_JS="${ION__CLASS_NO_JS:-"no-js"}"
 
 export ION_BIN_SELF="${ION_BIN_SELF:-"$0"}"
 export ION_BIN_CADDY="${ION_BIN_CADDY:-"caddy"}"
-export ION_BIN_CC="${ION_BIN_CC:-"tcc:gcc:clang:c99:cc:c89"}"
+export ION_BIN_CC="${ION_BIN_CC:-"gcc:clang:tcc:c99:cc:c89"}"
 export ION_BIN_ESBUILD="${ION_BIN_ESBUILD:-"esbuild"}"
 export ION_BIN_FLOCK="${ION_BIN_FLOCK:-"flock"}"
 export ION_BIN_FSWATCH="${ION_BIN_FSWATCH:-"fswatch"}"
@@ -5530,15 +5530,44 @@ start_many() {
 
 start_c() {
 	# see: developers.redhat.com/blog/2018/03/21/compiler-and-linker-flags-gcc
-	#      -combine? -fwhole-program? -flto?
-	#      -l? -I? -include? pkg-config?
+
+	# -l?
+	# -I?
+	# -include?
+	# -static?
+	# -static-pie?
 
 	start "$ION_BIN_CC" \
-		-static -g -O2 \
-		-pedantic -Wall -Wextra -Wconversion \
+		-std=c89 \
+		-O2 \
+		-g \
+		-pedantic \
+		-Wall \
+		-Wextra \
+		-Werror=vla \
+		-Werror=undef \
+		-Werror=shadow \
+		-Werror=cast-qual \
+		-Werror=conversion \
+		-Werror=return-type \
+		-Werror=unused-result \
+		-Werror=format-security \
+		-Werror=strict-prototypes \
+		-Werror=missing-prototypes \
+		-Werror=implicit-function-declaration \
+		-Wno-ignored-optimization-argument \
+		-D_FORTIFY_SOURCE=3 \
 		-fstack-clash-protection \
 		-fstack-protector-strong \
-		-D_FORTIFY_SOURCE=2 \
+		-fasynchronous-unwind-tables \
+		-fno-common \
+		-flto \
+		-fPIE \
+		-Wl,-pie \
+		-Wl,-z,now \
+		-Wl,-z,relro \
+		-Wl,-z,defs \
+		-Wl,-z,noexecstack \
 		-o "$2" \
 		"$1"
 }
