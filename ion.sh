@@ -87,7 +87,7 @@
 #   for feelings of insecurity regarding its shell script nature. ion
 #   is only superficially a shell script though – the shell layer
 #   negotiates with the host, while acting as a self-extracting
-#   archive for various Lua filters and C scripts*.
+#   archive for various Lua filters and C scripts.
 #
 # - **Portable, offline-first, and extensible**; ion's output is
 #   fully self-contained, enabling it to work with or without a connection,
@@ -774,10 +774,11 @@
 # -------
 #
 # - 0.12.0; 2026-6-16
+#   - fixed boolean usage
 #   - started adding c support
 #   - started switching to using ˋlocalˋ internally
 #   - started sharing immutable temporary files across processes
-#   - fixed boolean usage
+#   - added the c compiler
 # - 0.11.0; 2026-6-9
 #   - added the readme
 # - 0.10.0; 2026-6-6
@@ -1014,12 +1015,10 @@ export ION__CLASS_NO_JS="${ION__CLASS_NO_JS:-"no-js"}"
 
 export ION_BIN_SELF="${ION_BIN_SELF:-"$0"}"
 export ION_BIN_CADDY="${ION_BIN_CADDY:-"caddy"}"
-export ION_BIN_CC="${ION_BIN_CC:-"c99:cc:c89"}"
-export ION_BIN_CLANG="${ION_BIN_CLANG:-"clang"}"
+export ION_BIN_CC="${ION_BIN_CC:-"tcc:gcc:clang:c99:cc:c89"}"
 export ION_BIN_ESBUILD="${ION_BIN_ESBUILD:-"esbuild"}"
 export ION_BIN_FLOCK="${ION_BIN_FLOCK:-"flock"}"
 export ION_BIN_FSWATCH="${ION_BIN_FSWATCH:-"fswatch"}"
-export ION_BIN_GCC="${ION_BIN_GCC:-"gcc"}"
 export ION_BIN_LN="${ION_BIN_LN:-"ln"}"
 export ION_BIN_LUAC="${ION_BIN_LUAC:-"luac"}"
 export ION_BIN_OPENSSL="${ION_BIN_OPENSSL:-"openssl"}"
@@ -1030,7 +1029,6 @@ export ION_BIN_SHA256="${ION_BIN_SHA256:-"sha256"}"
 export ION_BIN_SHASUM="${ION_BIN_SHASUM:-"shasum"}"
 export ION_BIN_SHELLCHECK="${ION_BIN_SHELLCHECK:-"shellcheck"}"
 export ION_BIN_SSH="${ION_BIN_SSH:-"ssh"}"
-export ION_BIN_TCC="${ION_BIN_TCC:-"tcc"}"
 export ION_BIN_TCPSERVER="${ION_BIN_TCPSERVER:-"tcpserver"}"
 export ION_BIN_TIDY="${ION_BIN_TIDY:-}"
 export ION_BIN_PARALLEL="${ION_BIN_PARALLEL:-parallel}"
@@ -1124,13 +1122,14 @@ export ION_TEMP_FILTER_META="${ION_TEMP_FILTER_META:-}"
 export ION_TEMP_FILTER_DOCUMENT="${ION_TEMP_FILTER_DOCUMENT:-}"
 export ION_TEMP_TEMPLATE_JSON="${ION_TEMP_TEMPLATE_JSON:-}"
 export ION_TEMP_TEMPLATE_HTML="${ION_TEMP_TEMPLATE_HTML:-}"
+export ION_TEMP_SOURCE_STYLES="${ION_TEMP_SOURCE_STYLES:-}"
+export ION_TEMP_SOURCE_SCRIPTS="${ION_TEMP_SOURCE_SCRIPTS:-}"
+export ION_TEMP_GLOBAL_C="${ION_TEMP_GLOBAL_C:-}"
 
 TEMP_SED=
 TEMP_WATCH_LOCK=
 TEMP_WATCH_STREAM=
 TEMP_SERVER_CONFIG=
-TEMP_SOURCE_STYLES=
-TEMP_SOURCE_SCRIPTS=
 
 TAB=
 NEWLINE=
@@ -4034,115 +4033,6 @@ typedef uint_least32_t uint_fast32_t;
 #endif
 
 #endif
-
-#if defined (__TEST_PSTDINT_FOR_CORRECTNESS)
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#define glue3_aux(x,y,z) x ## y ## z
-#define glue3(x,y,z) glue3_aux(x,y,z)
-
-#define DECLU(bits) glue3(uint,bits,_t) glue3(u,bits,) = glue3(UINT,bits,_C) (0);
-#define DECLI(bits) glue3(int,bits,_t) glue3(i,bits,) = glue3(INT,bits,_C) (0);
-
-#define DECL(us,bits) glue3(DECL,us,) (bits)
-
-#define TESTUMAX(bits) glue3(u,bits,) = ~glue3(u,bits,); if (glue3(UINT,bits,_MAX) != glue3(u,bits,)) printf ("Something wrong with UINT%d_MAX\n", bits)
-
-#define REPORTERROR(msg) { err_n++; if (err_first <= 0) err_first = __LINE__; printf msg; }
-
-#define X_SIZE_MAX ((size_t)-1)
-
-int pstdint__test () {
-	int err_n = 0;
-	int err_first = 0;
-	DECL(I,8)
-	DECL(U,8)
-	DECL(I,16)
-	DECL(U,16)
-	DECL(I,32)
-	DECL(U,32)
-#ifdef INT64_MAX
-	DECL(I,64)
-	DECL(U,64)
-#endif
-	intmax_t imax = INTMAX_C(0);
-	uintmax_t umax = UINTMAX_C(0);
-	char str0[256], str1[256];
-
-	sprintf (str0, "%" PRINTF_INT32_MODIFIER "d", INT32_C(2147483647));
-	if (0 != strcmp (str0, "2147483647")) REPORTERROR (("Something wrong with PRINTF_INT32_MODIFIER : %s\n", str0));
-	if (atoi(PRINTF_INT32_DEC_WIDTH) != (int) strlen(str0)) REPORTERROR (("Something wrong with PRINTF_INT32_DEC_WIDTH : %s\n", PRINTF_INT32_DEC_WIDTH));
-	sprintf (str0, "%" PRINTF_INT32_MODIFIER "u", UINT32_C(4294967295));
-	if (0 != strcmp (str0, "4294967295")) REPORTERROR (("Something wrong with PRINTF_INT32_MODIFIER : %s\n", str0));
-	if (atoi(PRINTF_UINT32_DEC_WIDTH) != (int) strlen(str0)) REPORTERROR (("Something wrong with PRINTF_UINT32_DEC_WIDTH : %s\n", PRINTF_UINT32_DEC_WIDTH));
-#ifdef INT64_MAX
-	sprintf (str1, "%" PRINTF_INT64_MODIFIER "d", INT64_C(9223372036854775807));
-	if (0 != strcmp (str1, "9223372036854775807")) REPORTERROR (("Something wrong with PRINTF_INT32_MODIFIER : %s\n", str1));
-	if (atoi(PRINTF_INT64_DEC_WIDTH) != (int) strlen(str1)) REPORTERROR (("Something wrong with PRINTF_INT64_DEC_WIDTH : %s, %d\n", PRINTF_INT64_DEC_WIDTH, (int) strlen(str1)));
-	sprintf (str1, "%" PRINTF_INT64_MODIFIER "u", UINT64_C(18446744073709550591));
-	if (0 != strcmp (str1, "18446744073709550591")) REPORTERROR (("Something wrong with PRINTF_INT32_MODIFIER : %s\n", str1));
-	if (atoi(PRINTF_UINT64_DEC_WIDTH) != (int) strlen(str1)) REPORTERROR (("Something wrong with PRINTF_UINT64_DEC_WIDTH : %s, %d\n", PRINTF_UINT64_DEC_WIDTH, (int) strlen(str1)));
-#endif
-
-	sprintf (str0, "%d %x\n", 0, ~0);
-
-	sprintf (str1, "%d %x\n",  i8, ~0);
-	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with i8 : %s\n", str1));
-	sprintf (str1, "%u %x\n",  u8, ~0);
-	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with u8 : %s\n", str1));
-	sprintf (str1, "%d %x\n",  i16, ~0);
-	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with i16 : %s\n", str1));
-	sprintf (str1, "%u %x\n",  u16, ~0);
-	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with u16 : %s\n", str1));
-	sprintf (str1, "%" PRINTF_INT32_MODIFIER "d %x\n",  i32, ~0);
-	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with i32 : %s\n", str1));
-	sprintf (str1, "%" PRINTF_INT32_MODIFIER "u %x\n",  u32, ~0);
-	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with u32 : %s\n", str1));
-#ifdef INT64_MAX
-	sprintf (str1, "%" PRINTF_INT64_MODIFIER "d %x\n",  i64, ~0);
-	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with i64 : %s\n", str1));
-#endif
-	sprintf (str1, "%" PRINTF_INTMAX_MODIFIER "d %x\n",  imax, ~0);
-	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with imax : %s\n", str1));
-	sprintf (str1, "%" PRINTF_INTMAX_MODIFIER "u %x\n",  umax, ~0);
-	if (0 != strcmp (str0, str1)) REPORTERROR (("Something wrong with umax : %s\n", str1));
-
-	TESTUMAX(8);
-	TESTUMAX(16);
-	TESTUMAX(32);
-#ifdef INT64_MAX
-	TESTUMAX(64);
-#endif
-
-#define STR(v) #v
-#define Q(v) printf ("sizeof " STR(v) " = %u\n", (unsigned) sizeof (v));
-	if (err_n) {
-		printf ("pstdint.h is not correct.  Please use sizes below to correct it:\n");
-	}
-
-	Q(int)
-	Q(unsigned)
-	Q(long int)
-	Q(short int)
-	Q(int8_t)
-	Q(int16_t)
-	Q(int32_t)
-#ifdef INT64_MAX
-	Q(int64_t)
-#endif
-
-#if UINT_MAX < X_SIZE_MAX
-	printf ("UINT_MAX < X_SIZE_MAX\n");
-#else
-	printf ("UINT_MAX >= X_SIZE_MAX\n");
-#endif
-	printf ("%" PRINTF_INT64_MODIFIER "u vs %" PRINTF_INT64_MODIFIER "u\n", UINT_MAX, X_SIZE_MAX);
-
-	return EXIT_SUCCESS;
-}
-#endif
 EOF
 )"
 
@@ -4152,7 +4042,9 @@ EOF
 )"
 
 GLOBAL_C="$(cat <<'EOF'
-
+int main(void) {
+	return 0/*EXIT_SUCCESS*/;
+}
 EOF
 )"
 
@@ -4646,10 +4538,6 @@ have_cc() {
 	test "$ION_BIN_CC"
 }
 
-have_clang() {
-	test "$ION_BIN_CLANG"
-}
-
 have_esbuild() {
 	test "$ION_BIN_ESBUILD"
 }
@@ -4660,10 +4548,6 @@ have_flock() {
 
 have_fswatch() {
 	test "$ION_BIN_FSWATCH"
-}
-
-have_gcc() {
-	test "$ION_BIN_GCC"
 }
 
 have_ln() {
@@ -4704,10 +4588,6 @@ have_shellcheck() {
 
 have_ssh() {
 	test "$ION_BIN_SSH"
-}
-
-have_tcc() {
-	test "$ION_BIN_TCC"
 }
 
 have_tcpserver() {
@@ -4799,7 +4679,7 @@ found_posix() {
 }
 
 found_local() {
-	local _ 2>/dev/null
+	local _= 2>/dev/null
 }
 
 building_script() {
@@ -5645,6 +5525,21 @@ start_many() {
 
 	IFS="$ev__ifs"
 	return "$ev__ret"
+}
+
+start_c() {
+	# see: developers.redhat.com/blog/2018/03/21/compiler-and-linker-flags-gcc
+	#      -combine? -fwhole-program? -flto?
+	#      -l? -I? -include? pkg-config?
+
+	"$ION_BIN_CC" \
+		-static -g -O2 \
+		-pedantic -Wall -Wextra -Wconversion \
+		-fstack-clash-protection \
+		-fstack-protector-strong \
+		-D_FORTIFY_SOURCE=2 \
+		-o "$2" \
+		"$1"
 }
 
 start_stat() {
@@ -6534,8 +6429,8 @@ start_build_internal() {
 	export ION_OUTPUT_CURRENT="$ez__build"
 
 	if test "$ez__recompile"; then
-		start_esbuild css "$TEMP_SOURCE_STYLES" "$ez__build" || return
-		start_esbuild js "$TEMP_SOURCE_SCRIPTS" "$ez__build" || return
+		start_esbuild css "$ION_TEMP_SOURCE_STYLES" "$ez__build" || return
+		start_esbuild js "$ION_TEMP_SOURCE_SCRIPTS" "$ez__build" || return
 	fi
 
 	start_plan "$ez__plan" "$ez__rebuild" "$ez__recompile" || return
@@ -7098,8 +6993,11 @@ stop_temp_parent() {
 	file_remove "$TEMP_WATCH_LOCK" || true
 	file_remove "$TEMP_WATCH_STREAM" || true
 	file_remove "$TEMP_SERVER_CONFIG" || true
-	file_remove "$TEMP_SOURCE_STYLES" || true
-	file_remove "$TEMP_SOURCE_SCRIPTS" || true
+
+	file_remove "$ION_TEMP_SOURCE_STYLES" || true
+	file_remove "$ION_TEMP_SOURCE_SCRIPTS" || true
+
+	file_remove "$ION_TEMP_GLOBAL_C" || true
 
 	if test "$OUTPUT_TEMP"; then
 		dir_remove "$ION_OUTPUT" || true
@@ -7185,12 +7083,10 @@ init_env_find() {
 	ea__bin_self="$(init_env_bin "$ION_BIN_SELF" 1)" || return
 	ea__bin_caddy="$(init_env_bin "$ION_BIN_CADDY")" || return
 	ea__bin_cc="$(init_env_bins "$ION_BIN_CC")" || return
-	ea__bin_clang="$(init_env_bin "$ION_BIN_CLANG")" || return
 	ea__bin_esbuild="$(init_env_bin "$ION_BIN_ESBUILD")" || return
 	ea__bin_find="$(init_env_bins "$ION_BIN_FIND")" || return
 	ea__bin_flock="$(init_env_bin "$ION_BIN_FLOCK")" || return
 	ea__bin_fswatch="$(init_env_bin "$ION_BIN_FSWATCH")" || return
-	ea__bin_gcc="$(init_env_bin "$ION_BIN_GCC")" || return
 	ea__bin_ln="$(init_env_bin "$ION_BIN_LN")" || return
 	ea__bin_luac="$(init_env_bin "$ION_BIN_LUAC")" || return
 	ea__bin_openssl="$(init_env_bin "$ION_BIN_OPENSSL")" || return
@@ -7203,7 +7099,6 @@ init_env_find() {
 	ea__bin_shellcheck="$(init_env_bin "$ION_BIN_SHELLCHECK")" || return
 	ea__bin_ssh="$(init_env_bin "$ION_BIN_SSH")" || return
 	ea__bin_stat="$(init_env_bin "$ION_BIN_STAT")" || return
-	ea__bin_tcc="$(init_env_bin "$ION_BIN_TCC")" || return
 	ea__bin_tcpserver="$(init_env_bin "$ION_BIN_TCPSERVER")" || return
 	ea__bin_tidy="$(init_env_bin "$ION_BIN_TIDY")" || return
 	ea__bin_xargs="$(init_env_bin "$ION_BIN_XARGS")" || return
@@ -7211,12 +7106,10 @@ init_env_find() {
 	export ION_BIN_SELF="$ea__bin_self"
 	export ION_BIN_CADDY="$ea__bin_caddy"
 	export ION_BIN_CC="$ea__bin_cc"
-	export ION_BIN_CLANG="$ea__bin_clang"
 	export ION_BIN_ESBUILD="$ea__bin_esbuild"
 	export ION_BIN_FIND="$ea__bin_find"
 	export ION_BIN_FLOCK="$ea__bin_flock"
 	export ION_BIN_FSWATCH="$ea__bin_fswatch"
-	export ION_BIN_GCC="$ea__bin_gcc"
 	export ION_BIN_LN="$ea__bin_ln"
 	export ION_BIN_LUAC="$ea__bin_luac"
 	export ION_BIN_OPENSSL="$ea__bin_openssl"
@@ -7229,7 +7122,6 @@ init_env_find() {
 	export ION_BIN_SHELLCHECK="$ea__bin_shellcheck"
 	export ION_BIN_SSH="$ea__bin_ssh"
 	export ION_BIN_STAT="$ea__bin_stat"
-	export ION_BIN_TCC="$ea__bin_tcc"
 	export ION_BIN_TCPSERVER="$ea__bin_tcpserver"
 	export ION_BIN_TIDY="$ea__bin_tidy"
 	export ION_BIN_XARGS="$ea__bin_xargs"
@@ -7682,14 +7574,17 @@ init_check_env() {
 	! test "$ION_INPUT" || init_check_dir ION_INPUT "$ION_INPUT" || return
 	init_check_paths ION_MIRRORS "$ION_MIRRORS" || return
 
-	init_check_path ION_TEMP_DOCUMENT_BLANK "ION_TEMP_DOCUMENT_BLANK" || return
-	init_check_path ION_TEMP_FILTER_EMPTY "ION_TEMP_FILTER_EMPTY" || return
-	init_check_path ION_TEMP_FILTER_TEST "ION_TEMP_FILTER_TEST" || return
-	init_check_path ION_TEMP_FILTER_EXTRACT "ION_TEMP_FILTER_EXTRACT" || return
-	init_check_path ION_TEMP_FILTER_META "ION_TEMP_FILTER_META" || return
-	init_check_path ION_TEMP_FILTER_DOCUMENT "ION_TEMP_FILTER_DOCUMENT" || return
-	init_check_path ION_TEMP_TEMPLATE_JSON "ION_TEMP_TEMPLATE_JSON" || return
-	init_check_path ION_TEMP_TEMPLATE_HTML "ION_TEMP_TEMPLATE_HTML" || return
+	init_check_path ION_TEMP_DOCUMENT_BLANK "$ION_TEMP_DOCUMENT_BLANK" || return
+	init_check_path ION_TEMP_FILTER_EMPTY "$ION_TEMP_FILTER_EMPTY" || return
+	init_check_path ION_TEMP_FILTER_TEST "$ION_TEMP_FILTER_TEST" || return
+	init_check_path ION_TEMP_FILTER_EXTRACT "$ION_TEMP_FILTER_EXTRACT" || return
+	init_check_path ION_TEMP_FILTER_META "$ION_TEMP_FILTER_META" || return
+	init_check_path ION_TEMP_FILTER_DOCUMENT "$ION_TEMP_FILTER_DOCUMENT" || return
+	init_check_path ION_TEMP_TEMPLATE_JSON "$ION_TEMP_TEMPLATE_JSON" || return
+	init_check_path ION_TEMP_TEMPLATE_HTML "$ION_TEMP_TEMPLATE_HTML" || return
+	init_check_path ION_TEMP_SOURCE_STYLES "$ION_TEMP_SOURCE_STYLES" || return
+	init_check_path ION_TEMP_SOURCE_SCRIPTS "$ION_TEMP_SOURCE_SCRIPTS" || return
+	init_check_path ION_TEMP_GLOBAL_C "$ION_TEMP_GLOBAL_C" || return
 }
 
 init_check_bsd() {
@@ -7824,26 +7719,28 @@ init_temp_server_config() {
 }
 
 init_temp_source_style() {
-	TEMP_SOURCE_STYLES="$(start_temp_file src css)" || return
+	local temp="$(start_temp_file src css)" || return
 
 	paths_split_raw "$ION_SOURCE_STYLES" | {
 		while IFS= read -r ek__path; do
 			if test "$ek__path"; then
-				printf '@import "%s";\n' "$ek__path" >> "$TEMP_SOURCE_STYLES" || continue
+				printf '@import "%s";\n' "$ek__path" >> "$temp" || continue
 			fi
 		done
 	}
 
 	if building_style_global; then
-		print "$GLOBAL_CSS" >> "$TEMP_SOURCE_STYLES" || return
+		print "$GLOBAL_CSS" >> "$temp" || return
 	fi
+
+	export ION_TEMP_SOURCE_STYLES="$temp"
 }
 
 init_temp_source_script() {
-	TEMP_SOURCE_SCRIPTS="$(start_temp_file src js)" || return
+	local temp="$(start_temp_file src js)" || return
 
 	if building_script_global; then
-		print "'use strict';" > "$TEMP_SOURCE_SCRIPTS" || return
+		print "'use strict';" > "$temp" || return
 	fi
 
 	paths_split_raw "$ION_SOURCE_SCRIPTS" | {
@@ -7853,14 +7750,14 @@ init_temp_source_script() {
 			el__i=$((el__i+1))
 
 			if test "$el__path"; then
-				printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$TEMP_SOURCE_SCRIPTS" || continue
+				printf 'import f%d from "%s";\n' "$el__i" "$el__path" >> "$temp" || continue
 			fi
 		done
 	}
 
 	if building_script_global; then
-		print "$GLOBAL_JS_ENV" >> "$TEMP_SOURCE_SCRIPTS" || return
-		print "$GLOBAL_JS" >> "$TEMP_SOURCE_SCRIPTS" || return
+		print "$GLOBAL_JS_ENV" >> "$temp" || return
+		print "$GLOBAL_JS" >> "$temp" || return
 	fi
 
 	paths_split_raw "$ION_SOURCE_SCRIPTS" | {
@@ -7868,13 +7765,23 @@ init_temp_source_script() {
 
 		while IFS= read -r _; do
 			el__i=$((el__i+1))
-			printf 'typeof f%d === "function" && f%d();\n' "$el__i" "$el__i" >> "$TEMP_SOURCE_SCRIPTS" || continue
+			printf 'typeof f%d === "function" && f%d();\n' "$el__i" "$el__i" >> "$temp" || continue
 		done
 	}
 
 	if building_script_global; then
-		printf 'main();\n' >> "$TEMP_SOURCE_SCRIPTS" || return
+		printf 'main();\n' >> "$temp" || return
 	fi
+
+	export ION_TEMP_SOURCE_SCRIPTS="$temp"
+}
+
+init_temp_global_c() {
+	local temp="$(start_temp_file src c)" || return
+	print "$GLOBAL_H_STDINT" > "$temp" || return
+	print "$GLOBAL_H" >> "$temp" || return
+	print "$GLOBAL_C" >> "$temp" || return
+	export ION_TEMP_GLOBAL_C="$temp"
 }
 
 init_temp_output() {
@@ -7894,6 +7801,7 @@ init_temp_shared() {
 	init_temp_filter_document || return
 	init_temp_template_json || return
 	init_temp_template_html || return
+	init_temp_global_c || return
 }
 
 init_temp_parent() {

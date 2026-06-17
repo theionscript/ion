@@ -85,7 +85,7 @@ Roadmap
   for feelings of insecurity regarding its shell script nature. ion
   is only superficially a shell script though – the shell layer
   negotiates with the host, while acting as a self-extracting
-  archive for various Lua filters and C scripts*.
+  archive for various Lua filters and C scripts.
 
 - **Portable, offline-first, and extensible**; ion's output is
   fully self-contained, enabling it to work with or without a connection,
