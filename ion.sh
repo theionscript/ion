@@ -1015,7 +1015,7 @@ export ION__CLASS_NO_JS="${ION__CLASS_NO_JS:-"no-js"}"
 
 export ION_BIN_SELF="${ION_BIN_SELF:-"$0"}"
 export ION_BIN_CADDY="${ION_BIN_CADDY:-"caddy"}"
-export ION_BIN_CC="${ION_BIN_CC:-"gcc:clang:tcc:c99:cc:c89"}"
+export ION_BIN_CC="${ION_BIN_CC:-"gcc:clang:tcc:c99:c89:cc"}"
 export ION_BIN_ESBUILD="${ION_BIN_ESBUILD:-"esbuild"}"
 export ION_BIN_FLOCK="${ION_BIN_FLOCK:-"flock"}"
 export ION_BIN_FSWATCH="${ION_BIN_FSWATCH:-"fswatch"}"
@@ -4038,7 +4038,184 @@ EOF
 )"
 
 GLOBAL_H="$(cat <<'EOF'
+#ifndef INCLUDED_ION_PRELUDE
+	#define INCLUDED_ION_PRELUDE 1
 
+	#if __STDC__ && __STDC_VERSION__
+		#define CSTD __STDC_VERSION__
+	#else
+		#define CSTD 0
+	#endif
+
+	#if CSTD >= 201112L
+		#define C89 1
+		#define C94 1
+		#define C99 1
+		#define C11 1
+	#elif CSTD >= 199901L
+		#define C89 1
+		#define C94 1
+		#define C99 1
+		#define C11 0
+	#elif CSTD >= 199409L
+		#define C89 1
+		#define C94 1
+		#define C99 0
+		#define C11 0
+	#elif __STDC__
+		#define C89 1
+		#define C94 0
+		#define C99 0
+		#define C11 0
+	#else
+		#define C89 0
+		#define C94 0
+		#define C99 0
+		#define C11 0
+	#endif
+
+	#include <float.h>
+	#include <limits.h>
+	#include <stddef.h>
+
+	#if C99
+		#include <stdbool.h>
+	#else
+		typedef enum { false, true } bool;
+	#endif
+
+	typedef unsigned char byte;
+
+	#define null NULL
+
+	#define I8 INT8_C
+	#define I8_MIN INT8_MIN
+	#define I8_MAX INT8_MAX
+	typedef int8_t i8;
+
+	#define U8 UINT8_C
+	#define U8_MIN 0
+	#define U8_MAX UINT8_MAX
+	typedef uint8_t u8;
+
+	#define I16 INT16_C
+	#define I16_MIN INT16_MIN
+	#define I16_MAX INT16_MAX
+	typedef int16_t i16;
+
+	#define U16 UINT16_C
+	#define U16_MIN 0
+	#define U16_MAX UINT16_MAX
+	typedef uint16_t u16;
+
+	#define I32 INT32_C
+	#define I32_MIN INT32_MIN
+	#define I32_MAX INT32_MAX
+	typedef int32_t i32;
+
+	#define U32 UINT32_C
+	#define U32_MIN 0
+	#define U32_MAX UINT32_MAX
+	typedef uint32_t u32;
+
+	#ifdef INT64_MAX
+		#define I64 INT64_C
+		#define I64_MIN INT64_MIN
+		#define I64_MAX INT64_MAX
+		typedef int64_t i64;
+	#elif REQUIRE_64BITS
+		#define I64(I) I##l
+		#define I64_MIN LONG_MIN
+		#define I64_MAX LONG_MAX
+		typedef signed long int i64;
+		ASSERT(CHAR_BIT == 8 && sizeof(i64) == 8, "64bit integers are required")
+	#endif
+
+	#ifdef UINT64_MAX
+		#define U64 UINT64_C
+		#define U64_MIN 0
+		#define U64_MAX UINT64_MAX
+		typedef uint64_t u64;
+	#elif REQUIRE_64BITS
+		#define U64(I) I##ul
+		#define U64_MIN ULONG_MIN
+		#define U64_MAX ULONG_MAX
+		typedef unsigned long int u64;
+		ASSERT(CHAR_BIT == 8 && sizeof(u64) == 8, "64bit integers are required")
+	#endif
+
+	#ifdef I64
+		#define IMAX I64
+		#define IMAX_IS_LONG 1
+		#define IMAX_MIN I64_MIN
+		#define IMAX_MAX I64_MAX
+		typedef i64 imax;
+	#else
+		#define IMAX I32
+		#define IMAX_IS_LONG 0
+		#define IMAX_MIN I32_MIN
+		#define IMAX_MAX I32_MAX
+		typedef i32 imax;
+	#endif
+
+	#ifdef U64
+		#define UMAX U64
+		#define UMAX_IS_LONG 1
+		#define UMAX_MIN U64_MIN
+		#define UMAX_MAX U64_MAX
+		typedef u64 umax;
+	#else
+		#define UMAX U32
+		#define UMAX_IS_LONG 0
+		#define UMAX_MIN U32_MIN
+		#define UMAX_MAX U32_MAX
+		typedef u32 umax;
+	#endif
+
+	#define F32(F) F##f
+	#define F32_MIN FLT_MIN
+	#define F32_MAX FLT_MAX
+	#define F32_EPSILON FLT_EPSILON
+	#define F32_MANTISSA FLT_MANT_DIG
+	#define F32_RADIX FLT_RADIX
+	typedef float f32;
+
+	#define F64(F) F
+	#define F64_MIN DBL_MIN
+	#define F64_MAX DBL_MAX
+	#define F64_EPSILON DBL_EPSILON
+	#define F64_MANTISSA DBL_MANT_DIG
+	#define F64_RADIX DBL_RADIX
+	typedef double f64;
+
+	#define F128(F) F##L
+	#define F128_MIN LDBL_MIN
+	#define F128_MAX LDBL_MAX
+	#define F128_EPSILON LDBL_EPSILON
+	#define F128_MANTISSA LDBL_MANT_DIG
+	#define F128_RADIX LDBL_RADIX
+	typedef long double f128;
+
+	#if C99
+		#define FMAX F128
+		#define FMAX_IS_LONG 1
+		#define FMAX_MIN F128_MIN
+		#define FMAX_MAX F128_MAX
+		#define FMAX_EPSILON F128_EPSILON
+		#define FMAX_MANTISSA F128_MANTISSA
+		#define FMAX_RADIX F128_RADIX
+		typedef f128 fmax;
+	#else
+		#define FMAX F64
+		#define FMAX_IS_LONG 0
+		#define FMAX_MIN F64_MIN
+		#define FMAX_MAX F64_MAX
+		#define FMAX_EPSILON F64_EPSILON
+		#define FMAX_MANTISSA F64_MANTISSA
+		#define FMAX_RADIX F64_RADIX
+		typedef f64 fmax;
+	#endif
+#endif
 EOF
 )"
 
@@ -5531,11 +5708,11 @@ start_many() {
 start_c() {
 	# see: developers.redhat.com/blog/2018/03/21/compiler-and-linker-flags-gcc
 
-	# -l?
-	# -I?
-	# -include?
-	# -static?
-	# -static-pie?
+	# -l
+	# -I
+	# -include
+	# -static
+	# -static-pie
 
 	start "$ION_BIN_CC" \
 		-std=c89 \
@@ -5556,7 +5733,6 @@ start_c() {
 		-Werror=missing-prototypes \
 		-Werror=implicit-function-declaration \
 		-Wno-ignored-optimization-argument \
-		-D_FORTIFY_SOURCE=3 \
 		-fstack-clash-protection \
 		-fstack-protector-strong \
 		-fasynchronous-unwind-tables \
@@ -5568,6 +5744,7 @@ start_c() {
 		-Wl,-z,relro \
 		-Wl,-z,defs \
 		-Wl,-z,noexecstack \
+		-D_FORTIFY_SOURCE=3 \
 		-o "$2" \
 		"$1"
 }
@@ -6005,6 +6182,8 @@ stop_watcher() {
 }
 
 start_tcpserver() {
+	# todo: this should soon be replaced with a c script
+
 	if ! test "$SERVER_PID"; then
 		set -m
 		start "$ION_BIN_TCPSERVER" -q -U -H -R 127.0.0.1 "$ION_INBOX_PORT" sh "$ION_BIN_SELF" &
@@ -6307,6 +6486,8 @@ start_esbuild() {
 }
 
 start_scan() {
+	# todo: the while loop should soon be replaced with a c script
+
 	start_find cluster "$1" | while IFS= read -r ep__line; do
 		ep__ifs="$IFS"
 		IFS=":"
@@ -7338,6 +7519,8 @@ init_check_command() {
 }
 
 init_check_env() {
+	# todo: this should soon be replaced with a c script
+
 	init_check_dir ION_TEMP "$ION_TEMP" || return
 
 	init_check_string ION___ERROR_PREFIX_MAIN "$ION___ERROR_PREFIX_MAIN" || return
