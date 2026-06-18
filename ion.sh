@@ -1095,7 +1095,7 @@ export ION_FILTER_PATH="${ION_FILTER_PATH:-}"
 export ION_FILTER_TARGET="${ION_FILTER_TARGET:-}"
 
 export ION_START_ID="${ION_START_ID:-0}"
-export ION_START_PRE="${ION_START_PRE:-"env"}"
+export ION_START_PRE="${ION_START_PRE:-}"
 export ION_START_POST="${ION_START_POST:-}"
 export ION_START_ARGS="${ION_START_ARGS:-}"
 
@@ -1125,8 +1125,8 @@ export ION_TEMP_TEMPLATE_JSON="${ION_TEMP_TEMPLATE_JSON:-}"
 export ION_TEMP_TEMPLATE_HTML="${ION_TEMP_TEMPLATE_HTML:-}"
 export ION_TEMP_SOURCE_STYLES="${ION_TEMP_SOURCE_STYLES:-}"
 export ION_TEMP_SOURCE_SCRIPTS="${ION_TEMP_SOURCE_SCRIPTS:-}"
-export ION_TEMP_GLOBAL_C="${ION_TEMP_GLOBAL_C:-}"
-export ION_TEMP_GLOBAL_C_BIN="${ION_TEMP_GLOBAL_C_BIN:-}"
+export ION_TEMP_SYSTEM_BLANK_IN="${ION_TEMP_SYSTEM_BLANK_IN:-}"
+export ION_TEMP_SYSTEM_BLANK_OUT="${ION_TEMP_SYSTEM_BLANK_OUT:-}"
 
 TEMP_SED=
 TEMP_WATCH_LOCK=
@@ -4075,32 +4075,10 @@ GLOBAL_H="$(cat <<'EOF'
 		#define C11 0
 	#endif
 
-	#include <assert.h>
 	#include <float.h>
 	#include <limits.h>
 	#include <stddef.h>
 	#include <stdlib.h>
-
-	#if C11
-		#define ASSERT(e, m) static_assert(e, m)
-	#else
-		/* from: pixelbeat.org/programming/gcc/static_assert.html */
-
-		#define ASSERT_CONCAT_(a, b) a##b
-		#define ASSERT_CONCAT(a, b) ASSERT_CONCAT_(a, b)
-
-		/* These can't be used after statements in c89 */
-
-		#ifdef __COUNTER__
-			#define ASSERT(e, m) ;enum { ASSERT_CONCAT(static_assert_, __COUNTER__) = 1/(int)(!!(e)) }
-		#else
-			/* This can't be used twice on the same line so ensure if using in headers
-			 * that the headers are not included twice (by wrapping in #ifndef...#endif)
-			 * Note it doesn't cause an issue when used on same line of separate modules
-			 * compiled with gcc -combine -fwhole-program  */
-			#define ASSERT(e, m) ;enum { ASSERT_CONCAT(assert_line_, __LINE__) = 1/(int)(!!(e)) }
-		#endif
-	#endif
 
 	#if C99
 		#include <stdbool.h>
@@ -4143,58 +4121,42 @@ GLOBAL_H="$(cat <<'EOF'
 	typedef uint32_t u32;
 
 	#ifdef INT64_MAX
+		#define IMAX_64 1
 		#define I64 INT64_C
 		#define I64_MIN INT64_MIN
 		#define I64_MAX INT64_MAX
 		typedef int64_t i64;
 	#else
+		#define IMAX_64 0
 		#define I64(I) I##l
 		#define I64_MIN LONG_MIN
 		#define I64_MAX LONG_MAX
 		typedef signed long int i64;
-		ASSERT(CHAR_BIT == 8 && sizeof(i64) == 8, "64bit integers are required")
 	#endif
 
 	#ifdef UINT64_MAX
+		#define UMAX_64 1
 		#define U64 UINT64_C
 		#define U64_MIN 0
 		#define U64_MAX UINT64_MAX
 		typedef uint64_t u64;
 	#else
+		#define UMAX_64 0
 		#define U64(U) U##ul
 		#define U64_MIN ULONG_MIN
 		#define U64_MAX ULONG_MAX
 		typedef unsigned long int u64;
-		ASSERT(CHAR_BIT == 8 && sizeof(u64) == 8, "64bit integers are required")
 	#endif
 
-	#ifdef I64
-		#define IMAX I64
-		#define IMAX_IS_LONG 1
-		#define IMAX_MIN I64_MIN
-		#define IMAX_MAX I64_MAX
-		typedef i64 imax;
-	#else
-		#define IMAX I32
-		#define IMAX_IS_LONG 0
-		#define IMAX_MIN I32_MIN
-		#define IMAX_MAX I32_MAX
-		typedef i32 imax;
-	#endif
+	#define IMAX I64
+	#define IMAX_MIN I64_MIN
+	#define IMAX_MAX I64_MAX
+	typedef i64 imax;
 
-	#ifdef U64
-		#define UMAX U64
-		#define UMAX_IS_LONG 1
-		#define UMAX_MIN U64_MIN
-		#define UMAX_MAX U64_MAX
-		typedef u64 umax;
-	#else
-		#define UMAX U32
-		#define UMAX_IS_LONG 0
-		#define UMAX_MIN U32_MIN
-		#define UMAX_MAX U32_MAX
-		typedef u32 umax;
-	#endif
+	#define UMAX U64
+	#define UMAX_MIN U64_MIN
+	#define UMAX_MAX U64_MAX
+	typedef u64 umax;
 
 	#define F32(F) F##f
 	#define F32_MIN FLT_MIN
@@ -5663,10 +5625,17 @@ start() {
 	export ION_START_ID=1
 
 	# shellcheck disable=SC2086
-	info "$ION__MSG_RUNNING_COMMAND" "$ION_START_PRE" $ION_START_ARGS ${ION_START_POST:+"$ION_START_POST"} "$@"
+	info "$ION__MSG_RUNNING_COMMAND" \
+		${ION_START_PRE:+"$ION_START_PRE"} \
+		${ION_START_ARGS:+"$ION_START_ARGS"} \
+		${ION_START_POST:+"$ION_START_POST"} \
+	"$@"
 
 	# shellcheck disable=SC2086
-	"$ION_START_PRE" $ION_START_ARGS ${ION_START_POST:+"$ION_START_POST"} "$@" || eh__ret=$?
+	${ION_START_PRE:+"$ION_START_PRE"} \
+	${ION_START_ARGS:+"$ION_START_ARGS"} \
+	${ION_START_POST:+"$ION_START_POST"} \
+	"$@" || eh__ret=$?
 
 	export ION_START_ID="$eh__start_id"
 	IFS="$eh__ifs"
@@ -5716,10 +5685,18 @@ start_many() {
 		export ION_VOLUME="$ev__volume"
 
 		# shellcheck disable=SC2086
-		info "$ION__MSG_RUNNING_COMMAND_MANY" "$ION_START_PRE" $ION_START_ARGS ${ION_START_POST:+"$ION_START_POST"} "$@"
+		info "$ION__MSG_RUNNING_COMMAND_MANY" \
+			${ION_START_PRE:+"$ION_START_PRE"} \
+			${ION_START_ARGS:+"$ION_START_ARGS"} \
+			${ION_START_POST:+"$ION_START_POST"} \
+		"$@"
 
 		# shellcheck disable=SC2086
-		"$ev__cmd" $ev__args "$ION_START_PRE" $ION_START_ARGS ${ION_START_POST:+"$ION_START_POST"} "$@" || ev__ret=$?
+		"$ev__cmd" $ev__args \
+			${ION_START_PRE:+"$ION_START_PRE"} \
+			${ION_START_ARGS:+"$ION_START_ARGS"} \
+			${ION_START_POST:+"$ION_START_POST"} \
+		"$@" || ev__ret=$?
 
 		export ION_START_ID="$ev__start_id"
 		export ION_VOLUME="$ev__old_volume"
@@ -5729,14 +5706,30 @@ start_many() {
 	return "$ev__ret"
 }
 
-start_c() {
+start_cc() {
 	# see: developers.redhat.com/blog/2018/03/21/compiler-and-linker-flags-gcc
 
 	# -l
 	# -I
-	# -include
-	# -static
-	# -static-pie
+
+	# gcc:
+	#   -include
+	#   -fstack-clash-protection
+	#   -fstack-protector-strong
+	#   -fasynchronous-unwind-tables
+
+	# linux:
+	#   -fpie
+	#   -Wl,-pie
+	#   -Wl,-z,now
+	#   -Wl,-z,relro
+	#   -Wl,-z,defs
+	#   -Wl,-z,noexecstack
+
+	# other:
+	#   -static
+	#   -static-pie
+	#   -flto
 
 	start "$ION_BIN_CC" \
 		-std=c89 \
@@ -5745,30 +5738,8 @@ start_c() {
 		-pedantic \
 		-Wall \
 		-Wextra \
-		-Werror=vla \
-		-Werror=undef \
-		-Werror=shadow \
-		-Werror=cast-qual \
-		-Werror=conversion \
-		-Werror=return-type \
-		-Werror=unused-result \
-		-Werror=format-security \
-		-Werror=strict-prototypes \
-		-Werror=missing-prototypes \
-		-Werror=implicit-function-declaration \
-		-Wno-ignored-optimization-argument \
-		-fasynchronous-unwind-tables \
-		-fstack-clash-protection \
-		-fstack-protector-strong \
-		-fno-common \
-		-flto \
-		-fPIE \
-		-Wl,-pie \
-		-Wl,-z,now \
-		-Wl,-z,relro \
-		-Wl,-z,defs \
-		-Wl,-z,noexecstack \
-		-D_FORTIFY_SOURCE=3 \
+		-Werror \
+		-D_FORTIFY_SOURCE=2 \
 		-o "$2" \
 		"$1"
 }
@@ -7227,8 +7198,8 @@ deinit_temp_parent() {
 	file_remove "$ION_TEMP_SOURCE_STYLES" || true
 	file_remove "$ION_TEMP_SOURCE_SCRIPTS" || true
 
-	file_remove "$ION_TEMP_GLOBAL_C" || true
-	file_remove "$ION_TEMP_GLOBAL_C_BIN" || true
+	file_remove "$ION_TEMP_SYSTEM_BLANK_IN" || true
+	file_remove "$ION_TEMP_SYSTEM_BLANK_OUT" || true
 
 	if test "$OUTPUT_TEMP"; then
 		dir_remove "$ION_OUTPUT" || true
@@ -7789,7 +7760,7 @@ init_check_env() {
 	init_check_paths ION_SOURCE_SCRIPTS "$ION_SOURCE_SCRIPTS" || return
 
 	init_check_uint ION_START_ID "$ION_START_ID" || return
-	init_check_string ION_START_PRE "$ION_START_PRE" || return
+	! test "$ION_START_PRE" || init_check_string ION_START_PRE "$ION_START_PRE" || return
 	! test "$ION_START_POST" || init_check_string ION_START_POST "$ION_START_POST" || return
 	! test "$ION_START_ARGS" || init_check_string ION_START_ARGS "$ION_START_ARGS" || return
 
@@ -7819,8 +7790,8 @@ init_check_env() {
 	! test "$ION_TEMP_TEMPLATE_HTML" || init_check_path ION_TEMP_TEMPLATE_HTML "$ION_TEMP_TEMPLATE_HTML" || return
 	! test "$ION_TEMP_SOURCE_STYLES" || init_check_path ION_TEMP_SOURCE_STYLES "$ION_TEMP_SOURCE_STYLES" || return
 	! test "$ION_TEMP_SOURCE_SCRIPTS" || init_check_path ION_TEMP_SOURCE_SCRIPTS "$ION_TEMP_SOURCE_SCRIPTS" || return
-	! test "$ION_TEMP_GLOBAL_C" || init_check_path ION_TEMP_GLOBAL_C "$ION_TEMP_GLOBAL_C" || return
-	! test "$ION_TEMP_GLOBAL_C_BIN" || init_check_path ION_TEMP_GLOBAL_C_BIN "$ION_TEMP_GLOBAL_C_BIN" || return
+	! test "$ION_TEMP_SYSTEM_BLANK_IN" || init_check_path ION_TEMP_SYSTEM_BLANK_IN "$ION_TEMP_SYSTEM_BLANK_IN" || return
+	! test "$ION_TEMP_SYSTEM_BLANK_OUT" || init_check_path ION_TEMP_SYSTEM_BLANK_OUT "$ION_TEMP_SYSTEM_BLANK_OUT" || return
 }
 
 init_check_bsd() {
@@ -8024,20 +7995,18 @@ init_temp_source_script() {
 	export ION_TEMP_SOURCE_SCRIPTS="$temp"
 }
 
-init_temp_global_c() {
+init_temp_system() {
 	local temp
-	temp="$(start_temp_file src c)" || return
+
+	temp="$(start_temp_file system-in-blank c)" || return
 	print "$GLOBAL_H_STDINT" > "$temp" || return
 	print "$GLOBAL_H" >> "$temp" || return
 	print "$GLOBAL_C" >> "$temp" || return
-	export ION_TEMP_GLOBAL_C="$temp"
-}
+	export ION_TEMP_SYSTEM_BLANK_IN="$temp"
 
-init_temp_global_c_bin() {
-	local temp
-	temp="$(start_temp_file bin out)" || return
-	start_c "$ION_TEMP_GLOBAL_C" "$temp" || return
-	export ION_TEMP_GLOBAL_C_BIN="$temp"
+	temp="$(start_temp_file system-out-blank out)" || return
+	start_cc "$ION_TEMP_SYSTEM_BLANK_IN" "$temp" || return
+	export ION_TEMP_SYSTEM_BLANK_OUT="$temp"
 }
 
 init_temp_output() {
@@ -8057,8 +8026,7 @@ init_temp_shared() {
 	init_temp_filter_document || return
 	init_temp_template_json || return
 	init_temp_template_html || return
-	init_temp_global_c || return
-	init_temp_global_c_bin || return
+	init_temp_system || return
 }
 
 init_temp_parent() {
