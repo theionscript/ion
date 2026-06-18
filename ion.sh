@@ -142,6 +142,7 @@
 # References
 # ----------
 #
+# - cplusplus.com
 # - shellhaters.org
 # - dylanaraps/pure-sh-bible
 # - lua.org/manual/5.4/manual.html
@@ -4041,7 +4042,7 @@ GLOBAL_H="$(cat <<'EOF'
 #ifndef INCLUDED_ION_PRELUDE
 	#define INCLUDED_ION_PRELUDE 1
 
-	#if __STDC__ && __STDC_VERSION__
+	#if defined(__STDC__) && defined(__STDC_VERSION__) && __STDC__ && __STDC_VERSION__
 		#define CSTD __STDC_VERSION__
 	#else
 		#define CSTD 0
@@ -4062,7 +4063,7 @@ GLOBAL_H="$(cat <<'EOF'
 		#define C94 1
 		#define C99 0
 		#define C11 0
-	#elif __STDC__
+	#elif defined(__STDC__) && __STDC__
 		#define C89 1
 		#define C94 0
 		#define C99 0
@@ -4074,9 +4075,32 @@ GLOBAL_H="$(cat <<'EOF'
 		#define C11 0
 	#endif
 
+	#include <assert.h>
 	#include <float.h>
 	#include <limits.h>
 	#include <stddef.h>
+	#include <stdlib.h>
+
+	#if C11
+		#define ASSERT(e, m) static_assert(e, m)
+	#else
+		/* from: pixelbeat.org/programming/gcc/static_assert.html */
+
+		#define ASSERT_CONCAT_(a, b) a##b
+		#define ASSERT_CONCAT(a, b) ASSERT_CONCAT_(a, b)
+
+		/* These can't be used after statements in c89 */
+
+		#ifdef __COUNTER__
+			#define ASSERT(e, m) ;enum { ASSERT_CONCAT(static_assert_, __COUNTER__) = 1/(int)(!!(e)) }
+		#else
+			/* This can't be used twice on the same line so ensure if using in headers
+			 * that the headers are not included twice (by wrapping in #ifndef...#endif)
+			 * Note it doesn't cause an issue when used on same line of separate modules
+			 * compiled with gcc -combine -fwhole-program  */
+			#define ASSERT(e, m) ;enum { ASSERT_CONCAT(assert_line_, __LINE__) = 1/(int)(!!(e)) }
+		#endif
+	#endif
 
 	#if C99
 		#include <stdbool.h>
@@ -4084,9 +4108,9 @@ GLOBAL_H="$(cat <<'EOF'
 		typedef enum { false, true } bool;
 	#endif
 
-	typedef unsigned char byte;
-
 	#define null NULL
+
+	typedef unsigned char byte;
 
 	#define I8 INT8_C
 	#define I8_MIN INT8_MIN
@@ -4123,7 +4147,7 @@ GLOBAL_H="$(cat <<'EOF'
 		#define I64_MIN INT64_MIN
 		#define I64_MAX INT64_MAX
 		typedef int64_t i64;
-	#elif REQUIRE_64BITS
+	#else
 		#define I64(I) I##l
 		#define I64_MIN LONG_MIN
 		#define I64_MAX LONG_MAX
@@ -4136,8 +4160,8 @@ GLOBAL_H="$(cat <<'EOF'
 		#define U64_MIN 0
 		#define U64_MAX UINT64_MAX
 		typedef uint64_t u64;
-	#elif REQUIRE_64BITS
-		#define U64(I) I##ul
+	#else
+		#define U64(U) U##ul
 		#define U64_MIN ULONG_MIN
 		#define U64_MAX ULONG_MAX
 		typedef unsigned long int u64;
@@ -4221,7 +4245,7 @@ EOF
 
 GLOBAL_C="$(cat <<'EOF'
 int main(void) {
-	return 0/*EXIT_SUCCESS*/;
+	return EXIT_SUCCESS;
 }
 EOF
 )"
@@ -5733,9 +5757,9 @@ start_c() {
 		-Werror=missing-prototypes \
 		-Werror=implicit-function-declaration \
 		-Wno-ignored-optimization-argument \
+		-fasynchronous-unwind-tables \
 		-fstack-clash-protection \
 		-fstack-protector-strong \
-		-fasynchronous-unwind-tables \
 		-fno-common \
 		-flto \
 		-fPIE \
@@ -7183,7 +7207,7 @@ derive() {
 		}
 	}
 
-stop_temp_shared() {
+deinit_temp_shared() {
 	file_remove "$ION_TEMP_DOCUMENT_BLANK" || true
 	file_remove "$ION_TEMP_FILTER_EMPTY" || true
 	file_remove "$ION_TEMP_FILTER_TEST" || true
@@ -7194,7 +7218,7 @@ stop_temp_shared() {
 	file_remove "$ION_TEMP_TEMPLATE_HTML" || true
 }
 
-stop_temp_parent() {
+deinit_temp_parent() {
 	file_remove "$TEMP_SED" || true
 	file_remove "$TEMP_WATCH_LOCK" || true
 	file_remove "$TEMP_WATCH_STREAM" || true
@@ -7214,12 +7238,14 @@ stop_temp_parent() {
 
 deinit() {
 	if test "$STARTED"; then
-		if have_parent; then
-			stop_temp_shared || true
-		else
+		if ! have_parent; then
 			stop_server || true
 			stop_watcher || true
-			stop_temp_parent || true
+			deinit_temp_parent || true
+		fi
+
+		if ! have_parent || test "$ION_CLUSTER" = 1; then
+			deinit_temp_shared || true
 		fi
 
 		STARTED=
@@ -7783,18 +7809,18 @@ init_check_env() {
 	! test "$ION_INPUT" || init_check_dir ION_INPUT "$ION_INPUT" || return
 	init_check_paths ION_MIRRORS "$ION_MIRRORS" || return
 
-	init_check_path ION_TEMP_DOCUMENT_BLANK "$ION_TEMP_DOCUMENT_BLANK" || return
-	init_check_path ION_TEMP_FILTER_EMPTY "$ION_TEMP_FILTER_EMPTY" || return
-	init_check_path ION_TEMP_FILTER_TEST "$ION_TEMP_FILTER_TEST" || return
-	init_check_path ION_TEMP_FILTER_EXTRACT "$ION_TEMP_FILTER_EXTRACT" || return
-	init_check_path ION_TEMP_FILTER_META "$ION_TEMP_FILTER_META" || return
-	init_check_path ION_TEMP_FILTER_DOCUMENT "$ION_TEMP_FILTER_DOCUMENT" || return
-	init_check_path ION_TEMP_TEMPLATE_JSON "$ION_TEMP_TEMPLATE_JSON" || return
-	init_check_path ION_TEMP_TEMPLATE_HTML "$ION_TEMP_TEMPLATE_HTML" || return
-	init_check_path ION_TEMP_SOURCE_STYLES "$ION_TEMP_SOURCE_STYLES" || return
-	init_check_path ION_TEMP_SOURCE_SCRIPTS "$ION_TEMP_SOURCE_SCRIPTS" || return
-	init_check_path ION_TEMP_GLOBAL_C "$ION_TEMP_GLOBAL_C" || return
-	init_check_path ION_TEMP_GLOBAL_C_BIN "$ION_TEMP_GLOBAL_C_BIN" || return
+	! test "$ION_TEMP_DOCUMENT_BLANK" || init_check_path ION_TEMP_DOCUMENT_BLANK "$ION_TEMP_DOCUMENT_BLANK" || return
+	! test "$ION_TEMP_FILTER_EMPTY" || init_check_path ION_TEMP_FILTER_EMPTY "$ION_TEMP_FILTER_EMPTY" || return
+	! test "$ION_TEMP_FILTER_TEST" || init_check_path ION_TEMP_FILTER_TEST "$ION_TEMP_FILTER_TEST" || return
+	! test "$ION_TEMP_FILTER_EXTRACT" || init_check_path ION_TEMP_FILTER_EXTRACT "$ION_TEMP_FILTER_EXTRACT" || return
+	! test "$ION_TEMP_FILTER_META" || init_check_path ION_TEMP_FILTER_META "$ION_TEMP_FILTER_META" || return
+	! test "$ION_TEMP_FILTER_DOCUMENT" || init_check_path ION_TEMP_FILTER_DOCUMENT "$ION_TEMP_FILTER_DOCUMENT" || return
+	! test "$ION_TEMP_TEMPLATE_JSON" || init_check_path ION_TEMP_TEMPLATE_JSON "$ION_TEMP_TEMPLATE_JSON" || return
+	! test "$ION_TEMP_TEMPLATE_HTML" || init_check_path ION_TEMP_TEMPLATE_HTML "$ION_TEMP_TEMPLATE_HTML" || return
+	! test "$ION_TEMP_SOURCE_STYLES" || init_check_path ION_TEMP_SOURCE_STYLES "$ION_TEMP_SOURCE_STYLES" || return
+	! test "$ION_TEMP_SOURCE_SCRIPTS" || init_check_path ION_TEMP_SOURCE_SCRIPTS "$ION_TEMP_SOURCE_SCRIPTS" || return
+	! test "$ION_TEMP_GLOBAL_C" || init_check_path ION_TEMP_GLOBAL_C "$ION_TEMP_GLOBAL_C" || return
+	! test "$ION_TEMP_GLOBAL_C_BIN" || init_check_path ION_TEMP_GLOBAL_C_BIN "$ION_TEMP_GLOBAL_C_BIN" || return
 }
 
 init_check_bsd() {
@@ -7938,6 +7964,7 @@ init_temp_server_config() {
 
 init_temp_source_style() {
 	local temp
+
 	temp="$(start_temp_file src css)" || return
 
 	paths_split_raw "$ION_SOURCE_STYLES" | {
@@ -7957,6 +7984,7 @@ init_temp_source_style() {
 
 init_temp_source_script() {
 	local temp
+
 	temp="$(start_temp_file src js)" || return
 
 	if building_script_global; then
@@ -8053,14 +8081,14 @@ init() {
 	init_basics || return
 	init_signals || return
 
-	if ! have_parent || test "$ION_CLUSTER" = 1; then
-		init_temp_shared || return
-	fi
-
 	if ! have_parent; then
 		init_env || return
 		init_check || return
 		init_temp_parent || return
+	fi
+
+	if ! have_parent || test "$ION_CLUSTER" = 1; then
+		init_temp_shared || return
 	fi
 
 	if test "$ION_START_ID" = 1; then
