@@ -1044,6 +1044,9 @@ export ION_BIN_XARGS_GNU="${ION_BIN_XARGS_GNU:-}"
 
 export ION_DEV_URANDOM="${ION_DEV_URANDOM:-"/dev/urandom"}"
 
+export ION_LIB_C="${ION_LIB_C:-}"
+export ION_LIB_UV="${ION_LIB_UV:-}"
+
 export ION_SERVE="${ION_SERVE:-2}"
 export ION_SERVE_PORT="${ION_SERVE_PORT:-}"
 export ION_SERVE_PRODUCTION="${ION_SERVE_PRODUCTION:-0}"
@@ -7331,13 +7334,6 @@ init_env_find() {
 	export ION_BIN_XARGS="$ea__bin_xargs"
 }
 
-init_env_input() {
-	if test "$ION_INPUT"; then
-		dt__normal="$(path_normal "$ION_INPUT")" || return
-		export ION_INPUT="$dt__normal"
-	fi
-}
-
 init_env_styles() {
 	paths_split_raw "$1" | {
 		eb__styles=
@@ -7392,6 +7388,13 @@ init_env_source() {
 			dg__scripts="$(init_env_scripts "$dg__source")" || return
 			export ION_SOURCE_SCRIPTS="$dg__scripts"
 		fi
+	fi
+}
+
+init_env_input() {
+	if test "$ION_INPUT"; then
+		dt__normal="$(path_normal "$ION_INPUT")" || return
+		export ION_INPUT="$dt__normal"
 	fi
 }
 
@@ -7713,6 +7716,9 @@ init_check_env() {
 
 	init_check_path ION_DEV_URANDOM "$ION_DEV_URANDOM" || return
 
+	! test "$ION_LIB_C" || init_check_bool ION_LIB_C "$ION_LIB_C" || return
+	! test "$ION_LIB_UV" || init_check_bool ION_LIB_UV "$ION_LIB_UV" || return
+
 	init_check_uint ION_SERVE "$ION_SERVE" || return
 	init_check_bool ION_SERVE_WWW "$ION_SERVE_WWW" || return
 	init_check_bool ION_SERVE_PRODUCTION "$ION_SERVE_PRODUCTION" || return
@@ -8005,7 +8011,6 @@ init_temp_system() {
 	export ION_TEMP_SYSTEM_BLANK_IN="$temp"
 
 	temp="$(start_temp_file system-out-blank out)" || return
-	start_cc "$ION_TEMP_SYSTEM_BLANK_IN" "$temp" || return
 	export ION_TEMP_SYSTEM_BLANK_OUT="$temp"
 }
 
@@ -8039,6 +8044,40 @@ init_temp_parent() {
 	init_temp_output || return
 }
 
+init_system() {
+	local can_cc
+	local can_cc_uv
+
+	can_cc=0
+	can_cc_uv=0
+
+	if ! test "$ION_LIB_C"; then
+		start_cc \
+			"$ION_TEMP_SYSTEM_BLANK_IN" \
+			"$ION_TEMP_SYSTEM_BLANK_OUT" \
+		|| can_cc=$?
+
+		if test "$can_cc" -eq 0; then
+			export ION_LIB_C=1
+		else
+			export ION_LIB_C=0
+		fi
+	fi
+
+	if ! test "$ION_LIB_UV"; then
+		start_cc \
+			"$ION_TEMP_SYSTEM_BLANK_IN" \
+			"$ION_TEMP_SYSTEM_BLANK_OUT" \
+		|| can_cc_uv=$?
+
+		if test "$can_cc_uv" -eq 0; then
+			export ION_LIB_UV=1
+		else
+			export ION_LIB_UV=0
+		fi
+	fi
+}
+
 init() {
 	if test "$STARTED"; then
 		return
@@ -8057,6 +8096,7 @@ init() {
 
 	if ! have_parent || test "$ION_CLUSTER" = 1; then
 		init_temp_shared || return
+		init_system || return
 	fi
 
 	if test "$ION_START_ID" = 1; then
