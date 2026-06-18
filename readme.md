@@ -3,7 +3,7 @@
 
 **\*** It's still early days; this project is a pre-alpha
 minimum-viable-product that's just shy of being production-ready – for
-example, the post server is insecure and needs replacing, the query system
+example, the post server is insecure and is being replaced, the query system
 needs optimising, etc. This readme describes both where ion is, and also
 what it's been designed for – any features that are still upcoming
 have been marked with an asterisk.

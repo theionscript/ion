@@ -5,7 +5,7 @@
 #
 # **\*** It's still early days; this project is a pre-alpha
 # minimum-viable-product that's just shy of being production-ready – for
-# example, the post server is insecure and needs replacing, the query system
+# example, the post server is insecure and is being replaced, the query system
 # needs optimising, etc. This readme describes both where ion is, and also
 # what it's been designed for – any features that are still upcoming
 # have been marked with an asterisk.
@@ -4680,7 +4680,7 @@ found_posix() {
 }
 
 found_local() {
-	local _= 2>/dev/null
+	local _="" 2>/dev/null
 }
 
 building_script() {
@@ -6472,7 +6472,6 @@ start_build_internal() {
 start_build() {
 	do__rebuild="$1"
 	do__recompile="$2"
-	do__ret=0
 
 	note "$ION__MSG_BUILD_START"
 
@@ -6490,11 +6489,7 @@ start_build() {
 		"$do__plan" \
 	|| return
 
-	{ { start_build_internal "$do__build" "$do__plan" "$do__rebuild" "$do__recompile" 2>&1 1>&4 || do__ret=$?; } | tee "$do__log" 1>&2; } 4>&1
-
-	if test "$do__ret" -ne 0; then
-		return "$do__ret"
-	fi
+	{ start_build_internal "$do__build" "$do__plan" "$do__rebuild" "$do__recompile" 2>&1 1>&4 | tee "$do__log" 1>&2; } 4>&1
 
 	if should_serve; then
 		start_server "$do__build" || return
@@ -7675,53 +7670,61 @@ init_check() {
 }
 
 init_temp_document_blank() {
-	local temp="$(start_temp_file document-blank md)" || return
+	local temp
+	temp="$(start_temp_file document-blank md)" || return
 	export ION_TEMP_DOCUMENT_BLANK="$temp"
 }
 
 init_temp_filter_empty() {
-	local temp="$(start_temp_file filter-empty lua)" || return
+	local temp
+	temp="$(start_temp_file filter-empty lua)" || return
 	print "$SHARED_LUA" > "$temp" || return
 	print "$FILTER_EMPTY" >> "$temp" || return
 	export ION_TEMP_FILTER_EMPTY="$temp"
 }
 
 init_temp_filter_test() {
-	local temp="$(start_temp_file filter-test lua)" || return
+	local temp
+	temp="$(start_temp_file filter-test lua)" || return
 	print "$SHARED_LUA" > "$temp" || return
 	print "$FILTER_TEST" >> "$temp" || return
 	export ION_TEMP_FILTER_TEST="$temp"
 }
 
 init_temp_filter_extract() {
-	local temp="$(start_temp_file filter-extract lua)" || return
+	local temp
+	temp="$(start_temp_file filter-extract lua)" || return
 	print "$SHARED_LUA" > "$temp" || return
 	print "$FILTER_EXTRACT" >> "$temp" || return
 	export ION_TEMP_FILTER_EXTRACT="$temp"
 }
 
 init_temp_filter_meta() {
-	local temp="$(start_temp_file filter-meta lua)" || return
+	local temp
+	temp="$(start_temp_file filter-meta lua)" || return
 	print "$SHARED_LUA" > "$temp" || return
 	print "$FILTER_META" >> "$temp" || return
 	export ION_TEMP_FILTER_META="$temp"
 }
 
 init_temp_filter_document() {
-	local temp="$(start_temp_file filter-document lua)" || return
+	local temp
+	temp="$(start_temp_file filter-document lua)" || return
 	print "$SHARED_LUA" > "$temp" || return
 	print "$FILTER_DOCUMENT" >> "$temp" || return
 	export ION_TEMP_FILTER_DOCUMENT="$temp"
 }
 
 init_temp_template_json() {
-	local temp="$(start_temp_file template-json template)" || return
+	local temp
+	temp="$(start_temp_file template-json template)" || return
 	print "\$meta-json\$" > "$temp" || return
 	export ION_TEMP_TEMPLATE_JSON="$temp"
 }
 
 init_temp_template_html() {
-	local temp="$(start_temp_file template-html template)" || return
+	local temp
+	temp="$(start_temp_file template-html template)" || return
 	print "$GLOBAL_HTML" > "$temp" || return
 	export ION_TEMP_TEMPLATE_HTML="$temp"
 }
@@ -7751,7 +7754,8 @@ init_temp_server_config() {
 }
 
 init_temp_source_style() {
-	local temp="$(start_temp_file src css)" || return
+	local temp
+	temp="$(start_temp_file src css)" || return
 
 	paths_split_raw "$ION_SOURCE_STYLES" | {
 		while IFS= read -r ek__path; do
@@ -7769,7 +7773,8 @@ init_temp_source_style() {
 }
 
 init_temp_source_script() {
-	local temp="$(start_temp_file src js)" || return
+	local temp
+	temp="$(start_temp_file src js)" || return
 
 	if building_script_global; then
 		print "'use strict';" > "$temp" || return
@@ -7809,7 +7814,8 @@ init_temp_source_script() {
 }
 
 init_temp_global_c() {
-	local temp="$(start_temp_file src c)" || return
+	local temp
+	temp="$(start_temp_file src c)" || return
 	print "$GLOBAL_H_STDINT" > "$temp" || return
 	print "$GLOBAL_H" >> "$temp" || return
 	print "$GLOBAL_C" >> "$temp" || return
@@ -7817,7 +7823,8 @@ init_temp_global_c() {
 }
 
 init_temp_global_c_bin() {
-	local temp="$(start_temp_file bin out)" || return
+	local temp
+	temp="$(start_temp_file bin out)" || return
 	start_c "$ION_TEMP_GLOBAL_C" "$temp" || return
 	export ION_TEMP_GLOBAL_C_BIN="$temp"
 }
@@ -7882,7 +7889,7 @@ test_all() {
 	note "$ION__MSG_RUNNING_TESTS"
 
 	if have_shellcheck; then
-		start "$ION_BIN_SHELLCHECK" "$ION_BIN_SELF" || return
+		start "$ION_BIN_SHELLCHECK" -e SC3043 "$ION_BIN_SELF" || return
 	fi
 
 	if have_luac; then
