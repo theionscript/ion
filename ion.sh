@@ -8088,6 +8088,7 @@ init_system() {
 		start_cc \
 			"$ION_TEMP_SYSTEM_BLANK_IN" \
 			"$ION_TEMP_SYSTEM_BLANK_OUT" \
+			uv \
 		|| can_cc_uv=$?
 
 		if test "$can_cc_uv" -eq 0; then
