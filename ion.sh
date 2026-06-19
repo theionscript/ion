@@ -8025,9 +8025,7 @@ init_temp_system() {
 	local temp
 
 	temp="$(start_temp_file system-in-blank c)" || return
-	print "$GLOBAL_H_STDINT" > "$temp" || return
-	print "$GLOBAL_H" >> "$temp" || return
-	print "$GLOBAL_C" >> "$temp" || return
+	print "int main(void) { return 0; }" > "$temp" || return
 	export ION_TEMP_SYSTEM_BLANK_IN="$temp"
 
 	temp="$(start_temp_file system-out-blank out)" || return
