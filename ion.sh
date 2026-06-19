@@ -779,6 +779,8 @@
 #   - started adding c support
 #   - started switching to using ˋlocalˋ internally
 #   - started sharing immutable temporary files across processes
+#   - added flags for library support
+#   - added pkgconf support
 #   - added the c compiler
 # - 0.11.0; 2026-6-9
 #   - added the readme
@@ -1024,6 +1026,7 @@ export ION_BIN_LN="${ION_BIN_LN:-"ln"}"
 export ION_BIN_LUAC="${ION_BIN_LUAC:-"luac"}"
 export ION_BIN_OPENSSL="${ION_BIN_OPENSSL:-"openssl"}"
 export ION_BIN_PANDOC="${ION_BIN_PANDOC:-"pandoc"}"
+export ION_BIN_PKGCONF="${ION_BIN_PKGCONF:-"pkgconf:pkg-config"}"
 export ION_BIN_RCLONE="${ION_BIN_RCLONE:-"rclone"}"
 export ION_BIN_SHA256SUM="${ION_BIN_SHA256SUM:-"sha256sum"}"
 export ION_BIN_SHA256="${ION_BIN_SHA256:-"sha256"}"
@@ -5709,6 +5712,20 @@ start_many() {
 	return "$ev__ret"
 }
 
+start_pkgconf() {
+	local lib
+
+	if test "$1"; then
+		if test "$ION_BIN_PKGCONF"; then
+			"$ION_BIN_PKGCONF" --cflags --libs "$@"
+		else
+			for lib in "$@"; do
+				printf '-l%s ' "$lib"
+			done
+		fi
+	fi
+}
+
 start_cc() {
 	# see: developers.redhat.com/blog/2018/03/21/compiler-and-linker-flags-gcc
 
@@ -5743,6 +5760,7 @@ start_cc() {
 		-Wextra \
 		-Werror \
 		-D_FORTIFY_SOURCE=2 \
+		$(start_pkgconf "$@") \
 		-o "$2" \
 		"$1"
 }
@@ -7299,6 +7317,7 @@ init_env_find() {
 	ea__bin_openssl="$(init_env_bin "$ION_BIN_OPENSSL")" || return
 	ea__bin_pandoc="$(init_env_bin "$ION_BIN_PANDOC")" || return
 	ea__bin_parallel="$(init_env_bin "$ION_BIN_PARALLEL")" || return
+	ea__bin_pkgconf="$(init_env_bins "$ION_BIN_PKGCONF")" || return
 	ea__bin_rclone="$(init_env_bin "$ION_BIN_RCLONE")" || return
 	ea__bin_sha256sum="$(init_env_bin "$ION_BIN_SHA256SUM")" || return
 	ea__bin_sha256="$(init_env_bin "$ION_BIN_SHA256")" || return
@@ -7322,6 +7341,7 @@ init_env_find() {
 	export ION_BIN_OPENSSL="$ea__bin_openssl"
 	export ION_BIN_PANDOC="$ea__bin_pandoc"
 	export ION_BIN_PARALLEL="$ea__bin_parallel"
+	export ION_BIN_PKGCONF="$ea__bin_pkgconf"
 	export ION_BIN_RCLONE="$ea__bin_rclone"
 	export ION_BIN_SHA256SUM="$ea__bin_sha256sum"
 	export ION_BIN_SHA256="$ea__bin_sha256"
