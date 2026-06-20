@@ -5702,7 +5702,7 @@ start_pkgconf() {
 			"$ION_BIN_PKGCONF" --cflags --libs "$@"
 		else
 			for lib in "$@"; do
-				printf '-l%s ' "$lib"
+				printf '%s%s ' "-l" "$lib"
 			done
 		fi
 	fi
@@ -5736,6 +5736,7 @@ start_cc() {
 	in="$1"; shift
 	out="$1"; shift
 
+	# shellcheck disable=SC2046
 	start "$ION_BIN_CC" \
 		-std=c89 \
 		-O2 \
