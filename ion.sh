@@ -1047,8 +1047,9 @@ export ION_BIN_XARGS_GNU="${ION_BIN_XARGS_GNU:-}"
 
 export ION_DEV_URANDOM="${ION_DEV_URANDOM:-"/dev/urandom"}"
 
-export ION_LIB_C="${ION_LIB_C:-}"
 export ION_LIB_UV="${ION_LIB_UV:-}"
+export ION_LIB_YYJSON="${ION_LIB_YYJSON:-}"
+export ION_LIB_LLHTTP="${ION_LIB_LLHTTP:-}"
 
 export ION_SERVE="${ION_SERVE:-2}"
 export ION_SERVE_PORT="${ION_SERVE_PORT:-}"
@@ -1131,8 +1132,7 @@ export ION_TEMP_TEMPLATE_JSON="${ION_TEMP_TEMPLATE_JSON:-}"
 export ION_TEMP_TEMPLATE_HTML="${ION_TEMP_TEMPLATE_HTML:-}"
 export ION_TEMP_SOURCE_STYLES="${ION_TEMP_SOURCE_STYLES:-}"
 export ION_TEMP_SOURCE_SCRIPTS="${ION_TEMP_SOURCE_SCRIPTS:-}"
-export ION_TEMP_SYSTEM_BLANK_IN="${ION_TEMP_SYSTEM_BLANK_IN:-}"
-export ION_TEMP_SYSTEM_BLANK_OUT="${ION_TEMP_SYSTEM_BLANK_OUT:-}"
+export ION_TEMP_SYSTEM_BLANK="${ION_TEMP_SYSTEM_BLANK:-}"
 
 TEMP_SED=
 TEMP_WATCH_LOCK=
@@ -4832,20 +4832,14 @@ have_server() {
 	have_server_front && have_server_back
 }
 
-find_command() {
-	command -v "$@" 2>/dev/null || true
-}
-
-found_command() {
-	test "$(find_command "$@")"
-}
-
 found_os() {
 	test "$(uname -s)" = "$1"
 }
 
 found_posix() {
-	test -w /dev/null && test -w "$ION_TEMP" && found_command find && have_cc
+	test -w /dev/null && \
+		test -w "$ION_TEMP" && \
+		test -x "$ION_BIN_CC"
 }
 
 found_local() {
@@ -5270,18 +5264,6 @@ path_is_safe() {
 	esac
 }
 
-path_is_exec() {
-	test -x "$1"
-}
-
-path_is_file() {
-	test -f "$1"
-}
-
-path_is_dir() {
-	test -d "$1"
-}
-
 path_is_single() {
 	test "${1##*/*}"
 }
@@ -5443,7 +5425,7 @@ path_absolute() {
 
 	if path_is_absolute "$1"; then
 		ah__absolute="$1"
-	elif path_is_dir "$1"; then
+	elif test -d "$1"; then
 		ah__absolute="$(path_absolute_from "$1")" || return
 	elif path_is_name "$1"; then
 		ah__absolute="$(pwd)/$1" || return
@@ -5729,9 +5711,6 @@ start_pkgconf() {
 start_cc() {
 	# see: developers.redhat.com/blog/2018/03/21/compiler-and-linker-flags-gcc
 
-	# -l
-	# -I
-
 	# gcc:
 	#   -include
 	#   -fstack-clash-protection
@@ -5751,6 +5730,12 @@ start_cc() {
 	#   -static-pie
 	#   -flto
 
+	local in
+	local out
+
+	in="$1"; shift
+	out="$1"; shift
+
 	start "$ION_BIN_CC" \
 		-std=c89 \
 		-O2 \
@@ -5761,8 +5746,8 @@ start_cc() {
 		-Werror \
 		-D_FORTIFY_SOURCE=2 \
 		$(start_pkgconf "$@") \
-		-o "$2" \
-		"$1"
+		-o "$out" \
+		"$in"
 }
 
 start_stat() {
@@ -6033,7 +6018,7 @@ start_temp_template() {
 		SALT="$(start_random 16)" || return
 	fi
 
-	if path_is_dir "$ar__directory"; then
+	if test -d "$ar__directory"; then
 		ar__directory="$(path_trim_end "$ar__directory")/" || return
 	else
 		ar__directory=""
@@ -6135,8 +6120,6 @@ start_fswatch() {
 		ch__args="$ch__args"" -m poll_monitor"
 	fi
 
-	#set -m
-
 	if test "$ch__signal"; then
 		# shellcheck disable=SC2086
 		(start "$ION_BIN_FSWATCH" $ch__args "$@" | {
@@ -6150,8 +6133,6 @@ start_fswatch() {
 		start "$ION_BIN_FSWATCH" $ch__args "$@" >/dev/null &
 		START_PID=$!
 	fi
-
-	#set +m
 
 	IFS="$ch__ifs"
 	return $ch__ret
@@ -7218,9 +7199,7 @@ deinit_temp_parent() {
 
 	file_remove "$ION_TEMP_SOURCE_STYLES" || true
 	file_remove "$ION_TEMP_SOURCE_SCRIPTS" || true
-
-	file_remove "$ION_TEMP_SYSTEM_BLANK_IN" || true
-	file_remove "$ION_TEMP_SYSTEM_BLANK_OUT" || true
+	file_remove "$ION_TEMP_SYSTEM_BLANK" || true
 
 	if test "$OUTPUT_TEMP"; then
 		dir_remove "$ION_OUTPUT" || true
@@ -7257,7 +7236,15 @@ init_basics() {
 "
 }
 
-init_env_bin() {
+init_find_lib() {
+	if start_cc "$ION_TEMP_SYSTEM_BLANK" "/dev/null" "$@" 2>&1; then
+		printf 1
+	else
+		printf 0
+	fi
+}
+
+init_find_bin() {
 	cs__command="$1"
 	cs__self="$2"
 
@@ -7266,7 +7253,7 @@ init_env_bin() {
 	if path_is_absolute "$cs__command"; then
 		cs__absolute="$cs__command"
 	elif path_is_name "$cs__command" && ! test -f "$cs__command"; then
-		cs__absolute="$(find_command "$cs__command")" || return
+		cs__absolute="$(command -v "$cs__command" 2>/dev/null)" || return
 	elif test "$cs__command"; then
 		cs__absolute="$(path_normal "$cs__command")" || return
 	fi
@@ -7275,7 +7262,7 @@ init_env_bin() {
 		cs__self=1
 	fi
 
-	if path_is_absolute "$cs__absolute" && ! test "$cs__self" && ! path_is_exec "$cs__absolute"; then
+	if path_is_absolute "$cs__absolute" && ! test "$cs__self" && ! test -x "$cs__absolute"; then
 		error "$ION__MSG_COMMAND_NOT_EXEC" "$cs__command" "$cs__absolute" || return
 	fi
 
@@ -7286,14 +7273,14 @@ init_env_bin() {
 	fi
 }
 
-init_env_bins() {
+init_find_bins() {
 	dc__commands="$1"; shift
 
 	paths_split_raw "$dc__commands" | {
 		dc__found=
 
 		while IFS= read -r dc__command; do
-			dc__found="$(init_env_bin "$dc__command" "$@")" || continue
+			dc__found="$(init_find_bin "$dc__command" "$@")" || continue
 
 			if test "$dc__found"; then
 				break
@@ -7304,30 +7291,30 @@ init_env_bins() {
 	}
 }
 
-init_env_find() {
-	ea__bin_self="$(init_env_bin "$ION_BIN_SELF" 1)" || return
-	ea__bin_caddy="$(init_env_bin "$ION_BIN_CADDY")" || return
-	ea__bin_cc="$(init_env_bins "$ION_BIN_CC")" || return
-	ea__bin_esbuild="$(init_env_bin "$ION_BIN_ESBUILD")" || return
-	ea__bin_find="$(init_env_bins "$ION_BIN_FIND")" || return
-	ea__bin_flock="$(init_env_bin "$ION_BIN_FLOCK")" || return
-	ea__bin_fswatch="$(init_env_bin "$ION_BIN_FSWATCH")" || return
-	ea__bin_ln="$(init_env_bin "$ION_BIN_LN")" || return
-	ea__bin_luac="$(init_env_bin "$ION_BIN_LUAC")" || return
-	ea__bin_openssl="$(init_env_bin "$ION_BIN_OPENSSL")" || return
-	ea__bin_pandoc="$(init_env_bin "$ION_BIN_PANDOC")" || return
-	ea__bin_parallel="$(init_env_bin "$ION_BIN_PARALLEL")" || return
-	ea__bin_pkgconf="$(init_env_bins "$ION_BIN_PKGCONF")" || return
-	ea__bin_rclone="$(init_env_bin "$ION_BIN_RCLONE")" || return
-	ea__bin_sha256sum="$(init_env_bin "$ION_BIN_SHA256SUM")" || return
-	ea__bin_sha256="$(init_env_bin "$ION_BIN_SHA256")" || return
-	ea__bin_shasum="$(init_env_bin "$ION_BIN_SHASUM")" || return
-	ea__bin_shellcheck="$(init_env_bin "$ION_BIN_SHELLCHECK")" || return
-	ea__bin_ssh="$(init_env_bin "$ION_BIN_SSH")" || return
-	ea__bin_stat="$(init_env_bin "$ION_BIN_STAT")" || return
-	ea__bin_tcpserver="$(init_env_bin "$ION_BIN_TCPSERVER")" || return
-	ea__bin_tidy="$(init_env_bin "$ION_BIN_TIDY")" || return
-	ea__bin_xargs="$(init_env_bin "$ION_BIN_XARGS")" || return
+init_env_bins() {
+	ea__bin_self="$(init_find_bin "$ION_BIN_SELF" 1)" || return
+	ea__bin_caddy="$(init_find_bin "$ION_BIN_CADDY")" || return
+	ea__bin_cc="$(init_find_bins "$ION_BIN_CC")" || return
+	ea__bin_esbuild="$(init_find_bin "$ION_BIN_ESBUILD")" || return
+	ea__bin_find="$(init_find_bins "$ION_BIN_FIND")" || return
+	ea__bin_flock="$(init_find_bin "$ION_BIN_FLOCK")" || return
+	ea__bin_fswatch="$(init_find_bin "$ION_BIN_FSWATCH")" || return
+	ea__bin_ln="$(init_find_bin "$ION_BIN_LN")" || return
+	ea__bin_luac="$(init_find_bin "$ION_BIN_LUAC")" || return
+	ea__bin_openssl="$(init_find_bin "$ION_BIN_OPENSSL")" || return
+	ea__bin_pandoc="$(init_find_bin "$ION_BIN_PANDOC")" || return
+	ea__bin_parallel="$(init_find_bin "$ION_BIN_PARALLEL")" || return
+	ea__bin_pkgconf="$(init_find_bins "$ION_BIN_PKGCONF")" || return
+	ea__bin_rclone="$(init_find_bin "$ION_BIN_RCLONE")" || return
+	ea__bin_sha256sum="$(init_find_bin "$ION_BIN_SHA256SUM")" || return
+	ea__bin_sha256="$(init_find_bin "$ION_BIN_SHA256")" || return
+	ea__bin_shasum="$(init_find_bin "$ION_BIN_SHASUM")" || return
+	ea__bin_shellcheck="$(init_find_bin "$ION_BIN_SHELLCHECK")" || return
+	ea__bin_ssh="$(init_find_bin "$ION_BIN_SSH")" || return
+	ea__bin_stat="$(init_find_bin "$ION_BIN_STAT")" || return
+	ea__bin_tcpserver="$(init_find_bin "$ION_BIN_TCPSERVER")" || return
+	ea__bin_tidy="$(init_find_bin "$ION_BIN_TIDY")" || return
+	ea__bin_xargs="$(init_find_bin "$ION_BIN_XARGS")" || return
 
 	export ION_BIN_SELF="$ea__bin_self"
 	export ION_BIN_CADDY="$ea__bin_caddy"
@@ -7359,13 +7346,13 @@ init_env_styles() {
 		eb__styles=
 
 		while IFS= read -r eb__path; do
-			if path_is_dir "$eb__path"; then
+			if test -d "$eb__path"; then
 				eb__path="$(path_join "$eb__path" "$ION__NAME_MAIN_CSS")" || continue
 			fi
 
 			eb__ext="$(path_ext_get "$eb__path")" || continue
 
-			if path_is_file "$eb__path" && ext_style "$eb__ext"; then
+			if test -f "$eb__path" && ext_style "$eb__ext"; then
 				eb__styles="$(paths_join "$eb__styles" "$eb__path")"
 			fi
 		done
@@ -7379,13 +7366,13 @@ init_env_scripts() {
 		ec__scripts=
 
 		while IFS= read -r ec__path; do
-			if path_is_dir "$ec__path"; then
+			if test -d "$ec__path"; then
 				ec__path="$(path_join "$ec__path" "$ION__NAME_MAIN_JS")" || continue
 			fi
 
 			ec__ext="$(path_ext_get "$ec__path")" || continue
 
-			if path_is_file "$ec__path" && ext_script "$ec__ext"; then
+			if test -f "$ec__path" && ext_script "$ec__ext"; then
 				ec__scripts="$(paths_join "$ec__scripts" "$ec__path")"
 			fi
 		done
@@ -7418,7 +7405,7 @@ init_env_input() {
 	fi
 }
 
-init_env_build() {
+init_env_output() {
 	if test "$ION_OUTPUT"; then
 		du__normal="$(path_normal "$ION_OUTPUT")" || return
 		export ION_OUTPUT="$du__normal"
@@ -7437,15 +7424,6 @@ init_env_inbox() {
 		dz__normal="$(paths_normal "$ION_INBOX")" || return
 		export ION_INBOX="$dz__normal"
 	fi
-}
-
-init_env() {
-	init_env_find || return
-	init_env_source || return
-	init_env_input || return
-	init_env_build || return
-	init_env_mirrors || return
-	init_env_inbox || return
 }
 
 init_check_shell() {
@@ -7501,7 +7479,7 @@ init_check_name() {
 }
 
 init_check_dir() {
-	if ! path_is_dir "$2" || ! path_is_safe "$2"; then
+	if ! test -d "$2" || ! path_is_safe "$2"; then
 		error "$ION__MSG_INVALID_ENVIRONMENT" "$1" "$2" || return
 	fi
 }
@@ -7736,8 +7714,9 @@ init_check_env() {
 
 	init_check_path ION_DEV_URANDOM "$ION_DEV_URANDOM" || return
 
-	! test "$ION_LIB_C" || init_check_bool ION_LIB_C "$ION_LIB_C" || return
 	! test "$ION_LIB_UV" || init_check_bool ION_LIB_UV "$ION_LIB_UV" || return
+	! test "$ION_LIB_YYJSON" || init_check_bool ION_LIB_YYJSON "$ION_LIB_YYJSON" || return
+	! test "$ION_LIB_LLHTTP" || init_check_bool ION_LIB_LLHTTP "$ION_LIB_LLHTTP" || return
 
 	init_check_uint ION_SERVE "$ION_SERVE" || return
 	init_check_bool ION_SERVE_WWW "$ION_SERVE_WWW" || return
@@ -7816,8 +7795,7 @@ init_check_env() {
 	! test "$ION_TEMP_TEMPLATE_HTML" || init_check_path ION_TEMP_TEMPLATE_HTML "$ION_TEMP_TEMPLATE_HTML" || return
 	! test "$ION_TEMP_SOURCE_STYLES" || init_check_path ION_TEMP_SOURCE_STYLES "$ION_TEMP_SOURCE_STYLES" || return
 	! test "$ION_TEMP_SOURCE_SCRIPTS" || init_check_path ION_TEMP_SOURCE_SCRIPTS "$ION_TEMP_SOURCE_SCRIPTS" || return
-	! test "$ION_TEMP_SYSTEM_BLANK_IN" || init_check_path ION_TEMP_SYSTEM_BLANK_IN "$ION_TEMP_SYSTEM_BLANK_IN" || return
-	! test "$ION_TEMP_SYSTEM_BLANK_OUT" || init_check_path ION_TEMP_SYSTEM_BLANK_OUT "$ION_TEMP_SYSTEM_BLANK_OUT" || return
+	! test "$ION_TEMP_SYSTEM_BLANK" || init_check_path ION_TEMP_SYSTEM_BLANK "$ION_TEMP_SYSTEM_BLANK" || return
 }
 
 init_check_bsd() {
@@ -7854,25 +7832,6 @@ init_check_gnu() {
 			export ION_BIN_XARGS_GNU=0
 		fi
 	fi
-}
-
-init_check_commands() {
-	init_check_shell || return
-	init_check_bsd || return
-	init_check_gnu || return
-
-	init_check_command have_find "bfs or stat" || return
-	init_check_command have_hash "openssl" || return
-	init_check_command have_random "openssl" || return
-
-	init_check_command can_build "xargs" || return
-	init_check_command can_watch "fswatch" || return
-	init_check_command can_serve "tcpserver and caddy" || return
-}
-
-init_check() {
-	init_check_env || return
-	init_check_commands || return
 }
 
 init_temp_document_blank() {
@@ -8026,10 +7985,7 @@ init_temp_system() {
 
 	temp="$(start_temp_file system-in-blank c)" || return
 	print "int main(void) { return 0; }" > "$temp" || return
-	export ION_TEMP_SYSTEM_BLANK_IN="$temp"
-
-	temp="$(start_temp_file system-out-blank out)" || return
-	export ION_TEMP_SYSTEM_BLANK_OUT="$temp"
+	export ION_TEMP_SYSTEM_BLANK="$temp"
 }
 
 init_temp_output() {
@@ -8049,7 +8005,6 @@ init_temp_shared() {
 	init_temp_filter_document || return
 	init_temp_template_json || return
 	init_temp_template_html || return
-	init_temp_system || return
 }
 
 init_temp_parent() {
@@ -8059,41 +8014,26 @@ init_temp_parent() {
 	init_temp_server_config || return
 	init_temp_source_style || return
 	init_temp_source_script || return
+	init_temp_system || return
 	init_temp_output || return
 }
 
-init_system() {
-	local can_cc
-	local can_cc_uv
-
-	can_cc=0
-	can_cc_uv=0
-
-	if ! test "$ION_LIB_C"; then
-		start_cc \
-			"$ION_TEMP_SYSTEM_BLANK_IN" \
-			"$ION_TEMP_SYSTEM_BLANK_OUT" \
-		|| can_cc=$?
-
-		if test "$can_cc" -eq 0; then
-			export ION_LIB_C=1
-		else
-			export ION_LIB_C=0
-		fi
-	fi
+init_env_libs() {
+	local found
 
 	if ! test "$ION_LIB_UV"; then
-		start_cc \
-			"$ION_TEMP_SYSTEM_BLANK_IN" \
-			"$ION_TEMP_SYSTEM_BLANK_OUT" \
-			uv \
-		|| can_cc_uv=$?
+		found="$(init_find_lib uv)" || true
+		export ION_LIB_UV="$found"
+	fi
 
-		if test "$can_cc_uv" -eq 0; then
-			export ION_LIB_UV=1
-		else
-			export ION_LIB_UV=0
-		fi
+	if ! test "$ION_LIB_YYJSON"; then
+		found="$(init_find_lib yyjson)" || true
+		export ION_LIB_YYJSON="$found"
+	fi
+
+	if ! test "$ION_LIB_LLHTTP"; then
+		found="$(init_find_lib llhttp)" || true
+		export ION_LIB_LLHTTP="$found"
 	fi
 }
 
@@ -8108,14 +8048,31 @@ init() {
 	init_signals || return
 
 	if ! have_parent; then
-		init_env || return
-		init_check || return
+		init_env_bins || return
+		init_env_input || return
+		init_env_output || return
+		init_env_source || return
+		init_env_mirrors || return
+		init_env_inbox || return
+
+		init_check_shell || return
+		init_check_env || return
+		init_check_bsd || return
+		init_check_gnu || return
+
+		init_check_command have_find "bfs or stat" || return
+		init_check_command have_hash "openssl" || return
+		init_check_command have_random "openssl" || return
+		init_check_command can_build "xargs" || return
+		init_check_command can_watch "fswatch" || return
+		init_check_command can_serve "tcpserver and caddy" || return
+
 		init_temp_parent || return
+		init_env_libs || return
 	fi
 
 	if ! have_parent || test "$ION_CLUSTER" = 1; then
 		init_temp_shared || return
-		init_system || return
 	fi
 
 	if test "$ION_START_ID" = 1; then
