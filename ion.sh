@@ -1133,6 +1133,7 @@ export ION_TEMP_TEMPLATE_HTML="${ION_TEMP_TEMPLATE_HTML:-}"
 export ION_TEMP_SOURCE_STYLES="${ION_TEMP_SOURCE_STYLES:-}"
 export ION_TEMP_SOURCE_SCRIPTS="${ION_TEMP_SOURCE_SCRIPTS:-}"
 export ION_TEMP_SYSTEM_BLANK="${ION_TEMP_SYSTEM_BLANK:-}"
+export ION_TEMP_SYSTEM_SERVE="${ION_TEMP_SYSTEM_SERVE:-}"
 
 TEMP_SED=
 TEMP_WATCH_LOCK=
@@ -4044,7 +4045,7 @@ typedef uint_least32_t uint_fast32_t;
 EOF
 )"
 
-GLOBAL_H="$(cat <<'EOF'
+GLOBAL_H_SHARED="$(cat <<'EOF'
 #ifndef INCLUDED_ION_PRELUDE
 	#define INCLUDED_ION_PRELUDE 1
 
@@ -4211,7 +4212,7 @@ GLOBAL_H="$(cat <<'EOF'
 EOF
 )"
 
-GLOBAL_C="$(cat <<'EOF'
+GLOBAL_C_SERVE="$(cat <<'EOF'
 int main(void) {
 	return EXIT_SUCCESS;
 }
@@ -5729,6 +5730,7 @@ start_cc() {
 	#   -static
 	#   -static-pie
 	#   -flto
+	#   -g
 
 	local in
 	local out
@@ -5740,7 +5742,6 @@ start_cc() {
 	start "$ION_BIN_CC" \
 		-std=c89 \
 		-O2 \
-		-g \
 		-pedantic \
 		-Wall \
 		-Wextra \
@@ -7201,6 +7202,7 @@ deinit_temp_parent() {
 	file_remove "$ION_TEMP_SOURCE_STYLES" || true
 	file_remove "$ION_TEMP_SOURCE_SCRIPTS" || true
 	file_remove "$ION_TEMP_SYSTEM_BLANK" || true
+	file_remove "$ION_TEMP_SYSTEM_SERVE" || true
 
 	if test "$OUTPUT_TEMP"; then
 		dir_remove "$ION_OUTPUT" || true
@@ -7517,8 +7519,17 @@ init_check_command() {
 	fi
 }
 
+init_check_err() {
+	# todo: change this to init_check_all
+
+	local value
+	eval "value=\$$1"
+	error "$ION__MSG_INVALID_ENVIRONMENT" "$1" "$value" || return
+}
+
 init_check_env() {
-	# todo: this should soon be replaced with a c script
+	# todo: this section needs to reduce its subprocess usage
+	# with a function like: init_check_all dir=ION_TEMP string=ION___ERROR...
 
 	init_check_dir ION_TEMP "$ION_TEMP" || return
 
@@ -7797,6 +7808,7 @@ init_check_env() {
 	! test "$ION_TEMP_SOURCE_STYLES" || init_check_path ION_TEMP_SOURCE_STYLES "$ION_TEMP_SOURCE_STYLES" || return
 	! test "$ION_TEMP_SOURCE_SCRIPTS" || init_check_path ION_TEMP_SOURCE_SCRIPTS "$ION_TEMP_SOURCE_SCRIPTS" || return
 	! test "$ION_TEMP_SYSTEM_BLANK" || init_check_path ION_TEMP_SYSTEM_BLANK "$ION_TEMP_SYSTEM_BLANK" || return
+	! test "$ION_TEMP_SYSTEM_SERVE" || init_check_path ION_TEMP_SYSTEM_SERVE "$ION_TEMP_SYSTEM_SERVE" || return
 }
 
 init_check_bsd() {
@@ -7833,6 +7845,16 @@ init_check_gnu() {
 			export ION_BIN_XARGS_GNU=0
 		fi
 	fi
+}
+
+init_check_env_c() {
+	local temp_out
+
+	temp_out="$(start_temp_file self-check out)" || return
+	start_cc "$ION_TEMP_SYSTEM_SERVE" "$temp_out" || return
+	"$temp_out" || return
+
+	rm -f "$temp_out" || return
 }
 
 init_temp_document_blank() {
@@ -7982,11 +8004,24 @@ init_temp_source_script() {
 }
 
 init_temp_system() {
-	local temp
+	local temp_blank
+	local temp_check
 
-	temp="$(start_temp_file system-in-blank c)" || return
-	print "int main(void) { return 0; }" > "$temp" || return
-	export ION_TEMP_SYSTEM_BLANK="$temp"
+	temp_blank="$(start_temp_file system-blank c)" || return
+	temp_serve="$(start_temp_file system-check c)" || return
+
+	printf '%s\n' \
+		"int main(void) { return 0; }" \
+	> "$temp_blank" || return
+
+	printf '%s\n%s\n%s\n' \
+		"$GLOBAL_H_STDINT" \
+		"$GLOBAL_H_SHARED" \
+		"$GLOBAL_C_SERVE" \
+	> "$temp_serve" || return
+
+	export ION_TEMP_SYSTEM_BLANK="$temp_blank"
+	export ION_TEMP_SYSTEM_SERVE="$temp_serve"
 }
 
 init_temp_output() {
@@ -7998,6 +8033,8 @@ init_temp_output() {
 }
 
 init_temp_shared() {
+	# todo: reduce subprocesses by unwrapping and merging most of these
+
 	init_temp_document_blank || return
 	init_temp_filter_empty || return
 	init_temp_filter_test || return
