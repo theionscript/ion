@@ -7545,7 +7545,7 @@ init_basics() {
 }
 
 init_find_lib() {
-	if start_cc "$ION_TEMP_SYSTEM_BLANK" "/dev/null" "$@" 2>&1; then
+	if start_cc "$ION_TEMP_SYSTEM_BLANK" "/dev/null" "$@" >/dev/null 2>&1; then
 		printf 1
 	else
 		printf 0
@@ -8301,7 +8301,7 @@ init_temp_source_script() {
 
 init_temp_system() {
 	local temp_blank
-	local temp_check
+	local temp_serve
 
 	temp_blank="$(start_temp_file system-blank c)" || return
 	temp_serve="$(start_temp_file system-check c)" || return
