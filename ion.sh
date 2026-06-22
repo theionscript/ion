@@ -4221,12 +4221,9 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 		#define ERROR_DEPTH 2
 	#endif
 
-	#define ERROR_IF(EXP, CSQ) do { if (!error_is_okay(EXP)) CSQ } while (0)
-	#define ERROR_WHILE(STR, EXP) ERROR_IF(EXP, { return error_while((EXP), (STR)); })
-	#define ERROR(EXP) ERROR_IF(EXP, { return (EXP); })
-
-	#define ERROR_GOTO(LBL, EXP) ERROR_IF(EXP, { goto LBL; })
-	#define ERROR_CLEAN(EXP) ERROR_GOTO(clean, EXP)
+	#define ERROR_IF(EXP, CSQ) do { error _e = (EXP); if (!error_is_okay(_e)) CSQ } while (0)
+	#define ERROR_WHILE(STR, EXP) ERROR_IF(EXP, { return error_while(_e, (STR)); })
+	#define ERROR(EXP) ERROR_IF(EXP, { return _e; })
 
 	#define E ERROR
 	#define EIF ERROR_IF
@@ -4245,6 +4242,8 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 	};
 
 	typedef struct Error error;
+
+	void init();
 
 	error error_none();
 	error error_unknown();
@@ -4274,17 +4273,17 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 	error string_printo(const string);
 	error string_printe(const string);
 
-	extern const string __ERROR_PREFIX_MAIN;
-	extern const string __ERROR_INFIX_MAIN;
-	extern const string __ERROR_INFIX_SUB;
+	extern const string ION___ERROR_PREFIX_MAIN;
+	extern const string ION___ERROR_INFIX_MAIN;
+	extern const string ION___ERROR_INFIX_SUB;
 
-	extern const string _ERROR_UNKNOWN;
+	extern const string ION__ERROR_UNKNOWN;
 
-	extern const string _WORD_ERROR;
-	extern const string _WORD_NOTE;
-	extern const string _WORD_INFO;
+	extern const string ION__WORD_ERROR;
+	extern const string ION__WORD_NOTE;
+	extern const string ION__WORD_INFO;
 
-	extern const imax VOLUME;
+	extern const imax ION_VOLUME;
 #endif
 EOF
 )"
@@ -4306,25 +4305,25 @@ EOF
 )"
 
 GLOBAL_C="$(cat <<'EOF'
-static string env(const string name, string default) {
+static string env(const string name, string fallback) {
 	string value = getenv(name);
 
 	if (value != null && strlen(value) > 0) {
 		return value;
 	} else {
-		return default;
+		return fallback;
 	}
 }
 
-static string envs(const string name, string default) {
-	string value = env(name, default);
+static string envs(const string name, string fallback) {
+	string value = env(name, fallback);
 	assert(value != null && "env not given");
 	return value;
 }
 
-static imax envi(const string name, imax default) {
+static imax envi(const string name, imax fallback) {
 	string value_s = env(name, null);
-	imax value_i = default;
+	imax value_i = fallback;
 
 	if (value_s) {
 		errno = 0;
@@ -4335,28 +4334,16 @@ static imax envi(const string name, imax default) {
 	return value_i;
 }
 
-static bool envb(const string name, bool default) {
-	return envi(name, default ? 1 : 0) == 1;
+static bool envb(const string name, bool fallback) {
+	return envi(name, fallback ? 1 : 0) == 1;
 }
-
-const string __ERROR_PREFIX_MAIN = envs("ION___ERROR_PREFIX_MAIN");
-const string __ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN");
-const string __ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB");
-
-const string _ERROR_UNKNOWN = envs("ION__ERROR_UNKNOWN");
-
-const string _WORD_ERROR = envs("ION__WORD_ERROR");
-const string _WORD_NOTE = envs("ION__WORD_NOTE");
-const string _WORD_INFO = envs("ION__WORD_INFO");
-
-const imax VOLUME = envi("ION_VOLUME");
 
 error error_none() {
 	return error_new(null, null);
 }
 
 error error_unknown() {
-	return error_new(null, _ERROR_UNKNOWN);
+	return error_new(null, ION__ERROR_UNKNOWN);
 }
 
 bool error_is_okay(error err) {
@@ -4402,11 +4389,11 @@ error file_finishe() {
 }
 
 error string_printo(const string str) {
-	return file_append(str, stdout);
+	return file_append(stdout, str);
 }
 
 error string_printe(const string str) {
-	return file_append(str, stderr);
+	return file_append(stderr, str);
 }
 
 error error_new(const string ctx, const string msg) {
@@ -4462,20 +4449,20 @@ error error_while(error err, const string msg) {
 	imax i;
 
 	#if ERROR_DEPTH < 1
-		return;
+		return err;
 	#endif
 
-	if (err->causes[ERROR_DEPTH-1] != null) {
+	if (err.causes[ERROR_DEPTH-1] != null) {
 		for (i = 1; i < ERROR_DEPTH; i++) {
-			err->causes[i-1] = err->causes[i];
+			err.causes[i-1] = err.causes[i];
 		}
 
-		err->causes[ERROR_DEPTH-1] = null;
+		err.causes[ERROR_DEPTH-1] = null;
 	}
 
 	for (i = 0; i < ERROR_DEPTH; i++) {
-		if (err->causes[i] == null) {
-			err->causes[i] = msg;
+		if (err.causes[i] == null) {
+			err.causes[i] = msg;
 			break;
 		}
 	}
@@ -4486,17 +4473,17 @@ error error_while(error err, const string msg) {
 error error_print(error err, const string lbl) {
 	imax i;
 
-	E(string_printe(__ERROR_PREFIX_MAIN));
+	E(string_printe(ION___ERROR_PREFIX_MAIN));
 	E(string_printe(lbl));
 
-	E(string_printe(__ERROR_INFIX_MAIN));
+	E(string_printe(ION___ERROR_INFIX_MAIN));
 	E(string_printe(err.effect));
 
 	for (i = 0; i < ERROR_DEPTH; i++) {
-		const string cause = error_cause(i);
+		const string cause = error_cause(err, i);
 		if (!cause) break;
 
-		E(string_printe(__ERROR_INFIX_SUB));
+		E(string_printe(ION___ERROR_INFIX_SUB));
 		E(string_printe(cause));
 	}
 
@@ -4507,23 +4494,37 @@ error error_print(error err, const string lbl) {
 }
 
 void fail(error err) {
-	if (VOLUME > 0) {
-		error_print(err, _WORD_ERROR);
+	if (ION_VOLUME > 0) {
+		error_print(err, ION__WORD_ERROR);
 	}
 
 	exit(EXIT_FAILURE);
 }
 
 void note(error err) {
-	if (VOLUME > 1) {
-		error_print(err, _WORD_NOTE);
+	if (ION_VOLUME > 1) {
+		error_print(err, ION__WORD_NOTE);
 	}
 }
 
 void info(error err) {
-	if (VOLUME > 2) {
-		error_print(err, _WORD_INFO);
+	if (ION_VOLUME > 2) {
+		error_print(err, ION__WORD_INFO);
 	}
+}
+
+void init() {
+	const string ION___ERROR_PREFIX_MAIN = envs("ION___ERROR_PREFIX_MAIN");
+	const string ION___ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN");
+	const string ION___ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB");
+
+	const string ION__ERROR_UNKNOWN = envs("ION__ERROR_UNKNOWN");
+
+	const string ION__WORD_ERROR = envs("ION__WORD_ERROR");
+	const string ION__WORD_NOTE = envs("ION__WORD_NOTE");
+	const string ION__WORD_INFO = envs("ION__WORD_INFO");
+
+	const imax ION_VOLUME = envi("ION_VOLUME");
 }
 EOF
 )"
