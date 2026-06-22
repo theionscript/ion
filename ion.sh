@@ -4280,25 +4280,25 @@ GLOBAL_H_ENV="$(cat <<'EOF'
 #ifndef INCLUDED_ION_ENV
 	#define INCLUDED_ION_ENV 1
 
-	void init();
-
-	extern string ION___ERROR_PREFIX_MAIN;
-	extern string ION___ERROR_INFIX_MAIN;
-	extern string ION___ERROR_INFIX_SUB;
-
-	extern string ION__ERROR_UNKNOWN;
-
-	extern string ION__WORD_ERROR;
-	extern string ION__WORD_NOTE;
-	extern string ION__WORD_INFO;
-
-	extern imax ION_VOLUME;
+	void init_env();
 #endif
 EOF
 )"
 
 GLOBAL_C_ENV="$(cat <<'EOF'
-void init() {
+string ION___ERROR_PREFIX_MAIN;
+string ION___ERROR_INFIX_MAIN;
+string ION___ERROR_INFIX_SUB;
+
+string ION__ERROR_UNKNOWN;
+
+string ION__WORD_ERROR;
+string ION__WORD_NOTE;
+string ION__WORD_INFO;
+
+imax ION_VOLUME;
+
+void init_env() {
 	ION___ERROR_PREFIX_MAIN = envs("ION___ERROR_PREFIX_MAIN");
 	ION___ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN");
 	ION___ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB");
