@@ -1220,6 +1220,7 @@ _MSG_DEV = envs("ION__MSG_DEV")
 _MSG_OPENING_FILE = envs("ION__MSG_OPENING_FILE")
 _MSG_QUERYING_THE_INDEX = envs("ION__MSG_QUERYING_THE_INDEX")
 _MSG_QUERY_FOUND_AN_ENTRY = envs("ION__MSG_QUERY_FOUND_AN_ENTRY")
+_MSG_INVALID_ENVIRONMENT = envs("ION__MSG_INVALID_ENVIRONMENT")
 
 _VERB_IDENTITY = envs("ION__VERB_IDENTITY")
 
@@ -2373,9 +2374,11 @@ function clause_normal(clause)
 	if __QUERY_VERB > __QUERY_SUBJECT then
 		subject = table.remove(objects, __QUERY_SUBJECT)
 		verb = table.remove(objects, __QUERY_VERB-1)
-	else
+	elseif __QUERY_VERB < __QUERY_SUBJECT then
 		verb = table.remove(objects, __QUERY_VERB)
 		subject = table.remove(objects, __QUERY_SUBJECT-1)
+	else
+ 		exit(_MSG_INVALID_ENVIRONMENT, "ION___QUERY_SUBJECT");
 	end
 
 	if subject and not verb then
@@ -4280,6 +4283,18 @@ GLOBAL_H_ENV="$(cat <<'EOF'
 #ifndef INCLUDED_ION_ENV
 	#define INCLUDED_ION_ENV 1
 
+	extern string ION___ERROR_PREFIX_MAIN;
+	extern string ION___ERROR_INFIX_MAIN;
+	extern string ION___ERROR_INFIX_SUB;
+
+	extern string ION__ERROR_UNKNOWN;
+
+	extern string ION__WORD_ERROR;
+	extern string ION__WORD_NOTE;
+	extern string ION__WORD_INFO;
+
+	extern imax ION_VOLUME;
+
 	void init_env();
 #endif
 EOF
@@ -4290,7 +4305,7 @@ string ION___ERROR_PREFIX_MAIN;
 string ION___ERROR_INFIX_MAIN;
 string ION___ERROR_INFIX_SUB;
 
-string ION__ERROR_UNKNOWN;
+string ION__MSG_UNKNOWN;
 
 string ION__WORD_ERROR;
 string ION__WORD_NOTE;
@@ -4303,7 +4318,7 @@ void init_env() {
 	ION___ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN");
 	ION___ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB");
 
-	ION__ERROR_UNKNOWN = envs("ION__ERROR_UNKNOWN");
+	ION__MSG_UNKNOWN = envs("ION__MSG_UNKNOWN");
 
 	ION__WORD_ERROR = envs("ION__WORD_ERROR");
 	ION__WORD_NOTE = envs("ION__WORD_NOTE");
@@ -4353,7 +4368,7 @@ error error_none() {
 }
 
 error error_unknown() {
-	return error_new(null, ION__ERROR_UNKNOWN);
+	return error_new(null, ION__MSG_UNKNOWN);
 }
 
 bool error_is_okay(error err) {
@@ -7302,10 +7317,10 @@ derive() {
 	# note: this http parser is for temporary demos; it is intended to
 	# be replaced soon. It is currently slow and easy to break or overwhelm,
 	# such as with requests that are too large, or ones that lack a proper
-	# content-length, or random nonsense; the socket read is unlimited, and
-	# the length is checked after the unlimited read, rather than before.
-	# These are shell script limitations, and ultimately require
-	# switching to either Lua or C.
+	# content-length, or random nonsense; the socket read is unlimited, both
+	# when reading the head and the body, and the length is checked after the
+	# unlimited head read, rather than before. These are shell script
+	# limitations, and require switching to either Lua or C.
 
 	is_char() {
 		case "$1" in
