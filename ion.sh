@@ -142,12 +142,12 @@
 # References
 # ----------
 #
-# - cplusplus.com
 # - shellhaters.org
 # - dylanaraps/pure-sh-bible
 # - lua.org/manual/5.4/manual.html
 # - pandoc.org/MANUAL.html#pandocs-markdown
 # - pandoc.org/lua-filters.html
+# - cppreference.com
 #
 # Licence
 # =======
@@ -782,6 +782,8 @@
 #   - added flags for library support
 #   - added pkgconf support
 #   - added the c compiler
+#   - added the global header
+#   - added the error type
 # - 0.11.0; 2026-6-9
 #   - added the readme
 # - 0.10.0; 2026-6-6
@@ -814,9 +816,6 @@
 # ---
 
 export ION___ERROR_PREFIX_MAIN="${ION___ERROR_PREFIX_MAIN:-"- "}"
-export ION___ERROR_PREFIX_SUB="${ION___ERROR_PREFIX_SUB:-"  - "}"
-export ION___ERROR_PREFIX_SUBL="${ION___ERROR_PREFIX_SUBL:-"["}"
-export ION___ERROR_PREFIX_SUBR="${ION___ERROR_PREFIX_SUBR:-"] "}"
 export ION___ERROR_INFIX_MAIN="${ION___ERROR_INFIX_MAIN:-": "}"
 export ION___ERROR_INFIX_SUB="${ION___ERROR_INFIX_SUB:-"; "}"
 
@@ -872,6 +871,7 @@ export ION__NAME_MAIN_CSS="${ION__NAME_MAIN_CSS:-"$ION__WORD_MAIN.$ION__EXT_CSS"
 export ION__NAME_MAIN_JS="${ION__NAME_MAIN_JS:-"$ION__WORD_MAIN.$ION__EXT_JS"}"
 
 export ION__MSG_DEV="${ION__MSG_DEV:-"developer"}"
+export ION__MSG_UNKNOWN="${ION__MSG_UNKNOWN:-"unknown"}"
 export ION__MSG_COMMAND_NOT_FOUND="${ION__MSG_COMMAND_NOT_FOUND:-"command not found"}"
 export ION__MSG_COMMAND_NOT_EXEC="${ION__MSG_COMMAND_NOT_EXEC:-"command not executable"}"
 export ION__MSG_COMMAND_NOT_RECOGNISED="${ION__MSG_COMMAND_NOT_RECOGNISED:-"command not recognised"}"
@@ -1050,6 +1050,7 @@ export ION_DEV_URANDOM="${ION_DEV_URANDOM:-"/dev/urandom"}"
 export ION_LIB_UV="${ION_LIB_UV:-}"
 export ION_LIB_YYJSON="${ION_LIB_YYJSON:-}"
 export ION_LIB_LLHTTP="${ION_LIB_LLHTTP:-}"
+export ION_LIB_OPENSSL="${ION_LIB_OPENSSL:-}"
 
 export ION_SERVE="${ION_SERVE:-2}"
 export ION_SERVE_PORT="${ION_SERVE_PORT:-}"
@@ -1159,10 +1160,19 @@ OUTPUT_COUNT=0
 
 SHARED_LUA="$(cat <<'EOF'
 function env(name, default)
-	local found = os.getenv("ION_"..name)
-	found = found and #found > 0 and found or default
-	assert(found ~= nil, name.." not given")
-	return found
+	local value = os.getenv(name)
+
+	if value and #value > 0 then
+		return value
+	else
+		return default
+	end
+end
+
+function envs(name, default)
+	local value = env(name, default)
+	assert(value ~= nil, name.." not given")
+	return value
 end
 
 function envn(name, default)
@@ -1173,161 +1183,159 @@ function envb(name, default)
 	return envn(name, default) == 1 and true or false
 end
 
-__ERROR_PREFIX_SUB = env("__ERROR_PREFIX_SUB")
-__ERROR_PREFIX_SUBL = env("__ERROR_PREFIX_SUBL")
-__ERROR_PREFIX_SUBR = env("__ERROR_PREFIX_SUBR")
-__ERROR_INFIX_MAIN = env("__ERROR_INFIX_MAIN")
-__ERROR_INFIX_SUB = env("__ERROR_INFIX_SUB")
+__ERROR_PREFIX_MAIN = envs("ION___ERROR_PREFIX_MAIN")
+__ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN")
+__ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB")
 
-__QUERY_PHRASE = env("__QUERY_PHRASE")
-__QUERY_CLAUSE = env("__QUERY_CLAUSE")
-__QUERY_SENTENCE = env("__QUERY_SENTENCE")
-__QUERY_PARAGRAPH = env("__QUERY_PARAGRAPH")
+__QUERY_PHRASE = envs("ION___QUERY_PHRASE")
+__QUERY_CLAUSE = envs("ION___QUERY_CLAUSE")
+__QUERY_SENTENCE = envs("ION___QUERY_SENTENCE")
+__QUERY_PARAGRAPH = envs("ION___QUERY_PARAGRAPH")
 
-__QUERY_SUBJECT = envn("__QUERY_SUBJECT", 1)
-__QUERY_VERB = envn("__QUERY_VERB", 2)
+__QUERY_SUBJECT = envn("ION___QUERY_SUBJECT", 1)
+__QUERY_VERB = envn("ION___QUERY_VERB", 2)
 
-__QUERY_ALL = env("__QUERY_ALL")
-__QUERY_SEPARATOR = env("__QUERY_SEPARATOR")
-__QUERY_NESTED_LEFT = env("__QUERY_NESTED_LEFT")
-__QUERY_NESTED_RIGHT = env("__QUERY_NESTED_RIGHT")
+__QUERY_ALL = envs("ION___QUERY_ALL")
+__QUERY_SEPARATOR = envs("ION___QUERY_SEPARATOR")
+__QUERY_NESTED_LEFT = envs("ION___QUERY_NESTED_LEFT")
+__QUERY_NESTED_RIGHT = envs("ION___QUERY_NESTED_RIGHT")
 
-__TITLE_SEPARATOR = env("__TITLE_SEPARATOR")
-__TYPE_SEPARATOR = env("__TYPE_SEPARATOR")
+__TITLE_SEPARATOR = envs("ION___TITLE_SEPARATOR")
+__TYPE_SEPARATOR = envs("ION___TYPE_SEPARATOR")
 
-_WORD_INDEX = env("_WORD_INDEX")
-_WORD_ERROR = env("_WORD_ERROR")
-_WORD_INFO = env("_WORD_INFO")
-_WORD_NOTE = env("_WORD_NOTE")
+_WORD_INDEX = envs("ION__WORD_INDEX")
+_WORD_ERROR = envs("ION__WORD_ERROR")
+_WORD_INFO = envs("ION__WORD_INFO")
+_WORD_NOTE = envs("ION__WORD_NOTE")
 
-_EXT_META = env("_EXT_META")
-_EXT_HTML = env("_EXT_HTML")
+_EXT_META = envs("ION__EXT_META")
+_EXT_HTML = envs("ION__EXT_HTML")
 
-_NAME_ROOT = env("_NAME_ROOT")
-_NAME_BRANCH = env("_NAME_BRANCH")
-_NAME_INDEX_JS = env("_NAME_INDEX_JS")
-_NAME_INDEX_CSS = env("_NAME_INDEX_CSS")
+_NAME_ROOT = envs("ION__NAME_ROOT")
+_NAME_BRANCH = envs("ION__NAME_BRANCH")
+_NAME_INDEX_JS = envs("ION__NAME_INDEX_JS")
+_NAME_INDEX_CSS = envs("ION__NAME_INDEX_CSS")
 
-_MSG_DEV = env("_MSG_DEV")
-_MSG_OPENING_FILE = env("_MSG_OPENING_FILE")
-_MSG_QUERYING_THE_INDEX = env("_MSG_QUERYING_THE_INDEX")
-_MSG_QUERY_FOUND_AN_ENTRY = env("_MSG_QUERY_FOUND_AN_ENTRY")
+_MSG_DEV = envs("ION__MSG_DEV")
+_MSG_OPENING_FILE = envs("ION__MSG_OPENING_FILE")
+_MSG_QUERYING_THE_INDEX = envs("ION__MSG_QUERYING_THE_INDEX")
+_MSG_QUERY_FOUND_AN_ENTRY = envs("ION__MSG_QUERY_FOUND_AN_ENTRY")
 
-_VERB_IDENTITY = env("_VERB_IDENTITY")
+_VERB_IDENTITY = envs("ION__VERB_IDENTITY")
 
-_TYPE_NULL = env("_TYPE_NULL")
-_TYPE_TRUE = env("_TYPE_TRUE")
-_TYPE_FALSE = env("_TYPE_FALSE")
-_TYPE_BOOLEAN = env("_TYPE_BOOLEAN")
-_TYPE_NUMBER = env("_TYPE_NUMBER")
-_TYPE_STRING = env("_TYPE_STRING")
-_TYPE_NAME = env("_TYPE_NAME")
-_TYPE_TEXT = env("_TYPE_TEXT")
-_TYPE_PATH = env("_TYPE_PATH")
-_TYPE_PATHS = env("_TYPE_PATHS")
-_TYPE_REFERENCE = env("_TYPE_REFERENCE")
-_TYPE_RELATIONSHIP = env("_TYPE_RELATIONSHIP")
-_TYPE_OBJECT = env("_TYPE_OBJECT")
-_TYPE_ARRAY = env("_TYPE_ARRAY")
+_TYPE_NULL = envs("ION__TYPE_NULL")
+_TYPE_TRUE = envs("ION__TYPE_TRUE")
+_TYPE_FALSE = envs("ION__TYPE_FALSE")
+_TYPE_BOOLEAN = envs("ION__TYPE_BOOLEAN")
+_TYPE_NUMBER = envs("ION__TYPE_NUMBER")
+_TYPE_STRING = envs("ION__TYPE_STRING")
+_TYPE_NAME = envs("ION__TYPE_NAME")
+_TYPE_TEXT = envs("ION__TYPE_TEXT")
+_TYPE_PATH = envs("ION__TYPE_PATH")
+_TYPE_PATHS = envs("ION__TYPE_PATHS")
+_TYPE_REFERENCE = envs("ION__TYPE_REFERENCE")
+_TYPE_RELATIONSHIP = envs("ION__TYPE_RELATIONSHIP")
+_TYPE_OBJECT = envs("ION__TYPE_OBJECT")
+_TYPE_ARRAY = envs("ION__TYPE_ARRAY")
 
-_META_TYPE = env("_META_TYPE")
-_META_TYPE_DIRECTORY = env("_META_TYPE_DIRECTORY")
-_META_TYPE_DOCUMENT = env("_META_TYPE_DOCUMENT")
+_META_TYPE = envs("ION__META_TYPE")
+_META_TYPE_DIRECTORY = envs("ION__META_TYPE_DIRECTORY")
+_META_TYPE_DOCUMENT = envs("ION__META_TYPE_DOCUMENT")
 
-_META_SCAN = env("_META_SCAN")
+_META_SCAN = envs("ION__META_SCAN")
 
-_META_PATH = env("_META_PATH")
-_META_NAME = env("_META_NAME")
-_META_EXTENSION = env("_META_EXTENSION")
-_META_DOMAIN = env("_META_DOMAIN")
+_META_PATH = envs("ION__META_PATH")
+_META_NAME = envs("ION__META_NAME")
+_META_EXTENSION = envs("ION__META_EXTENSION")
+_META_DOMAIN = envs("ION__META_DOMAIN")
 
-_META_HASH = env("_META_HASH")
-_META_STAMP = env("_META_STAMP")
-_META_SIGNER = env("_META_SIGNER")
-_META_SIGNATURE = env("_META_SIGNATURE")
-_META_SALT = env("_META_SALT")
+_META_HASH = envs("ION__META_HASH")
+_META_STAMP = envs("ION__META_STAMP")
+_META_SIGNER = envs("ION__META_SIGNER")
+_META_SIGNATURE = envs("ION__META_SIGNATURE")
+_META_SALT = envs("ION__META_SALT")
 
-_META_LOCATION = env("_META_LOCATION")
-_META_ITERATION = env("_META_ITERATION")
-_META_MODIFIED = env("_META_MODIFIED")
-_META_SIZE = env("_META_SIZE")
+_META_LOCATION = envs("ION__META_LOCATION")
+_META_ITERATION = envs("ION__META_ITERATION")
+_META_MODIFIED = envs("ION__META_MODIFIED")
+_META_SIZE = envs("ION__META_SIZE")
 
-_META_WIDTH = env("_META_WIDTH")
-_META_HEIGHT = env("_META_HEIGHT")
-_META_DEPTH = env("_META_DEPTH")
-_META_LENGTH = env("_META_LENGTH")
+_META_WIDTH = envs("ION__META_WIDTH")
+_META_HEIGHT = envs("ION__META_HEIGHT")
+_META_DEPTH = envs("ION__META_DEPTH")
+_META_LENGTH = envs("ION__META_LENGTH")
 
-_META_DIRECTION = env("_META_DIRECTION")
-_META_ENCODING = env("_META_ENCODING")
-_META_ALPHABET = env("_META_ALPHABET")
-_META_LANGUAGE = env("_META_LANGUAGE")
-_META_WORDMARK = env("_META_WORDMARK")
-_META_FLAG = env("_META_FLAG")
-_META_ICON = env("_META_ICON")
+_META_DIRECTION = envs("ION__META_DIRECTION")
+_META_ENCODING = envs("ION__META_ENCODING")
+_META_ALPHABET = envs("ION__META_ALPHABET")
+_META_LANGUAGE = envs("ION__META_LANGUAGE")
+_META_WORDMARK = envs("ION__META_WORDMARK")
+_META_FLAG = envs("ION__META_FLAG")
+_META_ICON = envs("ION__META_ICON")
 
-_META_TITLE = env("_META_TITLE")
-_META_DESCRIPTION = env("_META_DESCRIPTION")
-_META_PUBLISHED = env("_META_PUBLISHED")
-_META_CATEGORY = env("_META_CATEGORY")
-_META_LABELS = env("_META_LABELS")
-_META_AUTHORS = env("_META_AUTHORS")
-_META_ALBUM = env("_META_ALBUM")
-_META_PUBLIC = env("_META_PUBLIC")
-_META_COVER = env("_META_COVER")
+_META_TITLE = envs("ION__META_TITLE")
+_META_DESCRIPTION = envs("ION__META_DESCRIPTION")
+_META_PUBLISHED = envs("ION__META_PUBLISHED")
+_META_CATEGORY = envs("ION__META_CATEGORY")
+_META_LABELS = envs("ION__META_LABELS")
+_META_AUTHORS = envs("ION__META_AUTHORS")
+_META_ALBUM = envs("ION__META_ALBUM")
+_META_PUBLIC = envs("ION__META_PUBLIC")
+_META_COVER = envs("ION__META_COVER")
 
-_META_FROM = env("_META_FROM")
-_META_PARENT = env("_META_PARENT")
-_META_RELATED = env("_META_RELATED")
-_META_PREVIOUSLY = env("_META_PREVIOUSLY")
-_META_REFERENCES = env("_META_REFERENCES")
-_META_DEPENDENCIES = env("_META_DEPENDENCIES")
-_META_TRANSLATIONS = env("_META_TRANSLATIONS")
-_META_DERIVATIVES = env("_META_DERIVATIVES")
+_META_FROM = envs("ION__META_FROM")
+_META_PARENT = envs("ION__META_PARENT")
+_META_RELATED = envs("ION__META_RELATED")
+_META_PREVIOUSLY = envs("ION__META_PREVIOUSLY")
+_META_REFERENCES = envs("ION__META_REFERENCES")
+_META_DEPENDENCIES = envs("ION__META_DEPENDENCIES")
+_META_TRANSLATIONS = envs("ION__META_TRANSLATIONS")
+_META_DERIVATIVES = envs("ION__META_DERIVATIVES")
 
-_ATTR_CURRENT = env("_ATTR_CURRENT")
-_ATTR_QUERY = env("_ATTR_QUERY")
-_ATTR_MULTIPLE = env("_ATTR_MULTIPLE")
-_ATTR_NESTED = env("_ATTR_NESTED")
-_ATTR_KEY = env("_ATTR_KEY")
-_ATTR_TYPE = env("_ATTR_TYPE")
-_ATTR_VALUE = env("_ATTR_VALUE")
-_ATTR_NAME = env("_ATTR_NAME")
+_ATTR_CURRENT = envs("ION__ATTR_CURRENT")
+_ATTR_QUERY = envs("ION__ATTR_QUERY")
+_ATTR_MULTIPLE = envs("ION__ATTR_MULTIPLE")
+_ATTR_NESTED = envs("ION__ATTR_NESTED")
+_ATTR_KEY = envs("ION__ATTR_KEY")
+_ATTR_TYPE = envs("ION__ATTR_TYPE")
+_ATTR_VALUE = envs("ION__ATTR_VALUE")
+_ATTR_NAME = envs("ION__ATTR_NAME")
 
-_CLASS_INDEX = env("_CLASS_INDEX")
-_CLASS_WORD = env("_CLASS_WORD")
-_CLASS_PAGE = env("_CLASS_PAGE")
-_CLASS_FORM = env("_CLASS_FORM")
-_CLASS_HEADER = env("_CLASS_HEADER")
-_CLASS_REQUIRED = env("_CLASS_REQUIRED")
-_CLASS_COMPONENT = env("_CLASS_COMPONENT")
-_CLASS_STARTED = env("_CLASS_STARTED")
-_CLASS_NO_JS = env("_CLASS_NO_JS")
+_CLASS_INDEX = envs("ION__CLASS_INDEX")
+_CLASS_WORD = envs("ION__CLASS_WORD")
+_CLASS_PAGE = envs("ION__CLASS_PAGE")
+_CLASS_FORM = envs("ION__CLASS_FORM")
+_CLASS_HEADER = envs("ION__CLASS_HEADER")
+_CLASS_REQUIRED = envs("ION__CLASS_REQUIRED")
+_CLASS_COMPONENT = envs("ION__CLASS_COMPONENT")
+_CLASS_STARTED = envs("ION__CLASS_STARTED")
+_CLASS_NO_JS = envs("ION__CLASS_NO_JS")
 
-START_ID = envn("START_ID")
+START_ID = envn("ION_START_ID")
 
-BIN_SELF = env("BIN_SELF")
+BIN_SELF = envs("ION_BIN_SELF")
 
-LINK_PROTOCOL = envb("LINK_PROTOCOL")
-LINK_DOMAIN = envb("LINK_DOMAIN")
-LINK_PREFIX = env("LINK_PREFIX")
-LINK_TRIM = envb("LINK_TRIM")
+LINK_PROTOCOL = envb("ION_LINK_PROTOCOL")
+LINK_DOMAIN = envb("ION_LINK_DOMAIN")
+LINK_PREFIX = envs("ION_LINK_PREFIX")
+LINK_TRIM = envb("ION_LINK_TRIM")
 
-DERIVE_SCRIPT = envb("DERIVE_SCRIPT")
-DERIVE_STYLE = envb("DERIVE_STYLE")
+DERIVE_SCRIPT = envb("ION_DERIVE_SCRIPT")
+DERIVE_STYLE = envb("ION_DERIVE_STYLE")
 
-EXTRACT_SUFFIX = env("EXTRACT_SUFFIX", "")
-EXTRACT_MAXIMUM = envn("EXTRACT_MAXIMUM", 0)
+EXTRACT_SUFFIX = envs("ION_EXTRACT_SUFFIX", "")
+EXTRACT_MAXIMUM = envn("ION_EXTRACT_MAXIMUM", 0)
 
-DOMAIN = env("DOMAIN")
-COGNATES = env("COGNATES")
-TESTING = envb("TEST")
-VOLUME = envn("VOLUME", 3)
-WORDS = envb("WORDS")
+DOMAIN = envs("ION_DOMAIN")
+COGNATES = envs("ION_COGNATES")
+TESTING = envb("ION_TEST")
+VOLUME = envn("ION_VOLUME", 3)
+WORDS = envb("ION_WORDS")
 
-FILTER_PATH = env("FILTER_PATH", false)
-FILTER_TARGET = env("FILTER_TARGET", false)
+FILTER_PATH = envs("ION_FILTER_PATH", false)
+FILTER_TARGET = envs("ION_FILTER_TARGET", false)
 
-OUTPUT_CURRENT = env("OUTPUT_CURRENT", false)
+OUTPUT_CURRENT = envs("ION_OUTPUT_CURRENT", false)
 
 CACHED_COGNATES = nil
 
@@ -1470,17 +1478,11 @@ function printe(label, ...)
 	local started = false
 	local err = ""
 
-	local prefix = __ERROR_PREFIX_SUB
-
-	if START_ID ~= 1 then
-		prefix = prefix..__ERROR_PREFIX_SUBL..START_ID..__ERROR_PREFIX_SUBR
-	end
-
 	for i=1, args.n do
 		local arg = args[i]
 
 		if not started then
-			err = prefix..label..__ERROR_INFIX_MAIN
+			err = __ERROR_PREFIX_MAIN..label..__ERROR_INFIX_MAIN
 			started = true
 		else
 			err = err..__ERROR_INFIX_SUB
@@ -4082,10 +4084,14 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 		#define C11 0
 	#endif
 
+	#include <assert.h>
+	#include <errno.h>
 	#include <float.h>
 	#include <limits.h>
 	#include <stddef.h>
+	#include <stdio.h>
 	#include <stdlib.h>
+	#include <string.h>
 
 	#if C99
 		#include <stdbool.h>
@@ -4094,6 +4100,8 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 	#endif
 
 	#define null NULL
+
+	typedef char* string;
 
 	typedef unsigned char byte;
 
@@ -4208,7 +4216,298 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 		#define FMAX_RADIX F64_RADIX
 		typedef f64 fmax;
 	#endif
+
+	#ifndef ERROR_DEPTH
+		#define ERROR_DEPTH 2
+	#endif
+
+	#define ERROR_IF(EXP, CSQ) do { if ((e = (EXP)).effect != null) CSQ } while (0)
+	#define ERROR_WHILE(STR, EXP) ERROR_IF(EXP, { error_append(&e, (STR)); return e; })
+	#define ERROR_GOTO(LBL, EXP) ERROR_IF(EXP, { goto LBL; })
+	#define ERROR_CLEAN(EXP) ERROR_GOTO(clean, EXP)
+	#define ERROR(EXP) ERROR_IF(EXP, { return e; })
+
+	#define E ERROR
+	#define EIF ERROR_IF
+	#define ERR ERROR_WHILE
+	#define EGOTO ERROR_GOTO
+	#define ECLEAN ERROR_CLEAN
+
+	struct Error {
+		const string context;
+		const string effect;
+
+		#if ERROR_DEPTH
+			const string causes[ERROR_DEPTH];
+		#endif
+	}
+
+	typedef struct Error error;
+
+	error error_none();
+	error error_unknown();
+
+	bool error_is_none(error e);
+	bool error_is_unknown(error e);
+
+	error error_new(const string, const string);
+
+	const string error_context(error);
+	const string error_effect(error);
+	const string error_cause(error, int);
+
+	bool error_is(error, error);
+	void error_append(error*, const string);
+	error error_print(error, const string);
+
+	error fail(error e);
+	error note(error e);
+	error info(error e);
+
+	error file_append(FILE*, const string);
+	error file_finish(FILE*);
+	error file_finisho();
+	error file_finishe();
+
+	error string_printo(const string);
+	error string_printe(const string);
+
+	extern const string __ERROR_PREFIX_MAIN;
+	extern const string __ERROR_INFIX_MAIN;
+	extern const string __ERROR_INFIX_SUB;
+
+	extern const string _ERROR_UNKNOWN;
+
+	extern const string _WORD_ERROR;
+	extern const string _WORD_NOTE;
+	extern const string _WORD_INFO;
+
+	extern const imax VOLUME;
 #endif
+EOF
+)"
+
+GLOBAL_H_LIBUV="$(cat <<'EOF'
+#ifndef INCLUDED_ION_PRELUDE_LIBUV
+	#define INCLUDED_ION_PRELUDE_LIBUV 1
+
+	error error_from_uv(int err);
+#endif
+EOF
+)"
+
+GLOBAL_C_LIBUV="$(cat <<'EOF'
+error error_from_uv(int err) {
+	return error_new("uv", uv_strerror(err));
+}
+EOF
+)"
+
+GLOBAL_C="$(cat <<'EOF'
+static string env(const string name, string default) {
+	string value = getenv(name);
+
+	if (value != null && strlen(value) > 0) {
+		return value;
+	} else {
+		return default;
+	}
+}
+
+static string envs(const string name, string default) {
+	string value = env(name, default);
+	assert(value != null && "env not given");
+	return value;
+}
+
+static imax envi(const string name, imax default) {
+	string value_s = env(name, null);
+	imax value_i = default;
+
+	if (value_s) {
+		errno = 0;
+		value_i = strtol(value_s, null, 10);
+		assert(errno == 0 && "invalid env given");
+	}
+
+	return value_i;
+}
+
+static bool envb(const string name, bool default) {
+	return envi(name, default ? 1 : 0) == 1;
+}
+
+const string __ERROR_PREFIX_MAIN = envs("ION___ERROR_PREFIX_MAIN");
+const string __ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN");
+const string __ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB");
+
+const string _ERROR_UNKNOWN = envs("ION__ERROR_UNKNOWN");
+
+const string _WORD_ERROR = envs("ION__WORD_ERROR");
+const string _WORD_NOTE = envs("ION__WORD_NOTE");
+const string _WORD_INFO = envs("ION__WORD_INFO");
+
+const imax VOLUME = envi("ION_VOLUME");
+
+error error_none() {
+	return error_new("", "");
+}
+
+error error_unknown() {
+	return error_new("", _ERROR_UNKNOWN);
+}
+
+bool error_is_none(error e) {
+	return error_is(e, error_none());
+}
+
+bool error_is_unknown(error e) {
+	return error_is(e, error_unknown());
+}
+
+error file_append(FILE* stream, const string str) {
+	int res;
+
+	if (!str) {
+		return error_none();
+	}
+
+	res = fputs(str, stream);
+
+	if (res == EOF) {
+		return error_unknown();
+	} else {
+		return error_none();
+	}
+}
+
+error file_finish(FILE* stream) {
+	int res = fflush(stream);
+
+	if (res == EOF) {
+		return error_unknown();
+	} else {
+		return error_none();
+	}
+}
+
+error file_finisho() {
+	return file_finish(stdout);
+}
+
+error file_finishe() {
+	return file_finish(stderr);
+}
+
+error string_printo(const string str) {
+	return file_append(str, stdout);
+}
+
+error string_printe(const string str) {
+	return file_append(str, stderr);
+}
+
+error error_new(const string ctx, const string msg) {
+	error e;
+	imax i;
+
+	e.context = ctx;
+	e.effect = msg;
+
+	for (i = 0; i < ERROR_DEPTH; i++) {
+		e.causes[i] = null;
+	}
+
+	return e;
+}
+
+const string error_context(error e) {
+	return e.context;
+}
+
+const string error_effect(error e) {
+	return e.effect;
+}
+
+const string error_cause(error e, imax i) {
+	if (i >= 0 && i < ERROR_DEPTH) {
+		return e.causes[i];
+	} else {
+		return null;
+	}
+}
+
+bool error_is(error e, error o) {
+	return e.effect && o.effect &&
+	       e.context && o.context &&
+	       strcmp(e.effect, o.effect) == 0 &&
+	       strcmp(e.context, o.context) == 0;
+}
+
+void error_append(error* e, const string msg) {
+	imax i;
+
+	#if ERROR_DEPTH < 1
+		return
+	#endif
+
+	if (e->causes[ERROR_DEPTH-1] != null) {
+		for (i = 1; i < ERROR_DEPTH; i++) {
+			e->causes[i-1] = e->causes[i];
+		}
+
+		e->causes[ERROR_DEPTH-1] = null;
+	}
+
+	for (i = 0; i < ERROR_DEPTH; i++) {
+		if (e->causes[i] == null) {
+			e->causes[i] = msg;
+			break;
+		}
+	}
+}
+
+error error_print(error e, const string lbl) {
+	imax i;
+
+	E(string_printe(__ERROR_PREFIX_MAIN));
+	E(string_printe(lbl));
+	E(string_printe(__ERROR_INFIX_MAIN));
+
+	E(string_printe(__ERROR_INFIX_SUB));
+	E(string_printe(e.effect));
+
+	for (i = 0; i < ERROR_DEPTH; i++) {
+		const string cause = error_cause(i);
+		if (!cause) break;
+
+		E(string_printe(__ERROR_INFIX_SUB));
+		E(string_printe(cause));
+	}
+
+	E(string_printe("\n"));
+	E(file_finishe());
+}
+
+error fail(error e) {
+	if (VOLUME > 0) {
+		error_print(e, _WORD_ERROR);
+	}
+
+	exit(EXIT_FAILURE);
+}
+
+error note(error e) {
+	if (VOLUME > 1) {
+		error_print(e, _WORD_NOTE);
+	}
+}
+
+error info(error e) {
+	if (VOLUME > 2) {
+		error_print(e, _WORD_INFO);
+	}
+}
 EOF
 )"
 
@@ -4697,10 +4996,6 @@ terminal_clear() {
 	test "$ION_WATCH_CLEAR" = 1 && test -t 1 && printf '\033[2J\033[H'
 }
 
-have_parent() {
-	test "$ION_START_ID" != 0
-}
-
 have_caddy() {
 	test "$ION_BIN_CADDY"
 }
@@ -4885,11 +5180,11 @@ building_html() {
 }
 
 should_help() {
-	! test "$ION_INPUT" && ! have_parent
+	test "$ION_START_ID" = 0 && ! test "$ION_INPUT"
 }
 
 should_test() {
-	! have_parent && test "$ION_TEST" = 1
+	test "$ION_START_ID" = 0 && test "$ION_TEST" = 1
 }
 
 should_derive() {
@@ -4897,15 +5192,15 @@ should_derive() {
 }
 
 should_spin() {
-	! should_help && ! have_parent && test "$ION_SPIN" = 1
+	! should_help && test "$ION_START_ID" = 0 && test "$ION_SPIN" = 1
 }
 
 should_watch() {
-	! should_help && ! have_parent && ! should_spin && test "$ION_WATCH" = 1
+	! should_help && ! should_spin && test "$ION_START_ID" = 0 && test "$ION_WATCH" = 1
 }
 
 should_serve() {
-	! should_help && ! have_parent && {
+	! should_help && test "$ION_START_ID" = 0 && {
 		test "$ION_SERVE" = 1 || {
 			test "$ION_SERVE" = 2 && have_server && should_watch
 		}
@@ -4943,19 +5238,9 @@ printe() {
 	ab__started=0
 	ab__err=
 
-	if have_parent; then
-		ab__prefix="$ION___ERROR_PREFIX_SUB"
-
-		if test "$ION_START_ID" != 0; then
-			ab__prefix="$ab__prefix$ION___ERROR_PREFIX_SUBL$ION_START_ID$ION___ERROR_PREFIX_SUBR"
-		fi
-	else
-		ab__prefix="$ION___ERROR_PREFIX_MAIN"
-	fi
-
 	for ab__part in "$@"; do
 		if test "$ab__started" -eq 0; then
-			ab__err="$ab__prefix$ab__label$ION___ERROR_INFIX_MAIN"
+			ab__err="$ION___ERROR_PREFIX_MAIN$ab__label$ION___ERROR_INFIX_MAIN"
 			ab__started=1
 		else
 			ab__err="$ab__err$ION___ERROR_INFIX_SUB"
@@ -6280,6 +6565,8 @@ stop_caddy() {
 }
 
 start_server() {
+	# todo: replace with c+uv+llhttp+yyjson+openssl
+
 	note "$ION__MSG_STARTING_SERVERS"
 
 	if ! have_server; then
@@ -7212,13 +7499,13 @@ deinit_temp_parent() {
 
 deinit() {
 	if test "$STARTED"; then
-		if ! have_parent; then
+		if test "$ION_START_ID" = 0; then
 			stop_server || true
 			stop_watcher || true
 			deinit_temp_parent || true
 		fi
 
-		if ! have_parent || test "$ION_CLUSTER" = 1; then
+		if test "$ION_START_ID" = 0 || test "$ION_CLUSTER" = 1; then
 			deinit_temp_shared || true
 		fi
 
@@ -7519,24 +7806,13 @@ init_check_command() {
 	fi
 }
 
-init_check_err() {
-	# todo: change this to init_check_all
-
-	local value
-	eval "value=\$$1"
-	error "$ION__MSG_INVALID_ENVIRONMENT" "$1" "$value" || return
-}
-
 init_check_env() {
-	# todo: this section needs to reduce its subprocess usage
-	# with a function like: init_check_all dir=ION_TEMP string=ION___ERROR...
+	# todo: this section should reduce its subprocess usage with a function like:
+	# init_check_types dir ION_TEMP "$ION_TEMP" string ION___ERROR...
 
 	init_check_dir ION_TEMP "$ION_TEMP" || return
 
 	init_check_string ION___ERROR_PREFIX_MAIN "$ION___ERROR_PREFIX_MAIN" || return
-	init_check_string ION___ERROR_PREFIX_SUB "$ION___ERROR_PREFIX_SUB" || return
-	init_check_string ION___ERROR_PREFIX_SUBL "$ION___ERROR_PREFIX_SUBL" || return
-	init_check_string ION___ERROR_PREFIX_SUBR "$ION___ERROR_PREFIX_SUBR" || return
 	init_check_string ION___ERROR_INFIX_MAIN "$ION___ERROR_INFIX_MAIN" || return
 	init_check_string ION___ERROR_INFIX_SUB "$ION___ERROR_INFIX_SUB" || return
 
@@ -7590,6 +7866,7 @@ init_check_env() {
 	init_check_name ION__NAME_MAIN_JS "$ION__NAME_MAIN_JS" || return
 
 	init_check_string ION__MSG_DEV "$ION__MSG_DEV" || return
+	init_check_string ION__MSG_UNKNOWN "$ION__MSG_UNKNOWN" || return
 	init_check_string ION__MSG_COMMAND_NOT_FOUND "$ION__MSG_COMMAND_NOT_FOUND" || return
 	init_check_string ION__MSG_COMMAND_NOT_EXEC "$ION__MSG_COMMAND_NOT_EXEC" || return
 	init_check_string ION__MSG_COMMAND_NOT_RECOGNISED "$ION__MSG_COMMAND_NOT_RECOGNISED" || return
@@ -7729,6 +8006,7 @@ init_check_env() {
 	! test "$ION_LIB_UV" || init_check_bool ION_LIB_UV "$ION_LIB_UV" || return
 	! test "$ION_LIB_YYJSON" || init_check_bool ION_LIB_YYJSON "$ION_LIB_YYJSON" || return
 	! test "$ION_LIB_LLHTTP" || init_check_bool ION_LIB_LLHTTP "$ION_LIB_LLHTTP" || return
+	! test "$ION_LIB_OPENSSL" || init_check_bool ION_LIB_OPENSSL "$ION_LIB_OPENSSL" || return
 
 	init_check_uint ION_SERVE "$ION_SERVE" || return
 	init_check_bool ION_SERVE_WWW "$ION_SERVE_WWW" || return
@@ -8073,6 +8351,11 @@ init_env_libs() {
 		found="$(init_find_lib llhttp)" || true
 		export ION_LIB_LLHTTP="$found"
 	fi
+
+	if ! test "$ION_LIB_OPENSSL"; then
+		found="$(init_find_lib openssl)" || true
+		export ION_LIB_OPENSSL="$found"
+	fi
 }
 
 init() {
@@ -8085,7 +8368,7 @@ init() {
 	init_basics || return
 	init_signals || return
 
-	if ! have_parent; then
+	if test "$ION_START_ID" = 0; then
 		init_env_bins || return
 		init_env_input || return
 		init_env_output || return
@@ -8109,12 +8392,8 @@ init() {
 		init_env_libs || return
 	fi
 
-	if ! have_parent || test "$ION_CLUSTER" = 1; then
+	if test "$ION_START_ID" = 0 || test "$ION_CLUSTER" = 1; then
 		init_temp_shared || return
-	fi
-
-	if test "$ION_START_ID" = 1; then
-		export ION_START_ID=$$
 	fi
 }
 
@@ -8153,7 +8432,7 @@ main() {
 		http_handle || exit 3
 	elif should_derive; then
 		derive "$@" || exit 4
-	elif ! have_parent; then
+	elif test "$ION_START_ID" = 0; then
 		if should_test; then
 			test_all || exit 5
 		fi
