@@ -4047,7 +4047,7 @@ typedef uint_least32_t uint_fast32_t;
 EOF
 )"
 
-GLOBAL_H_SHARED="$(cat <<'EOF'
+GLOBAL_H_PRELUDE="$(cat <<'EOF'
 #ifndef INCLUDED_ION_PRELUDE
 	#define INCLUDED_ION_PRELUDE 1
 
@@ -4243,7 +4243,14 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 
 	typedef struct Error error;
 
-	void init();
+	string env(const string, string);
+	string envs(const string, string);
+	imax envi(const string, imax);
+	bool envb(const string, bool);
+
+	void fail(error);
+	void note(error);
+	void info(error);
 
 	error error_none();
 	error error_unknown();
@@ -4261,10 +4268,6 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 	error error_while(error, const string);
 	error error_print(error, const string);
 
-	void fail(error);
-	void note(error);
-	void info(error);
-
 	error file_append(FILE*, const string);
 	error file_finish(FILE*);
 	error file_finisho();
@@ -4272,6 +4275,15 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 
 	error string_printo(const string);
 	error string_printe(const string);
+#endif
+EOF
+)"
+
+GLOBAL_H_ENV="$(cat <<'EOF'
+#ifndef INCLUDED_ION_ENV
+	#define INCLUDED_ION_ENV 1
+
+	void init();
 
 	extern const string ION___ERROR_PREFIX_MAIN;
 	extern const string ION___ERROR_INFIX_MAIN;
@@ -4288,24 +4300,25 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 EOF
 )"
 
-GLOBAL_H_LIBUV="$(cat <<'EOF'
-#ifndef INCLUDED_ION_PRELUDE_LIBUV
-	#define INCLUDED_ION_PRELUDE_LIBUV 1
+GLOBAL_C_ENV="$(cat <<'EOF'
+void init() {
+	const string ION___ERROR_PREFIX_MAIN = envs("ION___ERROR_PREFIX_MAIN");
+	const string ION___ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN");
+	const string ION___ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB");
 
-	error error_from_uv(int err);
-#endif
-EOF
-)"
+	const string ION__ERROR_UNKNOWN = envs("ION__ERROR_UNKNOWN");
 
-GLOBAL_C_LIBUV="$(cat <<'EOF'
-error error_from_uv(int err) {
-	return error_new("uv", uv_strerror(err));
+	const string ION__WORD_ERROR = envs("ION__WORD_ERROR");
+	const string ION__WORD_NOTE = envs("ION__WORD_NOTE");
+	const string ION__WORD_INFO = envs("ION__WORD_INFO");
+
+	const imax ION_VOLUME = envi("ION_VOLUME");
 }
 EOF
 )"
 
 GLOBAL_C="$(cat <<'EOF'
-static string env(const string name, string fallback) {
+string env(const string name, string fallback) {
 	string value = getenv(name);
 
 	if (value != null && strlen(value) > 0) {
@@ -4315,13 +4328,13 @@ static string env(const string name, string fallback) {
 	}
 }
 
-static string envs(const string name, string fallback) {
+string envs(const string name, string fallback) {
 	string value = env(name, fallback);
 	assert(value != null && "env not given");
 	return value;
 }
 
-static imax envi(const string name, imax fallback) {
+imax envi(const string name, imax fallback) {
 	string value_s = env(name, null);
 	imax value_i = fallback;
 
@@ -4334,7 +4347,7 @@ static imax envi(const string name, imax fallback) {
 	return value_i;
 }
 
-static bool envb(const string name, bool fallback) {
+bool envb(const string name, bool fallback) {
 	return envi(name, fallback ? 1 : 0) == 1;
 }
 
@@ -4512,19 +4525,21 @@ void info(error err) {
 		error_print(err, ION__WORD_INFO);
 	}
 }
+EOF
+)"
 
-void init() {
-	const string ION___ERROR_PREFIX_MAIN = envs("ION___ERROR_PREFIX_MAIN");
-	const string ION___ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN");
-	const string ION___ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB");
+GLOBAL_H_LIBUV="$(cat <<'EOF'
+#ifndef INCLUDED_ION_LIBUV
+	#define INCLUDED_ION_LIBUV 1
 
-	const string ION__ERROR_UNKNOWN = envs("ION__ERROR_UNKNOWN");
+	error error_from_uv(int);
+#endif
+EOF
+)"
 
-	const string ION__WORD_ERROR = envs("ION__WORD_ERROR");
-	const string ION__WORD_NOTE = envs("ION__WORD_NOTE");
-	const string ION__WORD_INFO = envs("ION__WORD_INFO");
-
-	const imax ION_VOLUME = envi("ION_VOLUME");
+GLOBAL_C_LIBUV="$(cat <<'EOF'
+error error_from_uv(int err) {
+	return error_new("uv", uv_strerror(err));
 }
 EOF
 )"
