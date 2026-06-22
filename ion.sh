@@ -4137,7 +4137,7 @@ GLOBAL_H_PRELUDE="$(cat <<'EOF'
 
 	#ifdef INT64_MAX
 		#define IMAX_64 1
-		#define I64 INT64_C
+		#define I64(I) INT64_C(I)
 		#define I64_MIN INT64_MIN
 		#define I64_MAX INT64_MAX
 		typedef int64_t i64;
@@ -4151,7 +4151,7 @@ GLOBAL_H_PRELUDE="$(cat <<'EOF'
 
 	#ifdef UINT64_MAX
 		#define UMAX_64 1
-		#define U64 UINT64_C
+		#define U64(U) UINT64_C(U)
 		#define U64_MIN 0
 		#define U64_MAX UINT64_MAX
 		typedef uint64_t u64;
@@ -4228,16 +4228,14 @@ GLOBAL_H_PRELUDE="$(cat <<'EOF'
 	#define E ERROR
 	#define EIF ERROR_IF
 	#define ERR ERROR_WHILE
-	#define EGOTO ERROR_GOTO
-	#define ECLEAN ERROR_CLEAN
 	#define OK error_none()
 
 	struct Error {
-		const string context;
-		const string effect;
+		string context;
+		string effect;
 
 		#if ERROR_DEPTH
-			const string causes[ERROR_DEPTH];
+			string causes[ERROR_DEPTH];
 		#endif
 	};
 
@@ -4285,34 +4283,34 @@ GLOBAL_H_ENV="$(cat <<'EOF'
 
 	void init();
 
-	extern const string ION___ERROR_PREFIX_MAIN;
-	extern const string ION___ERROR_INFIX_MAIN;
-	extern const string ION___ERROR_INFIX_SUB;
+	extern string ION___ERROR_PREFIX_MAIN;
+	extern string ION___ERROR_INFIX_MAIN;
+	extern string ION___ERROR_INFIX_SUB;
 
-	extern const string ION__ERROR_UNKNOWN;
+	extern string ION__ERROR_UNKNOWN;
 
-	extern const string ION__WORD_ERROR;
-	extern const string ION__WORD_NOTE;
-	extern const string ION__WORD_INFO;
+	extern string ION__WORD_ERROR;
+	extern string ION__WORD_NOTE;
+	extern string ION__WORD_INFO;
 
-	extern const imax ION_VOLUME;
+	extern imax ION_VOLUME;
 #endif
 EOF
 )"
 
 GLOBAL_C_ENV="$(cat <<'EOF'
 void init() {
-	const string ION___ERROR_PREFIX_MAIN = envs("ION___ERROR_PREFIX_MAIN");
-	const string ION___ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN");
-	const string ION___ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB");
+	ION___ERROR_PREFIX_MAIN = envs("ION___ERROR_PREFIX_MAIN");
+	ION___ERROR_INFIX_MAIN = envs("ION___ERROR_INFIX_MAIN");
+	ION___ERROR_INFIX_SUB = envs("ION___ERROR_INFIX_SUB");
 
-	const string ION__ERROR_UNKNOWN = envs("ION__ERROR_UNKNOWN");
+	ION__ERROR_UNKNOWN = envs("ION__ERROR_UNKNOWN");
 
-	const string ION__WORD_ERROR = envs("ION__WORD_ERROR");
-	const string ION__WORD_NOTE = envs("ION__WORD_NOTE");
-	const string ION__WORD_INFO = envs("ION__WORD_INFO");
+	ION__WORD_ERROR = envs("ION__WORD_ERROR");
+	ION__WORD_NOTE = envs("ION__WORD_NOTE");
+	ION__WORD_INFO = envs("ION__WORD_INFO");
 
-	const imax ION_VOLUME = envi("ION_VOLUME");
+	ION_VOLUME = envi("ION_VOLUME");
 }
 EOF
 )"
@@ -4490,7 +4488,7 @@ error error_print(error err, const string lbl) {
 	E(string_printe(lbl));
 
 	E(string_printe(ION___ERROR_INFIX_MAIN));
-	E(string_printe(err.effect));
+	E(string_printe(error_effect(err)));
 
 	for (i = 0; i < ERROR_DEPTH; i++) {
 		const string cause = error_cause(err, i);
@@ -4531,6 +4529,8 @@ EOF
 GLOBAL_H_LIBUV="$(cat <<'EOF'
 #ifndef INCLUDED_ION_LIBUV
 	#define INCLUDED_ION_LIBUV 1
+
+	#include <uv.h>
 
 	error error_from_uv(int);
 #endif
@@ -4607,6 +4607,9 @@ EOF
 
 GLOBAL_JS="$(cat <<'EOF'
 let COMPONENTS = {};
+
+// todo: use of innerHTML needs checking and perhaps replacing with textContent
+// see: https://stackoverflow.com/a/24428100
 
 function document_ready(f) {
 	// see: youmightnotneedjquery.com/#ready
@@ -4725,7 +4728,7 @@ function form_preview(form) {
 	for (let i = textareas.length-1; i >= 0; i--) {
 		const text = textareas[i].value;
 		const textarea = node_change_tag(textareas[i], "strong");
-		textarea.innerHTML = text.replace(/\n/g, "<br>");
+		textarea.innerHTML = text.replace(/\n/g, "<br>"); // this needs checking, see above
 		all_inputs.push(textarea);
 	}
 
@@ -8327,7 +8330,7 @@ init_temp_system() {
 
 	printf '%s\n%s\n%s\n' \
 		"$GLOBAL_H_STDINT" \
-		"$GLOBAL_H_SHARED" \
+		"$GLOBAL_H_PRELUDE" \
 		"$GLOBAL_C_SERVE" \
 	> "$temp_serve" || return
 
