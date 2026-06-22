@@ -4221,7 +4221,7 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 		#define ERROR_DEPTH 2
 	#endif
 
-	#define ERROR_IF(EXP, CSQ) do { if ((e = (EXP)).effect != null) CSQ } while (0)
+	#define ERROR_IF(EXP, CSQ) do { error _e; if ((_e = (EXP)).effect != null) CSQ } while (0)
 	#define ERROR_WHILE(STR, EXP) ERROR_IF(EXP, { error_append(&e, (STR)); return e; })
 	#define ERROR_GOTO(LBL, EXP) ERROR_IF(EXP, { goto LBL; })
 	#define ERROR_CLEAN(EXP) ERROR_GOTO(clean, EXP)
@@ -4232,6 +4232,7 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 	#define ERR ERROR_WHILE
 	#define EGOTO ERROR_GOTO
 	#define ECLEAN ERROR_CLEAN
+	#define OK error_none()
 
 	struct Error {
 		const string context;
@@ -4240,15 +4241,15 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 		#if ERROR_DEPTH
 			const string causes[ERROR_DEPTH];
 		#endif
-	}
+	};
 
 	typedef struct Error error;
 
 	error error_none();
 	error error_unknown();
 
-	bool error_is_none(error e);
-	bool error_is_unknown(error e);
+	bool error_is_none(error);
+	bool error_is_unknown(error);
 
 	error error_new(const string, const string);
 
@@ -4258,11 +4259,11 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 
 	bool error_is(error, error);
 	void error_append(error*, const string);
-	error error_print(error, const string);
+	void error_print(error, const string);
 
-	error fail(error e);
-	error note(error e);
-	error info(error e);
+	void fail(error);
+	void note(error);
+	void info(error);
 
 	error file_append(FILE*, const string);
 	error file_finish(FILE*);
@@ -4357,12 +4358,12 @@ error error_unknown() {
 	return error_new("", _ERROR_UNKNOWN);
 }
 
-bool error_is_none(error e) {
-	return error_is(e, error_none());
+bool error_is_none(error err) {
+	return error_is(err, error_none());
 }
 
-bool error_is_unknown(error e) {
-	return error_is(e, error_unknown());
+bool error_is_unknown(error err) {
+	return error_is(err, error_unknown());
 }
 
 error file_append(FILE* stream, const string str) {
@@ -4408,66 +4409,66 @@ error string_printe(const string str) {
 }
 
 error error_new(const string ctx, const string msg) {
-	error e;
+	error err;
 	imax i;
 
-	e.context = ctx;
-	e.effect = msg;
+	err.context = ctx;
+	err.effect = msg;
 
 	for (i = 0; i < ERROR_DEPTH; i++) {
-		e.causes[i] = null;
+		err.causes[i] = null;
 	}
 
-	return e;
+	return err;
 }
 
-const string error_context(error e) {
-	return e.context;
+const string error_context(error err) {
+	return err.context;
 }
 
-const string error_effect(error e) {
-	return e.effect;
+const string error_effect(error err) {
+	return err.effect;
 }
 
-const string error_cause(error e, imax i) {
+const string error_cause(error err, imax i) {
 	if (i >= 0 && i < ERROR_DEPTH) {
-		return e.causes[i];
+		return err.causes[i];
 	} else {
 		return null;
 	}
 }
 
-bool error_is(error e, error o) {
-	return e.effect && o.effect &&
-	       e.context && o.context &&
-	       strcmp(e.effect, o.effect) == 0 &&
-	       strcmp(e.context, o.context) == 0;
+bool error_is(error err, error otr) {
+	return err.effect && otr.effect &&
+	       err.context && otr.context &&
+	       strcmp(err.effect, otr.effect) == 0 &&
+	       strcmp(err.context, otr.context) == 0;
 }
 
-void error_append(error* e, const string msg) {
+void error_append(error* err, const string msg) {
 	imax i;
 
 	#if ERROR_DEPTH < 1
 		return
 	#endif
 
-	if (e->causes[ERROR_DEPTH-1] != null) {
+	if (err->causes[ERROR_DEPTH-1] != null) {
 		for (i = 1; i < ERROR_DEPTH; i++) {
-			e->causes[i-1] = e->causes[i];
+			err->causes[i-1] = err->causes[i];
 		}
 
-		e->causes[ERROR_DEPTH-1] = null;
+		err->causes[ERROR_DEPTH-1] = null;
 	}
 
 	for (i = 0; i < ERROR_DEPTH; i++) {
-		if (e->causes[i] == null) {
-			e->causes[i] = msg;
+		if (err->causes[i] == null) {
+			err->causes[i] = msg;
 			break;
 		}
 	}
 }
 
-error error_print(error e, const string lbl) {
+error error_print(error err, const string lbl) {
 	imax i;
 
 	E(string_printe(__ERROR_PREFIX_MAIN));
@@ -4475,7 +4476,7 @@ error error_print(error e, const string lbl) {
 	E(string_printe(__ERROR_INFIX_MAIN));
 
 	E(string_printe(__ERROR_INFIX_SUB));
-	E(string_printe(e.effect));
+	E(string_printe(err.effect));
 
 	for (i = 0; i < ERROR_DEPTH; i++) {
 		const string cause = error_cause(i);
@@ -4487,25 +4488,27 @@ error error_print(error e, const string lbl) {
 
 	E(string_printe("\n"));
 	E(file_finishe());
+
+	return OK;
 }
 
-error fail(error e) {
+void fail(error err) {
 	if (VOLUME > 0) {
-		error_print(e, _WORD_ERROR);
+		error_print(err, _WORD_ERROR);
 	}
 
 	exit(EXIT_FAILURE);
 }
 
-error note(error e) {
+void note(error err) {
 	if (VOLUME > 1) {
-		error_print(e, _WORD_NOTE);
+		error_print(err, _WORD_NOTE);
 	}
 }
 
-error info(error e) {
+void info(error err) {
 	if (VOLUME > 2) {
-		error_print(e, _WORD_INFO);
+		error_print(err, _WORD_INFO);
 	}
 }
 EOF
