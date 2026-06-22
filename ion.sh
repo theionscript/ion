@@ -4221,11 +4221,12 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 		#define ERROR_DEPTH 2
 	#endif
 
-	#define ERROR_IF(EXP, CSQ) do { error _e; if ((_e = (EXP)).effect != null) CSQ } while (0)
-	#define ERROR_WHILE(STR, EXP) ERROR_IF(EXP, { error_append(&e, (STR)); return e; })
+	#define ERROR_IF(EXP, CSQ) do { if (!error_is_okay(EXP)) CSQ } while (0)
+	#define ERROR_WHILE(STR, EXP) ERROR_IF(EXP, { return error_while((EXP), (STR)); })
+	#define ERROR(EXP) ERROR_IF(EXP, { return (EXP); })
+
 	#define ERROR_GOTO(LBL, EXP) ERROR_IF(EXP, { goto LBL; })
 	#define ERROR_CLEAN(EXP) ERROR_GOTO(clean, EXP)
-	#define ERROR(EXP) ERROR_IF(EXP, { return e; })
 
 	#define E ERROR
 	#define EIF ERROR_IF
@@ -4248,7 +4249,7 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 	error error_none();
 	error error_unknown();
 
-	bool error_is_none(error);
+	bool error_is_okay(error);
 	bool error_is_unknown(error);
 
 	error error_new(const string, const string);
@@ -4258,8 +4259,8 @@ GLOBAL_H_SHARED="$(cat <<'EOF'
 	const string error_cause(error, int);
 
 	bool error_is(error, error);
-	void error_append(error*, const string);
-	void error_print(error, const string);
+	error error_while(error, const string);
+	error error_print(error, const string);
 
 	void fail(error);
 	void note(error);
@@ -4351,14 +4352,14 @@ const string _WORD_INFO = envs("ION__WORD_INFO");
 const imax VOLUME = envi("ION_VOLUME");
 
 error error_none() {
-	return error_new("", "");
+	return error_new(null, null);
 }
 
 error error_unknown() {
-	return error_new("", _ERROR_UNKNOWN);
+	return error_new(null, _ERROR_UNKNOWN);
 }
 
-bool error_is_none(error err) {
+bool error_is_okay(error err) {
 	return error_is(err, error_none());
 }
 
@@ -4439,17 +4440,29 @@ const string error_cause(error err, imax i) {
 }
 
 bool error_is(error err, error otr) {
-	return err.effect && otr.effect &&
-	       err.context && otr.context &&
-	       strcmp(err.effect, otr.effect) == 0 &&
-	       strcmp(err.context, otr.context) == 0;
+	bool context = false;
+	bool effect = false;
+
+	if (err.context && otr.context) {
+		context = strcmp(err.context, otr.context) == 0;
+	} else {
+		context = !err.context && !otr.context;
+	}
+
+	if (err.effect && otr.effect) {
+		effect = strcmp(err.effect, otr.effect) == 0;
+	} else {
+		effect = !err.effect && !otr.effect;
+	}
+
+	return context && effect;
 }
 
-void error_append(error* err, const string msg) {
+error error_while(error err, const string msg) {
 	imax i;
 
 	#if ERROR_DEPTH < 1
-		return
+		return;
 	#endif
 
 	if (err->causes[ERROR_DEPTH-1] != null) {
@@ -4466,6 +4479,8 @@ void error_append(error* err, const string msg) {
 			break;
 		}
 	}
+
+	return err;
 }
 
 error error_print(error err, const string lbl) {
@@ -4473,9 +4488,8 @@ error error_print(error err, const string lbl) {
 
 	E(string_printe(__ERROR_PREFIX_MAIN));
 	E(string_printe(lbl));
-	E(string_printe(__ERROR_INFIX_MAIN));
 
-	E(string_printe(__ERROR_INFIX_SUB));
+	E(string_printe(__ERROR_INFIX_MAIN));
 	E(string_printe(err.effect));
 
 	for (i = 0; i < ERROR_DEPTH; i++) {
