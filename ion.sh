@@ -4241,10 +4241,9 @@ GLOBAL_H_PRELUDE="$(cat <<'EOF'
 
 	typedef struct Error error;
 
-	string env(const string, string);
-	string envs(const string, string);
-	imax envi(const string, imax);
-	bool envb(const string, bool);
+	string envs(const string);
+	imax envi(const string);
+	bool envb(const string);
 
 	void fail(error);
 	void note(error);
@@ -4316,37 +4315,37 @@ EOF
 )"
 
 GLOBAL_C="$(cat <<'EOF'
-string env(const string name, string fallback) {
+string envs(const string name) {
 	string value = getenv(name);
 
-	if (value != null && strlen(value) > 0) {
-		return value;
+	if (value == null || strlen(value) == 0) {
+		assert(value != null && "env not given");
 	} else {
-		return fallback;
+		return value;
 	}
 }
 
-string envs(const string name, string fallback) {
-	string value = env(name, fallback);
-	assert(value != null && "env not given");
-	return value;
-}
+imax envi(const string name) {
+	string value_s = envs(name);
+	imax value_i;
 
-imax envi(const string name, imax fallback) {
-	string value_s = env(name, null);
-	imax value_i = fallback;
-
-	if (value_s) {
-		errno = 0;
-		value_i = strtol(value_s, null, 10);
-		assert(errno == 0 && "invalid env given");
-	}
+	errno = 0;
+	value_i = strtol(value_s, null, 10);
+	assert(errno == 0 && "invalid int given");
 
 	return value_i;
 }
 
-bool envb(const string name, bool fallback) {
-	return envi(name, fallback ? 1 : 0) == 1;
+bool envb(const string name) {
+	imax value = envi(name);
+
+	if (value == 1) {
+		return true;
+	} else if (value == 0) {
+		return false;
+	} else {
+		assert(errno == 0 && "invalid bool given");
+	}
 }
 
 error error_none() {
