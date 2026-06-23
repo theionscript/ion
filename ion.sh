@@ -4104,8 +4104,6 @@ GLOBAL_H_PRELUDE="$(cat <<'EOF'
 
 	#define null NULL
 
-	typedef char* string;
-
 	typedef unsigned char byte;
 
 	#define I8 INT8_C
@@ -4234,19 +4232,19 @@ GLOBAL_H_PRELUDE="$(cat <<'EOF'
 	#define OK error_none()
 
 	struct Error {
-		string context;
-		string effect;
+		char* context;
+		char* effect;
 
 		#if ERROR_DEPTH
-			string causes[ERROR_DEPTH];
+			char* causes[ERROR_DEPTH];
 		#endif
 	};
 
 	typedef struct Error error;
 
-	string envs(const string);
-	imax envi(const string);
-	bool envb(const string);
+	const char* envs(const char*);
+	imax envi(const char*);
+	bool envb(const char*);
 
 	void fail(error);
 	void note(error);
@@ -4258,23 +4256,23 @@ GLOBAL_H_PRELUDE="$(cat <<'EOF'
 	bool error_is_okay(error);
 	bool error_is_unknown(error);
 
-	error error_new(const string, const string);
+	error error_new(const char*, const char*);
 
-	const string error_context(error);
-	const string error_effect(error);
-	const string error_cause(error, int);
+	const char* error_context(error);
+	const char* error_effect(error);
+	const char* error_cause(error, int);
 
 	bool error_is(error, error);
-	error error_while(error, const string);
-	error error_print(error, const string);
+	error error_while(error, const char*);
+	error error_print(error, const char*);
 
-	error file_append(FILE*, const string);
+	error file_append(FILE*, const char*);
 	error file_finish(FILE*);
 	error file_finisho();
 	error file_finishe();
 
-	error string_printo(const string);
-	error string_printe(const string);
+	error string_printo(const char*);
+	error string_printe(const char*);
 #endif
 EOF
 )"
@@ -4283,15 +4281,15 @@ GLOBAL_H_ENV="$(cat <<'EOF'
 #ifndef INCLUDED_ION_ENV
 	#define INCLUDED_ION_ENV 1
 
-	extern string ION___ERROR_PREFIX_MAIN;
-	extern string ION___ERROR_INFIX_MAIN;
-	extern string ION___ERROR_INFIX_SUB;
+	extern char* ION___ERROR_PREFIX_MAIN;
+	extern char* ION___ERROR_INFIX_MAIN;
+	extern char* ION___ERROR_INFIX_SUB;
 
-	extern string ION__ERROR_UNKNOWN;
+	extern char* ION__MSG_UNKNOWN;
 
-	extern string ION__WORD_ERROR;
-	extern string ION__WORD_NOTE;
-	extern string ION__WORD_INFO;
+	extern char* ION__WORD_ERROR;
+	extern char* ION__WORD_NOTE;
+	extern char* ION__WORD_INFO;
 
 	extern imax ION_VOLUME;
 
@@ -4301,15 +4299,15 @@ EOF
 )"
 
 GLOBAL_C_ENV="$(cat <<'EOF'
-string ION___ERROR_PREFIX_MAIN;
-string ION___ERROR_INFIX_MAIN;
-string ION___ERROR_INFIX_SUB;
+char* ION___ERROR_PREFIX_MAIN;
+char* ION___ERROR_INFIX_MAIN;
+char* ION___ERROR_INFIX_SUB;
 
-string ION__MSG_UNKNOWN;
+char* ION__MSG_UNKNOWN;
 
-string ION__WORD_ERROR;
-string ION__WORD_NOTE;
-string ION__WORD_INFO;
+char* ION__WORD_ERROR;
+char* ION__WORD_NOTE;
+char* ION__WORD_INFO;
 
 imax ION_VOLUME;
 
@@ -4330,18 +4328,19 @@ EOF
 )"
 
 GLOBAL_C="$(cat <<'EOF'
-string envs(const string name) {
-	string value = getenv(name);
+const char* envs(const char* name) {
+	const char* value = getenv(name);
 
 	if (value == null || strlen(value) == 0) {
 		assert(value != null && "env not given");
+		return null;
 	} else {
 		return value;
 	}
 }
 
-imax envi(const string name) {
-	string value_s = envs(name);
+imax envi(const char* name) {
+	const char* value_s = envs(name);
 	imax value_i;
 
 	errno = 0;
@@ -4351,7 +4350,7 @@ imax envi(const string name) {
 	return value_i;
 }
 
-bool envb(const string name) {
+bool envb(const char* name) {
 	imax value = envi(name);
 
 	if (value == 1) {
@@ -4360,6 +4359,7 @@ bool envb(const string name) {
 		return false;
 	} else {
 		assert(errno == 0 && "invalid bool given");
+		return false;
 	}
 }
 
@@ -4379,7 +4379,7 @@ bool error_is_unknown(error err) {
 	return error_is(err, error_unknown());
 }
 
-error file_append(FILE* stream, const string str) {
+error file_append(FILE* stream, const char* str) {
 	int res;
 
 	if (!str) {
@@ -4413,15 +4413,15 @@ error file_finishe() {
 	return file_finish(stderr);
 }
 
-error string_printo(const string str) {
+error string_printo(const char* str) {
 	return file_append(stdout, str);
 }
 
-error string_printe(const string str) {
+error string_printe(const char* str) {
 	return file_append(stderr, str);
 }
 
-error error_new(const string ctx, const string msg) {
+error error_new(const char* ctx, const char* msg) {
 	error err;
 	imax i;
 
@@ -4435,15 +4435,15 @@ error error_new(const string ctx, const string msg) {
 	return err;
 }
 
-const string error_context(error err) {
+const char* error_context(error err) {
 	return err.context;
 }
 
-const string error_effect(error err) {
+const char* error_effect(error err) {
 	return err.effect;
 }
 
-const string error_cause(error err, imax i) {
+const char* error_cause(error err, imax i) {
 	if (i >= 0 && i < ERROR_DEPTH) {
 		return err.causes[i];
 	} else {
@@ -4470,32 +4470,30 @@ bool error_is(error err, error otr) {
 	return context && effect;
 }
 
-error error_while(error err, const string msg) {
+error error_while(error err, const char* msg) {
 	imax i;
 
-	#if ERROR_DEPTH < 1
-		return err;
+	#if ERROR_DEPTH
+		if (err.causes[ERROR_DEPTH-1] != null) {
+			for (i = 1; i < ERROR_DEPTH; i++) {
+				err.causes[i-1] = err.causes[i];
+			}
+
+			err.causes[ERROR_DEPTH-1] = null;
+		}
+
+		for (i = 0; i < ERROR_DEPTH; i++) {
+			if (err.causes[i] == null) {
+				err.causes[i] = msg;
+				break;
+			}
+		}
 	#endif
-
-	if (err.causes[ERROR_DEPTH-1] != null) {
-		for (i = 1; i < ERROR_DEPTH; i++) {
-			err.causes[i-1] = err.causes[i];
-		}
-
-		err.causes[ERROR_DEPTH-1] = null;
-	}
-
-	for (i = 0; i < ERROR_DEPTH; i++) {
-		if (err.causes[i] == null) {
-			err.causes[i] = msg;
-			break;
-		}
-	}
 
 	return err;
 }
 
-error error_print(error err, const string lbl) {
+error error_print(error err, const char* lbl) {
 	imax i;
 
 	E(string_printe(ION___ERROR_PREFIX_MAIN));
@@ -4505,7 +4503,7 @@ error error_print(error err, const string lbl) {
 	E(string_printe(error_effect(err)));
 
 	for (i = 0; i < ERROR_DEPTH; i++) {
-		const string cause = error_cause(err, i);
+		const char* cause = error_cause(err, i);
 		if (!cause) break;
 
 		E(string_printe(ION___ERROR_INFIX_SUB));
