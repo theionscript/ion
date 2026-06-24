@@ -2,11 +2,13 @@
 ===
 
 **\*** It's still early days; this project is a pre-alpha
-minimum-viable-product that's just shy of being production-ready – for
-example, the post server is insecure and is being replaced, the query system
-needs optimising, etc. This readme describes both where ion is, and also
-what it's been designed for – any features that are still upcoming
-have been marked with an asterisk.
+minimum-viable-product that's not quite production-ready – for
+example, the query system needs optimising, the post server is
+a duct-taped proof-of-concept which is currently being replaced
+with a high-performance C version, etc. This document describes
+both where ion is, and also what it's been designed for – any
+features that are still upcoming have been marked with
+an asterisk.
 
 ion is a universal media processing pipeline. ion's core purpose in life
 is to take an input folder and produce an indexed and optimised version of

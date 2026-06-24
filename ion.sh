@@ -4,11 +4,13 @@
 # ===
 #
 # **\*** It's still early days; this project is a pre-alpha
-# minimum-viable-product that's just shy of being production-ready – for
-# example, the post server is insecure and is being replaced, the query system
-# needs optimising, etc. This readme describes both where ion is, and also
-# what it's been designed for – any features that are still upcoming
-# have been marked with an asterisk.
+# minimum-viable-product that's not quite production-ready – for
+# example, the query system needs optimising, the post server is
+# a duct-taped proof-of-concept which is currently being replaced
+# with a high-performance C version, etc. This document describes
+# both where ion is, and also what it's been designed for – any
+# features that are still upcoming have been marked with
+# an asterisk.
 #
 # ion is a universal media processing pipeline. ion's core purpose in life
 # is to take an input folder and produce an indexed and optimised version of
@@ -4423,7 +4425,7 @@ error string_printe(const char* str) {
 
 error error_new(const char* ctx, const char* msg) {
 	error err;
-	imax i;
+	umax i;
 
 	err.context = ctx;
 	err.effect = msg;
@@ -4443,7 +4445,7 @@ const char* error_effect(error err) {
 	return err.effect;
 }
 
-const char* error_cause(error err, imax i) {
+const char* error_cause(error err, umax i) {
 	if (i >= 0 && i < ERROR_DEPTH) {
 		return err.causes[i];
 	} else {
@@ -4471,7 +4473,7 @@ bool error_is(error err, error otr) {
 }
 
 error error_while(error err, const char* msg) {
-	imax i;
+	umax i;
 
 	#if ERROR_DEPTH
 		if (err.causes[ERROR_DEPTH-1] != null) {
@@ -4494,7 +4496,7 @@ error error_while(error err, const char* msg) {
 }
 
 error error_print(error err, const char* lbl) {
-	imax i;
+	umax i;
 
 	E(string_printe(ION___ERROR_PREFIX_MAIN));
 	E(string_printe(lbl));
